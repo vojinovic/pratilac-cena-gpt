@@ -1,241 +1,8 @@
-<!DOCTYPE html>
-<html lang="sr">
-<head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-
-<title>Auto Drukara</title>
-
-<style>
-    *{box-sizing:border-box;}
-
-    body{
-        margin:0;
-        padding:24px;
-        font-family:Arial,sans-serif;
-        background:#f4f4f6;
-        color:#1d1d1f;
-    }
-
-    .container{
-        max-width:760px;
-        margin:0 auto;
-    }
-
-    h1{
-        font-size:34px;
-        margin-bottom:8px;
-    }
-
-    .subtitle{
-        color:#666;
-        margin-bottom:28px;
-    }
-
-    .box{
-        background:#fff;
-        padding:20px;
-        border-radius:20px;
-        margin-bottom:22px;
-        box-shadow:0 2px 8px rgba(0,0,0,.05);
-    }
-
-    input{
-        width:100%;
-        padding:14px;
-        border-radius:14px;
-        border:1px solid #ddd;
-        margin-bottom:14px;
-        font-size:16px;
-    }
-
-    button{
-        border:none;
-        border-radius:14px;
-        padding:12px 18px;
-        font-weight:700;
-        cursor:pointer;
-    }
-
-    .primary-btn{
-        background:#5b4ce6;
-        color:#fff;
-    }
-
-    .filter-wrap{
-        display:flex;
-        gap:10px;
-        flex-wrap:wrap;
-        margin-bottom:14px;
-    }
-
-    .filter-btn{
-        background:#ececec;
-        padding:10px 14px;
-        border-radius:999px;
-        font-weight:700;
-        font-size:14px;
-    }
-
-    .filter-btn.active{
-        background:#5b4ce6;
-        color:#fff;
-    }
-
-    .sort-row{
-        display:flex;
-        align-items:center;
-        gap:10px;
-        margin-bottom:18px;
-    }
-
-    .sort-label{
-        font-size:14px;
-        font-weight:700;
-        color:#666;
-    }
-
-    select{
-        appearance:none;
-        background:#fff;
-        border:1px solid #ddd;
-        border-radius:999px;
-        padding:11px 40px 11px 16px;
-        font-size:14px;
-        font-weight:700;
-        cursor:pointer;
-    }
-
-    .oglas-header{
-        display:flex;
-        justify-content:space-between;
-        align-items:center;
-        margin-bottom:18px;
-    }
-
-    .badge{
-        background:#efeaff;
-        color:#5b4ce6;
-        padding:6px 10px;
-        border-radius:999px;
-        font-size:13px;
-        font-weight:700;
-    }
-
-    .card{
-        background:#fafafa;
-        border:1px solid #e7e7e7;
-        border-radius:18px;
-        padding:16px;
-        margin-bottom:16px;
-    }
-
-    .title{
-        font-size:17px;
-        font-weight:700;
-        color:#483dff;
-        text-decoration:none;
-    }
-
-    .status{
-        display:inline-block;
-        margin-top:6px;
-        padding:5px 10px;
-        border-radius:999px;
-        font-size:12px;
-        font-weight:700;
-    }
-
-    .active{background:#e8fff1;color:#138a47;}
-    .inactive{background:#ffe3e3;color:#d92d20;}
-
-    .price{
-        font-size:18px;
-        font-weight:800;
-        color:#0a8f3d;
-        margin-top:8px;
-    }
-
-    .stats{
-        margin-top:10px;
-        font-size:14px;
-        background:#f1f3f5;
-        padding:10px;
-        border-radius:12px;
-        line-height:1.5;
-    }
-
-    .img{
-        width:100%;
-        height:180px;
-        object-fit:cover;
-        border-radius:14px;
-        margin-bottom:12px;
-    }
-</style>
-</head>
-
-<body>
-
-<div class="container">
-
-<h1>🚗 Auto Drukara</h1>
-<div class="subtitle">Prati cene i promene oglasa</div>
-
-<div class="box">
-    <input id="url" placeholder="URL oglasa">
-    <input id="label" placeholder="Naziv (opciono)">
-    <button class="primary-btn" onclick="add()">Dodaj oglas</button>
-</div>
-
-<div class="box">
-
-    <div class="oglas-header">
-        <h2>Praćeni oglasi</h2>
-        <div class="badge" id="count">0</div>
-    </div>
-
-    <div class="filter-wrap">
-        <button class="filter-btn active" onclick="setFilter('all', this)">Svi</button>
-        <button class="filter-btn" onclick="setFilter('active', this)">Aktivni</button>
-        <button class="filter-btn" onclick="setFilter('inactive', this)">Nestali</button>
-        <button class="filter-btn" onclick="setFilter('changes', this)">Promene</button>
-    </div>
-
-    <div class="sort-row">
-        <span class="sort-label">Sort:</span>
-        <select id="sortSelect" onchange="render()">
-            <option value="default">Podrazumevano</option>
-            <option value="biggestDrop">Najveći pad</option>
-            <option value="lowest">Najjeftiniji</option>
-            <option value="latest">Najnoviji</option>
-        </select>
-    </div>
-
-    <div id="list"></div>
-
-</div>
-
-</div>
-
 <script>
-
 const API = "https://pratilac-cena-api.vojinovic82.workers.dev";
 
-let FILTER="all";
-let DATA=null;
-
-function format(c){
-    if(c===null||c===undefined) return "N/A";
-    return new Intl.NumberFormat("sr-RS").format(c)+" €";
-}
-
-function setFilter(f,btn){
-    FILTER=f;
-    document.querySelectorAll(".filter-btn").forEach(b=>b.classList.remove("active"));
-    btn.classList.add("active");
-    render();
-}
+let DATA = {};
+let FILTER = "all";
 
 async function load(){
     const r = await fetch(API + "/data");
@@ -243,103 +10,85 @@ async function load(){
     render();
 }
 
+function setFilter(f){
+    FILTER = f;
+
+    document.querySelectorAll(".filter-btn")
+        .forEach(b => b.classList.remove("active"));
+
+    document.querySelector(`[data-filter="${f}"]`)
+        .classList.add("active");
+
+    render();
+}
+
 function render(){
 
-    const oglasi = DATA?.oglasi||[];
-    const cene = DATA?.cene||{};
+    const oglasi = DATA?.oglasi || [];
+    const cene = DATA?.cene || {};
 
-    let list = oglasi.filter(o=>{
-        const c = cene[o.url]||{};
+    // 1. FILTER
+    let list = oglasi.filter(o => {
+        const c = cene[o.url] || {};
 
-        if(FILTER==="active") return c.aktivan!==false;
-        if(FILTER==="inactive") return c.aktivan===false;
-        if(FILTER==="changes") return c.prethodna_cena;
+        if(FILTER === "active") return c.aktivan !== false;
+        if(FILTER === "inactive") return c.aktivan === false;
+        if(FILTER === "changes") return c.prethodna_cena;
 
         return true;
     });
 
-    const sort = document.getElementById("sortSelect").value;
+    // 2. SORT (BEST DEAL FIRST)
+    list.sort((a, b) => {
+        return (cene[b.url]?.score || 0) - (cene[a.url]?.score || 0);
+    });
 
-    if(sort==="biggestDrop"){
-        list.sort((a,b)=>{
-            return ((cene[b.url]?.ukupno_snizenje)||0) - ((cene[a.url]?.ukupno_snizenje)||0);
-        });
-    }
+    // 3. RENDER
+    const container = document.getElementById("list");
+    container.innerHTML = "";
 
-    if(sort==="lowest"){
-        list.sort((a,b)=>{
-            return ((cene[a.url]?.cena)||99999999) - ((cene[b.url]?.cena)||99999999);
-        });
-    }
+    list.forEach(o => {
+        const c = cene[o.url] || {};
 
-    if(sort==="latest"){
-        list.sort((a,b)=>{
-            return ((cene[b.url]?.poslednja_provera)||"").localeCompare((cene[a.url]?.poslednja_provera)||"");
-        });
-    }
+        const score = c.score || 0;
 
-    document.getElementById("count").innerText=list.length;
+        let badge = "⚪";
+        if(score >= 80) badge = "🔥";
+        else if(score >= 60) badge = "🟢";
+        else if(score >= 40) badge = "🟡";
+        else badge = "🔴";
 
-    const wrap=document.getElementById("list");
+        const div = document.createElement("div");
+        div.className = "card";
 
-    if(!list.length){
-        wrap.innerHTML="Nema oglasa.";
-        return;
-    }
-
-    wrap.innerHTML="";
-
-    list.forEach(o=>{
-
-        const c=cene[o.url]||{};
-        const name=o.label||c.label||"Oglas";
-
-        wrap.innerHTML+=`
-        <div class="card">
-
-            ${c.slika?`<img class="img" src="${c.slika}">`:""}
-
-            <a class="title" href="${o.url}" target="_blank">${name}</a>
-
-            <div class="status ${c.aktivan===false?"inactive":"active"}">
-                ${c.aktivan===false?"Nestao":"Aktivan"}
+        div.innerHTML = `
+            <img src="${c.slika || ""}" />
+            
+            <div class="title">
+                ${o.label || "Oglas"} ${badge}
             </div>
 
-            <div class="price">${format(c.cena)}</div>
-
-            <div class="stats">
-                Prva: ${format(c.prva_cena)}<br>
-                Najniža: ${format(c.najmanja_cena)}<br>
-                Promene: ${c.broj_promena||0}<br>
-                Ukupno: ${format(c.ukupno_snizenje||0)}
+            <div class="price">
+                ${c.cena || "N/A"} €
             </div>
 
-        </div>`;
+            <div class="meta">
+                Prva: ${c.prethodna_cena || "N/A"} € <br>
+                Promena: ${c.promena || 0} € <br>
+                Score: ${score}/100
+            </div>
+
+            <div class="date">
+                Poslednja provera: ${c.poslednja_provera || "-"}
+            </div>
+
+            <a href="${o.url}" target="_blank">Otvori oglas</a>
+        `;
+
+        container.appendChild(div);
     });
 }
 
-async function add(){
-
-    const url=document.getElementById("url").value.trim();
-    const label=document.getElementById("label").value.trim();
-
-    if(!url) return alert("Unesi URL");
-
-    await fetch(API+"/add",{
-        method:"POST",
-        headers:{"Content-Type":"application/json"},
-        body:JSON.stringify({url,label})
-    });
-
-    document.getElementById("url").value="";
-    document.getElementById("label").value="";
-
-    load();
-}
-
+// init
 load();
-
 </script>
-
-</body>
-</html>
