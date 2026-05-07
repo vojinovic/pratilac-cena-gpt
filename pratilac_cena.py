@@ -1,232 +1,129 @@
-#!/usr/bin/env python3
-
 import json
-import os
-import re
-import time
 from datetime import datetime
 
-import requests
-from bs4 import BeautifulSoup
-
-RESEND_API_KEY = os.environ.get("RESEND_API_KEY", "")
-EMAIL_PRIMALAC = os.environ.get("EMAIL_PRIMALAC", "")
-
-OGLASI_FAJL = "oglasi.json"
-BAZA_FAJL = "cene_oglasa.json"
-
-PAUZA = 4
-
-HEADERS = {
-    "User-Agent": "Mozilla/5.0",
-    "Accept-Language": "sr-RS,sr;q=0.9,en-US;q=0.8",
-}
+FILES_OGLASI = "oglasi.json"
+FILES_CENE = "cene_oglasa.json"
 
 
-def ucitaj_oglase():
-    with open(OGLASI_FAJL, "r", encoding="utf-8") as f:
-        return json.load(f)
+def izracunaj_score(p):
+    score = 50  # base score
 
+    cena = p.get("cena", 0)
+    prva = p.get("prva_cena", cena)
+    najmanja = p.get("najmanja_cena", cena)
 
-def ucitaj_bazu():
-    if os.path.exists(BAZA_FAJL):
-        with open(BAZA_FAJL, "r", encoding="utf-8") as f:
-            return json.load(f)
-    return {}
+    ukupno_snizenje = p.get("ukupno_snizenje", 0)
+    broj_promena = p.get("broj_promena", 0)
+    tip = p.get("promena_tip", "bez_promene")
 
-
-def sacuvaj_bazu(baza):
-    with open(BAZA_FAJL, "w", encoding="utf-8") as f:
-        json.dump(baza, f, ensure_ascii=False, indent=2)
-
-
-def normalizuj_cenu(text):
-    if not text:
-        return None
-
-    patterns = [
-        r"([\d\.\s]{4,})\s*€",
-        r"([\d\.\s]{4,})\s*EUR",
-    ]
-
-    for pattern in patterns:
-        match = re.search(pattern, str(text))
-
-        if match:
-            cifre = re.sub(r"[^\d]", "", match.group(1))
-            if cifre:
-                cena = int(cifre)
-                if 1000 <= cena <= 500000:
-                    return cena
-
-    return None
-
-
-def izvuci_cenu(soup, html):
-    for el in soup.find_all():
-        if el.string:
-            cena = normalizuj_cenu(el.string)
-            if cena:
-                return cena
-
-    return normalizuj_cenu(html)
-
-
-def izvuci_sliku(soup):
-    img = soup.find("meta", property="og:image")
-    if img and img.get("content"):
-        return img.get("content")
-
-    img = soup.find("img")
-    if img and img.get("src"):
-        return img.get("src")
-
-    return None
-
-
-def izvuci_naziv(soup):
-    if soup.title:
-        return soup.title.text.strip()
-    h1 = soup.find("h1")
-    if h1:
-        return h1.text.strip()
-    return "Oglas"
-
-
-def proveri_oglas(url):
-    try:
-        r = requests.get(url, headers=HEADERS, timeout=20)
-        r.raise_for_status()
-    except:
-        return None, None, None, False
-
-    soup = BeautifulSoup(r.text, "html.parser")
-
-    return (
-        izvuci_cenu(soup, r.text),
-        izvuci_sliku(soup),
-        izvuci_naziv(soup),
-        True
-    )
-
-
-# 🧠 SCORE ENGINE (AKTIVAN)
-def calculate_score(title, text, price):
-
-    text = (title or "").lower() + " " + (text or "").lower()
-
-    score = 50
-
-    # positive
-    if "prvi vlasnik" in text:
+    # 1. cena level
+    if cena < 30000:
+        score += 20
+    elif cena < 35000:
         score += 10
-    if "servisna knjiga" in text:
-        score += 10
-    if "garaziran" in text:
-        score += 5
-    if "bez ulaganja" in text:
-        score += 10
-    if "full oprema" in text:
-        score += 8
-
-    # negative
-    if "udaren" in text:
-        score -= 30
-    if "farban" in text:
-        score -= 20
-    if "ostecen" in text:
-        score -= 25
-    if "uvoz" in text:
+    else:
         score -= 5
 
-    # price bias
-    if price:
-        if price < 20000:
-            score += 5
-        if price > 40000:
-            score -= 5
+    # 2. discount bonus
+    if ukupno_snizenje > 1000:
+        score += 15
+    elif ukupno_snizenje > 0:
+        score += 5
 
-    return max(0, min(100, score))
+    # 3. trend
+    if tip == "pad":
+        score += 15
+    elif tip == "rast":
+        score -= 10
 
+    # 4. activity bonus (pregovori / promene)
+    if broj_promena > 2:
+        score += 5
+    elif broj_promena == 0:
+        score -= 5
 
-def format_cena(cena):
-    if cena is None:
-        return "N/A"
-    return f"{cena:,}".replace(",", ".") + " €"
+    # clamp
+    if score > 100:
+        score = 100
+    if score < 0:
+        score = 0
+
+    return score
 
 
 def main():
 
-    oglasi = ucitaj_oglase()
-    baza = ucitaj_bazu()
+    # load oglasi
+    with open(FILES_OGLASI, "r", encoding="utf-8") as f:
+        oglasi = json.load(f)
 
-    snizenja = []
-    upozorenja = []
+    try:
+        with open(FILES_CENE, "r", encoding="utf-8") as f:
+            cene = json.load(f)
+    except:
+        cene = {}
 
-    sada = datetime.now().strftime("%d.%m.%Y %H:%M")
+    novi_output = {}
 
     for oglas in oglasi:
 
         url = oglas["url"]
-        print("Proveravam:", url)
 
-        cena, slika, naziv, aktivan = proveri_oglas(url)
+        # već postojeći podaci
+        stari = cene.get(url, {})
 
-        stara = baza.get(url, {})
+        cena = oglas.get("cena", stari.get("cena"))
 
-        label = oglas.get("label") or naziv
+        prva_cena = stari.get("prva_cena", cena)
+        prethodna_cena = stari.get("cena")
 
-        # 🔥 SCORE (OVDE SE AKTIVIRA)
-        score = calculate_score(naziv, "", cena)
+        # promena logika
+        if prethodna_cena and prethodna_cena != cena:
+            broj_promena = stari.get("broj_promena", 0) + 1
+        else:
+            broj_promena = stari.get("broj_promena", 0)
 
-        if not aktivan:
-            baza[url] = {
-                **stara,
-                "aktivan": False,
-                "poslednja_provera": sada,
-                "score": score
-            }
-            continue
+        ukupno_snizenje = prva_cena - cena
 
-        stara_cena = stara.get("cena")
+        if cena < prethodna_cena if prethodna_cena else cena:
+            promena_tip = "pad"
+        elif cena > prethodna_cena if prethodna_cena else cena:
+            promena_tip = "rast"
+        else:
+            promena_tip = "bez_promene"
 
-        promena = 0
-        tip = "bez_promene"
-
-        if stara_cena and cena:
-            if cena < stara_cena:
-                promena = stara_cena - cena
-                tip = "snizenje"
-
-                snizenja.append({
-                    "url": url,
-                    "label": label,
-                    "stara": stara_cena,
-                    "nova": cena,
-                    "razlika": promena
-                })
-
-            elif cena > stara_cena:
-                promena = cena - stara_cena
-                tip = "povecanje"
-
-        baza[url] = {
-            "label": label,
+        obj = {
+            "label": oglas.get("label"),
             "cena": cena,
-            "slika": slika,
+            "prva_cena": prva_cena,
+            "najmanja_cena": min(stari.get("najmanja_cena", cena), cena),
+            "broj_promena": broj_promena,
+            "ukupno_snizenje": ukupno_snizenje,
+            "slika": oglas.get("slika"),
+            "prethodna_cena": prethodna_cena,
+            "promena": (prethodna_cena - cena) if prethodna_cena else 0,
+            "promena_tip": promena_tip,
+            "datum_promene": datetime.now().strftime("%d.%m.%Y %H:%M"),
             "aktivan": True,
-            "prethodna_cena": stara_cena,
-            "promena": promena,
-            "promena_tip": tip,
-            "poslednja_provera": sada,
-            "score": score   # ⭐ AKTIVNO
+            "problem_cena": False,
+            "poslednja_provera": datetime.now().strftime("%d.%m.%Y %H:%M"),
+
+            # 🔥 KLJUČNO
+            "score": izracunaj_score({
+                "cena": cena,
+                "prva_cena": prva_cena,
+                "najmanja_cena": stari.get("najmanja_cena", cena),
+                "ukupno_snizenje": ukupno_snizenje,
+                "broj_promena": broj_promena,
+                "promena_tip": promena_tip
+            })
         }
 
-        time.sleep(PAUZA)
+        novi_output[url] = obj
 
-    sacuvaj_bazu(baza)
-
-    print("Gotovo.")
+    # save
+    with open(FILES_CENE, "w", encoding="utf-8") as f:
+        json.dump(novi_output, f, indent=2, ensure_ascii=False)
 
 
 if __name__ == "__main__":
