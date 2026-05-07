@@ -17,7 +17,7 @@ BAZA_FAJL = "cene_oglasa.json"
 PAUZA = 3
 
 HEADERS = {
-    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36"
+    "User-Agent": "Mozilla/5.0"
 }
 
 
@@ -27,7 +27,9 @@ def ucitaj_oglase():
 
 
 def ucitaj_bazu():
+
     if os.path.exists(BAZA_FAJL):
+
         with open(BAZA_FAJL, "r", encoding="utf-8") as f:
             return json.load(f)
 
@@ -35,6 +37,7 @@ def ucitaj_bazu():
 
 
 def sacuvaj_bazu(baza):
+
     with open(BAZA_FAJL, "w", encoding="utf-8") as f:
         json.dump(baza, f, ensure_ascii=False, indent=2)
 
@@ -47,10 +50,13 @@ def izvuci_cenu(text):
     ]
 
     for pattern in patterns:
+
         match = re.search(pattern, text)
 
         if match:
+
             cena = match.group(1)
+
             cena = cena.replace(".", "")
             cena = cena.replace(",", "")
 
@@ -64,15 +70,40 @@ def izvuci_cenu(text):
 
 def izvuci_sliku(soup):
 
+    # og:image
     meta = soup.find("meta", property="og:image")
 
     if meta and meta.get("content"):
-        return meta.get("content")
 
-    img = soup.find("img")
+        url = meta.get("content").strip()
 
-    if img and img.get("src"):
-        return img.get("src")
+        if url.startswith("http"):
+            return url
+
+    # twitter:image
+    meta2 = soup.find("meta", attrs={"name": "twitter:image"})
+
+    if meta2 and meta2.get("content"):
+
+        url = meta2.get("content").strip()
+
+        if url.startswith("http"):
+            return url
+
+    # fallback
+    imgs = soup.find_all("img")
+
+    for img in imgs:
+
+        src = img.get("src")
+
+        if not src:
+            continue
+
+        src = src.strip()
+
+        if "gcdn.polovniautomobili.com" in src:
+            return src
 
     return None
 
@@ -82,6 +113,7 @@ def izvuci_naziv(soup):
     title = soup.find("title")
 
     if title:
+
         text = title.get_text(strip=True)
 
         text = text.replace("| Polovni Automobili", "")
@@ -107,30 +139,36 @@ def calculate_score(
 
     score = 50
 
-    # JEFTINIJI AUTO = BOLJI SCORE
+    # cena
     if cena:
+
         if cena < 25000:
             score += 20
+
         elif cena < 30000:
             score += 15
+
         elif cena < 35000:
             score += 10
+
         elif cena > 45000:
             score -= 10
 
-    # AKO JE SNIZEN
+    # snizenje
     if prva_cena and cena and prva_cena > cena:
 
         pad_proc = ((prva_cena - cena) / prva_cena) * 100
 
         if pad_proc > 15:
             score += 25
+
         elif pad_proc > 10:
             score += 20
+
         elif pad_proc > 5:
             score += 10
 
-    # OPREMA
+    # oprema
     bonus_keywords = [
         "r-design",
         "inscription",
@@ -139,34 +177,26 @@ def calculate_score(
         "4x4",
         "pano",
         "panorama",
-        "full",
-        "ful",
         "matrix",
-        "led",
         "hud",
-        "harman",
-        "bowers",
         "360",
         "massage",
-        "masaza",
-        "ventilacija",
-        "webasto",
         "memorija",
-        "adaptivni",
-        "acc"
+        "acc",
+        "full",
+        "ful"
     ]
 
     for kw in bonus_keywords:
+
         if kw in text:
             score += 3
 
-    # DOBRI SIGNALI
+    # dobri signali
     good_signals = [
         "prvi vlasnik",
         "1 vlasnik",
-        "kupljen nov",
         "servisna",
-        "servisiran",
         "garaza",
         "garažiran",
         "bez ulaganja",
@@ -174,21 +204,21 @@ def calculate_score(
     ]
 
     for kw in good_signals:
+
         if kw in text:
             score += 5
 
-    # LOSI SIGNALI
+    # losi signali
     bad_signals = [
         "hitno",
         "fiksno",
-        "urgentno",
         "zamena",
-        "menjam",
         "ostecen",
         "oštećen"
     ]
 
     for kw in bad_signals:
+
         if kw in text:
             score -= 5
 
@@ -212,7 +242,9 @@ def proveri_oglas(url):
         soup = BeautifulSoup(html, "html.parser")
 
         cena = izvuci_cenu(html)
+
         slika = izvuci_sliku(soup)
+
         naziv = izvuci_naziv(soup)
 
         return cena, slika, naziv, html, True
@@ -227,6 +259,7 @@ def proveri_oglas(url):
 def main():
 
     oglasi = ucitaj_oglase()
+
     baza = ucitaj_bazu()
 
     now = datetime.now().strftime("%d.%m.%Y %H:%M")
@@ -266,6 +299,7 @@ def main():
             prethodna_cena = stara.get("cena")
 
             promena = 0
+
             promena_tip = "bez_promene"
 
             if cena and prethodna_cena:
