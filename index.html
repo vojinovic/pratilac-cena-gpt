@@ -43,7 +43,54 @@ function render(){
         return (cene[b.url]?.score || 0) - (cene[a.url]?.score || 0);
     });
 
-    // 3. RENDER
+    // =========================
+    // 🔥 TOP 3 DEALS
+    // =========================
+    const top3 = list.slice(0, 3);
+    const topContainer = document.getElementById("topDeals");
+
+    if (topContainer) {
+        topContainer.innerHTML = "";
+
+        top3.forEach(o => {
+            const c = cene[o.url] || {};
+            const score = c.score || 0;
+
+            const card = document.createElement("div");
+            card.className = "top-card";
+
+            let badge = "⚪";
+            if(score >= 80) badge = "🔥";
+            else if(score >= 60) badge = "🟢";
+            else if(score >= 40) badge = "🟡";
+            else badge = "🔴";
+
+            card.innerHTML = `
+                <div class="badge">BEST DEAL</div>
+                <img src="${c.slika || ""}" />
+                
+                <div class="title">
+                    ${o.label || "Oglas"} ${badge}
+                </div>
+
+                <div class="price">
+                    ${c.cena || "N/A"} €
+                </div>
+
+                <div class="score">
+                    Score: ${score}/100
+                </div>
+
+                <a href="${o.url}" target="_blank">Otvori oglas</a>
+            `;
+
+            topContainer.appendChild(card);
+        });
+    }
+
+    // =========================
+    // FULL LIST
+    // =========================
     const container = document.getElementById("list");
     container.innerHTML = "";
 
