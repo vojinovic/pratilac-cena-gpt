@@ -2,18 +2,18 @@
 <html lang="sr">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 
 <title>Auto Drukara</title>
 
 <style>
-    *{ box-sizing:border-box; }
+    *{box-sizing:border-box;}
 
     body{
         margin:0;
         padding:24px;
-        background:#f4f4f6;
         font-family:Arial,sans-serif;
+        background:#f4f4f6;
         color:#1d1d1f;
     }
 
@@ -23,20 +23,19 @@
     }
 
     h1{
-        margin-bottom:8px;
         font-size:34px;
+        margin-bottom:8px;
     }
 
     .subtitle{
         color:#666;
         margin-bottom:28px;
-        line-height:1.5;
     }
 
     .box{
         background:#fff;
-        border-radius:20px;
         padding:20px;
+        border-radius:20px;
         margin-bottom:22px;
         box-shadow:0 2px 8px rgba(0,0,0,.05);
     }
@@ -54,9 +53,8 @@
         border:none;
         border-radius:14px;
         padding:12px 18px;
-        cursor:pointer;
-        font-size:15px;
         font-weight:700;
+        cursor:pointer;
     }
 
     .primary-btn{
@@ -68,16 +66,15 @@
         display:flex;
         gap:10px;
         flex-wrap:wrap;
-        margin-bottom:18px;
+        margin-bottom:14px;
     }
 
     .filter-btn{
         background:#ececec;
-        color:#444;
         padding:10px 14px;
         border-radius:999px;
-        font-size:14px;
         font-weight:700;
+        font-size:14px;
     }
 
     .filter-btn.active{
@@ -101,18 +98,59 @@
         font-weight:700;
     }
 
+    /* SORT UI */
+    .sort-row{
+        display:flex;
+        align-items:center;
+        gap:10px;
+        margin-bottom:18px;
+    }
+
+    .sort-label{
+        font-size:14px;
+        font-weight:700;
+        color:#666;
+    }
+
+    select{
+        appearance:none;
+        background:#fff;
+        border:1px solid #ddd;
+        border-radius:999px;
+        padding:11px 40px 11px 16px;
+        font-size:14px;
+        font-weight:700;
+        cursor:pointer;
+        min-width:220px;
+
+        background-image:
+            linear-gradient(45deg, transparent 50%, #555 50%),
+            linear-gradient(135deg, #555 50%, transparent 50%);
+        background-position:
+            calc(100% - 18px) 50%,
+            calc(100% - 13px) 50%;
+        background-size:5px 5px, 5px 5px;
+        background-repeat:no-repeat;
+    }
+
+    select:focus{
+        outline:none;
+        border-color:#5b4ce6;
+        box-shadow:0 0 0 3px rgba(91,76,230,.15);
+    }
+
     .oglas-card{
+        background:#fafafa;
         border:1px solid #e7e7e7;
         border-radius:18px;
         padding:16px;
         margin-bottom:16px;
-        background:#fafafa;
     }
 
     .oglas-card.neaktivan{
-        opacity:.72;
-        border:1px solid #ffb4b4;
         background:#fff3f3;
+        border-color:#ffb4b4;
+        opacity:.8;
     }
 
     .oglas-link{
@@ -123,8 +161,8 @@
     }
 
     .status{
-        margin-top:8px;
         display:inline-block;
+        margin-top:8px;
         padding:6px 10px;
         border-radius:999px;
         font-size:12px;
@@ -142,9 +180,9 @@
     }
 
     .cena{
-        color:#0a8f3d;
         font-size:18px;
         font-weight:800;
+        color:#0a8f3d;
         margin-top:8px;
     }
 
@@ -154,63 +192,35 @@
         color:#666;
     }
 
-    .pad{
-        color:#d92d20;
-        font-weight:700;
-    }
+    .pad{color:#d92d20;font-weight:700;}
+    .rast{color:#0a8f3d;font-weight:700;}
 
-    .rast{
-        color:#0a8f3d;
-        font-weight:700;
+    .stats-box{
+        margin-top:12px;
+        padding:12px;
+        border-radius:12px;
+        background:#f1f3f5;
+        font-size:14px;
+        line-height:1.6;
     }
 
     .datum{
         margin-top:10px;
-        color:#666;
-        font-size:14px;
+        font-size:13px;
+        color:#777;
     }
 
     .delete-btn{
         background:#ffdede;
         color:#e02424;
-        height:44px;
-        min-width:86px;
+        border-radius:12px;
+        padding:10px 14px;
     }
 
     .empty{
         color:#777;
     }
 
-    .stats-box{
-        margin-top:12px;
-        padding:12px;
-        background:#f1f3f5;
-        border-radius:12px;
-        font-size:14px;
-        line-height:1.7;
-    }
-
-    select{
-        padding:10px 14px;
-        border-radius:12px;
-        border:1px solid #ddd;
-        font-size:14px;
-        margin-bottom:18px;
-    }
-
-    @media(max-width:640px){
-        body{
-            padding:14px;
-        }
-
-        .oglas-flex{
-            flex-direction:column;
-        }
-
-        .delete-btn{
-            width:100%;
-        }
-    }
 </style>
 </head>
 
@@ -219,27 +229,12 @@
 <div class="container">
 
     <h1>🚗 Auto Drukara</h1>
-
-    <div class="subtitle">
-        Prati cene polovnih automobila i dobij obaveštenje kada cena padne.
-    </div>
+    <div class="subtitle">Prati cene i promene oglasa</div>
 
     <div class="box">
-        <input
-            id="url"
-            type="text"
-            placeholder="https://www.polovniautomobili.com/auto-oglasi/..."
-        >
-
-        <input
-            id="label"
-            type="text"
-            placeholder="Naziv oglasa, opciono"
-        >
-
-        <button class="primary-btn" onclick="dodajOglas()">
-            Dodaj oglas
-        </button>
+        <input id="url" placeholder="URL oglasa"/>
+        <input id="label" placeholder="Naziv (opciono)"/>
+        <button class="primary-btn" onclick="dodajOglas()">Dodaj oglas</button>
     </div>
 
     <div class="box">
@@ -256,15 +251,17 @@
             <button class="filter-btn" onclick="setFilter('changes', this)">Sa promenom</button>
         </div>
 
-        <select id="sortSelect" onchange="render()">
-            <option value="default">Podrazumevano</option>
-            <option value="biggestDrop">🔥 Najveći pad</option>
-            <option value="lowestPrice">💸 Najjeftiniji</option>
-            <option value="latest">🆕 Poslednje provereni</option>
-        </select>
+        <div class="sort-row">
+            <span class="sort-label">Sortiraj:</span>
+            <select id="sortSelect" onchange="render()">
+                <option value="default">Podrazumevano</option>
+                <option value="biggestDrop">🔥 Najveći pad</option>
+                <option value="lowestPrice">💸 Najjeftiniji</option>
+                <option value="latest">🆕 Poslednje provereni</option>
+            </select>
+        </div>
 
         <div id="oglasi"></div>
-
     </div>
 
 </div>
@@ -272,285 +269,164 @@
 <script>
 const API = "https://pratilac-cena-api.vojinovic82.workers.dev";
 
-let CURRENT_FILTER = "all";
-let GLOBAL_DATA = null;
+let FILTER = "all";
+let DATA = null;
 
-function formatCena(cena){
-    if(cena === null || cena === undefined) return "N/A";
-    return new Intl.NumberFormat("sr-RS").format(cena) + " €";
+function formatCena(c){
+    if(c === null || c === undefined) return "N/A";
+    return new Intl.NumberFormat("sr-RS").format(c) + " €";
 }
 
-function formatProcenat(promena, prethodnaCena){
-    if(!promena || !prethodnaCena) return "";
-
-    const procenat = (promena / prethodnaCena) * 100;
-
-    return procenat.toFixed(1) + "%";
+function formatProcenat(p, old){
+    if(!p || !old) return "";
+    return ((p / old) * 100).toFixed(1) + "%";
 }
 
-function setFilter(filter, btn){
-    CURRENT_FILTER = filter;
-
-    document.querySelectorAll(".filter-btn")
-        .forEach(x => x.classList.remove("active"));
-
+function setFilter(f, btn){
+    FILTER = f;
+    document.querySelectorAll(".filter-btn").forEach(b=>b.classList.remove("active"));
     btn.classList.add("active");
-
     render();
 }
 
-async function ucitaj(){
-    const res = await fetch(API + "/data");
-    GLOBAL_DATA = await res.json();
+async function load(){
+    const r = await fetch(API + "/data");
+    DATA = await r.json();
     render();
 }
 
 function render(){
 
-    const wrapper = document.getElementById("oglasi");
+    const oglasi = DATA?.oglasi || [];
+    const cene = DATA?.cene || {};
 
-    const oglasi = GLOBAL_DATA?.oglasi || [];
-    const cene = GLOBAL_DATA?.cene || {};
+    let list = oglasi.filter(o=>{
+        const c = cene[o.url] || {};
 
-    let filtrirani = oglasi.filter(oglas => {
-
-        const item = cene[oglas.url] || {};
-
-        if(CURRENT_FILTER === "active"){
-            return item.aktivan !== false;
-        }
-
-        if(CURRENT_FILTER === "inactive"){
-            return item.aktivan === false;
-        }
-
-        if(CURRENT_FILTER === "changes"){
-            return item.prethodna_cena;
-        }
+        if(FILTER==="active") return c.aktivan !== false;
+        if(FILTER==="inactive") return c.aktivan === false;
+        if(FILTER==="changes") return c.prethodna_cena;
 
         return true;
     });
 
-    const sort = document.getElementById("sortSelect")?.value;
+    const sort = document.getElementById("sortSelect").value;
 
-    if(sort === "biggestDrop"){
-
-        filtrirani.sort((a,b) => {
-
-            const aData = cene[a.url] || {};
-            const bData = cene[b.url] || {};
-
-            return (bData.ukupno_snizenje || 0)
-                - (aData.ukupno_snizenje || 0);
+    if(sort==="biggestDrop"){
+        list.sort((a,b)=>{
+            const A = cene[a.url]||{};
+            const B = cene[b.url]||{};
+            return (B.ukupno_snizenje||0)-(A.ukupno_snizenje||0);
         });
     }
 
-    if(sort === "lowestPrice"){
-
-        filtrirani.sort((a,b) => {
-
-            const aData = cene[a.url] || {};
-            const bData = cene[b.url] || {};
-
-            return (aData.cena || 99999999)
-                - (bData.cena || 99999999);
+    if(sort==="lowestPrice"){
+        list.sort((a,b)=>{
+            const A = cene[a.url]||{};
+            const B = cene[b.url]||{};
+            return (A.cena||999999)-(B.cena||999999);
         });
     }
 
-    if(sort === "latest"){
-
-        filtrirani.sort((a,b) => {
-
-            const aData = cene[a.url] || {};
-            const bData = cene[b.url] || {};
-
-            return (bData.poslednja_provera || "")
-                .localeCompare(aData.poslednja_provera || "");
+    if(sort==="latest"){
+        list.sort((a,b)=>{
+            const A = cene[a.url]||{};
+            const B = cene[b.url]||{};
+            return (B.poslednja_provera||"").localeCompare(A.poslednja_provera||"");
         });
     }
 
-    document.getElementById("count").innerText = filtrirani.length;
+    document.getElementById("count").innerText = list.length;
 
-    if(!filtrirani.length){
-        wrapper.innerHTML = `<div class="empty">Nema oglasa.</div>`;
+    const wrap = document.getElementById("oglasi");
+
+    if(!list.length){
+        wrap.innerHTML = `<div class="empty">Nema oglasa.</div>`;
         return;
     }
 
-    wrapper.innerHTML = "";
+    wrap.innerHTML = "";
 
-    filtrirani.forEach(oglas => {
+    list.forEach(o=>{
 
-        const item = cene[oglas.url] || {};
-        const prikazNaziva = oglas.label || item.label || "Oglas bez naziva";
+        const c = cene[o.url]||{};
+        const name = o.label || c.label || "Oglas";
 
-        let promenaHtml = "";
+        let change = "";
 
-        if(item.prethodna_cena){
-
-            if(item.promena_tip === "snizenje"){
-
-                promenaHtml = `
-                    <div class="stara-cena">
-                        Pre: ${formatCena(item.prethodna_cena)}
-                        <span class="pad">
-                            ↓ ${formatCena(Math.abs(item.promena))}
-                            (-${formatProcenat(Math.abs(item.promena), item.prethodna_cena)})
-                        </span>
-                    </div>
-                `;
-
-            } else if(item.promena_tip === "povecanje"){
-
-                promenaHtml = `
-                    <div class="stara-cena">
-                        Pre: ${formatCena(item.prethodna_cena)}
-                        <span class="rast">
-                            ↑ ${formatCena(item.promena)}
-                            (+${formatProcenat(item.promena, item.prethodna_cena)})
-                        </span>
-                    </div>
-                `;
-
-            } else {
-
-                promenaHtml = `
-                    <div class="stara-cena">
-                        Pre: ${formatCena(item.prethodna_cena)}
-                    </div>
-                `;
-            }
-
-        } else {
-
-            promenaHtml = `
+        if(c.prethodna_cena){
+            change = `
                 <div class="stara-cena">
-                    Nema zabeležene promene
+                    Pre: ${formatCena(c.prethodna_cena)}
+                    ${c.promena_tip==="snizenje"
+                        ? `<span class="pad">↓ ${formatCena(Math.abs(c.promena))} (-${formatProcenat(Math.abs(c.promena),c.prethodna_cena)})</span>`
+                        : `<span class="rast">↑ ${formatCena(c.promena)} (+${formatProcenat(c.promena,c.prethodna_cena)})</span>`
+                    }
                 </div>
             `;
+        } else {
+            change = `<div class="stara-cena">Nema promene</div>`;
         }
 
-        const statusHtml = item.aktivan === false
-            ? `<div class="status inactive">Oglas više nije aktivan</div>`
-            : `<div class="status active">Aktivan oglas</div>`;
+        wrap.innerHTML += `
+            <div class="oglas-card ${c.aktivan===false?"neaktivan":""}">
 
-        wrapper.innerHTML += `
-            <div class="oglas-card ${item.aktivan === false ? 'neaktivan' : ''}">
+                <a class="oglas-link" href="${o.url}" target="_blank">${name}</a>
 
-                ${item.slika ? `
-                    <img
-                        src="${item.slika}"
-                        alt="${prikazNaziva}"
-                        style="
-                            width:100%;
-                            height:180px;
-                            object-fit:cover;
-                            border-radius:14px;
-                            margin-bottom:14px;
-                        "
-                    >
-                ` : ""}
-
-                <div class="oglas-flex" style="display:flex;justify-content:space-between;gap:12px;">
-
-                    <div style="flex:1;">
-
-                        <a href="${oglas.url}"
-                           target="_blank"
-                           class="oglas-link">
-                           ${prikazNaziva}
-                        </a>
-
-                        ${statusHtml}
-
-                        <div class="cena">
-                            ${formatCena(item.cena)}
-                        </div>
-
-                        ${promenaHtml}
-
-                        <div class="stats-box">
-
-                            <div>
-                                💰 Prva cena:
-                                <strong>${formatCena(item.prva_cena)}</strong>
-                            </div>
-
-                            <div>
-                                📉 Najniža cena:
-                                <strong>${formatCena(item.najmanja_cena)}</strong>
-                            </div>
-
-                            <div>
-                                🔄 Broj promena:
-                                <strong>${item.broj_promena || 0}</strong>
-                            </div>
-
-                            <div>
-                                🧾 Ukupno sniženje:
-                                <strong>${formatCena(item.ukupno_snizenje || 0)}</strong>
-                            </div>
-
-                        </div>
-
-                        <div class="datum">
-                            Poslednja provera:
-                            ${item.poslednja_provera || "-"}
-                        </div>
-
-                    </div>
-
-                    <button class="delete-btn"
-                            onclick="obrisiOglas('${oglas.url}')">
-                        Obriši
-                    </button>
-
+                <div class="status ${c.aktivan===false?"inactive":"active"}">
+                    ${c.aktivan===false?"Nestao":"Aktivan"}
                 </div>
+
+                <div class="cena">${formatCena(c.cena)}</div>
+
+                ${change}
+
+                <div class="stats-box">
+                    Prva: ${formatCena(c.prva_cena)}<br>
+                    Najniža: ${formatCena(c.najmanja_cena)}<br>
+                    Promena: ${c.broj_promena||0}<br>
+                    Ukupno: ${formatCena(c.ukupno_snizenje||0)}
+                </div>
+
+                <div class="datum">
+                    Poslednja provera: ${c.poslednja_provera || "-"}
+                </div>
+
+                <button class="delete-btn" onclick="deleteItem('${o.url}')">Obriši</button>
             </div>
         `;
     });
 }
 
 async function dodajOglas(){
-
     const url = document.getElementById("url").value.trim();
     const label = document.getElementById("label").value.trim();
 
-    if(!url){
-        alert("Unesi URL oglasa.");
-        return;
-    }
+    if(!url) return alert("Unesi URL");
 
-    await fetch(API + "/add", {
+    await fetch(API+"/add",{
         method:"POST",
-        headers:{
-            "Content-Type":"application/json"
-        },
-        body:JSON.stringify({
-            url,
-            label
-        })
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({url,label})
     });
 
-    document.getElementById("url").value = "";
-    document.getElementById("label").value = "";
+    document.getElementById("url").value="";
+    document.getElementById("label").value="";
 
-    ucitaj();
+    load();
 }
 
-async function obrisiOglas(url){
-
-    await fetch(API + "/delete", {
+async function deleteItem(url){
+    await fetch(API+"/delete",{
         method:"POST",
-        headers:{
-            "Content-Type":"application/json"
-        },
-        body:JSON.stringify({ url })
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({url})
     });
 
-    ucitaj();
+    load();
 }
 
-ucitaj();
+load();
 </script>
 
 </body>
