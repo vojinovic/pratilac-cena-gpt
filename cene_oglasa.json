@@ -12,9 +12,9 @@
     "promena_tip": "bez_promene",
     "datum_promene": "07.05.2026 16:58",
     "aktivan": true,
-    "problem_cena": false,
-    "poslednja_provera": "07.05.2026 16:58",
-    "score": 55
+    "problem_cena": true,
+    "poslednja_provera": "07.05.2026 17:16",
+    "score": 69
   },
   "https://www.polovniautomobili.com/auto-oglasi/28877577/volvo-xc60-20-awd?attp=p9_pv0_pc0_pl11_plv0": {
     "label": "Volvo XC60 AWD",
@@ -29,9 +29,9 @@
     "promena_tip": "bez_promene",
     "datum_promene": "07.05.2026 16:58",
     "aktivan": true,
-    "problem_cena": false,
-    "poslednja_provera": "07.05.2026 16:58",
-    "score": 55
+    "problem_cena": true,
+    "poslednja_provera": "07.05.2026 17:16",
+    "score": 66
   },
   "https://www.polovniautomobili.com/auto-oglasi/29005264/volvo-xc60-4x4-d4kupljovde1vl?attp=p9_pv0_pc0_pl11_plv0": {
     "label": "Volvo smesna boja",
@@ -46,9 +46,9 @@
     "promena_tip": "bez_promene",
     "datum_promene": "07.05.2026 16:58",
     "aktivan": true,
-    "problem_cena": false,
-    "poslednja_provera": "07.05.2026 16:58",
-    "score": 65
+    "problem_cena": true,
+    "poslednja_provera": "07.05.2026 17:16",
+    "score": 71
   },
   "https://www.polovniautomobili.com/auto-oglasi/28451802/volvo-xc60-20b4mhev-momentum?attp=p9_pv0_pc0_pl11_plv0": {
     "label": "",
@@ -63,9 +63,9 @@
     "promena_tip": "bez_promene",
     "datum_promene": "07.05.2026 16:58",
     "aktivan": true,
-    "problem_cena": false,
-    "poslednja_provera": "07.05.2026 16:58",
-    "score": 65
+    "problem_cena": true,
+    "poslednja_provera": "07.05.2026 17:16",
+    "score": 74
   },
   "https://www.polovniautomobili.com/auto-oglasi/28597036/volvo-xc60-b4-awd-inscription?attp=p9_pv0_pc0_pl11_plv0": {
     "label": "",
@@ -80,9 +80,9 @@
     "promena_tip": "bez_promene",
     "datum_promene": "07.05.2026 16:58",
     "aktivan": true,
-    "problem_cena": false,
-    "poslednja_provera": "07.05.2026 16:58",
-    "score": 55
+    "problem_cena": true,
+    "poslednja_provera": "07.05.2026 17:16",
+    "score": 69
   },
   "https://www.polovniautomobili.com/auto-oglasi/29012594/volvo-xc60?attp=p9_pv0_pc0_pl11_plv0": {
     "label": "Xc60 daje ga za 27",
@@ -97,9 +97,9 @@
     "promena_tip": "bez_promene",
     "datum_promene": "07.05.2026 16:58",
     "aktivan": true,
-    "problem_cena": false,
-    "poslednja_provera": "07.05.2026 16:58",
-    "score": 65
+    "problem_cena": true,
+    "poslednja_provera": "07.05.2026 17:16",
+    "score": 68
   },
   "https://www.polovniautomobili.com/auto-oglasi/28720117/skoda-kodiaq-20tdisport4x4pano?attp=p9_pv0_pc0_pl11_plv0": {
     "label": "",
@@ -114,8 +114,8 @@
     "promena_tip": "bez_promene",
     "datum_promene": "07.05.2026 16:58",
     "aktivan": true,
-    "problem_cena": false,
-    "poslednja_provera": "07.05.2026 16:58",
-    "score": 65
+    "problem_cena": true,
+    "poslednja_provera": "07.05.2026 17:16",
+    "score": 79
   }
 }
