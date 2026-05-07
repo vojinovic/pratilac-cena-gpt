@@ -86,7 +86,9 @@ def izvuci_cenu(soup, html):
         el = soup.find(attrs=sel)
 
         if el:
-            cena = normalizuj_cenu(el.get("content") or el.get_text(" ", strip=True))
+            cena = normalizuj_cenu(
+                el.get("content") or el.get_text(" ", strip=True)
+            )
 
             if cena:
                 return cena
@@ -99,12 +101,33 @@ def izvuci_cenu(soup, html):
 
     for script in soup.find_all("script"):
         text = script.string or script.get_text(" ", strip=True)
+
         cena = normalizuj_cenu(text)
 
         if cena:
             return cena
 
     return normalizuj_cenu(html)
+
+
+def izvuci_sliku(soup):
+    selektori = [
+        {"property": "og:image"},
+        {"name": "og:image"},
+    ]
+
+    for sel in selektori:
+        el = soup.find("meta", attrs=sel)
+
+        if el and el.get("content"):
+            return el.get("content")
+
+    img = soup.find("img")
+
+    if img and img.get("src"):
+        return img.get("src")
+
+    return None
 
 
 def proveri_oglas(url):
@@ -114,19 +137,22 @@ def proveri_oglas(url):
 
     except Exception as e:
         print(f"Greška pri otvaranju oglasa: {e}")
-        return None, False
+        return None, None, False
 
     soup = BeautifulSoup(resp.text, "html.parser")
+
     cena = izvuci_cenu(soup, resp.text)
+    slika = izvuci_sliku(soup)
 
     print(f"Pronađena cena: {cena}")
 
-    return cena, True
+    return cena, slika, True
 
 
 def format_cena(cena):
     if cena is None:
         return "N/A"
+
     return f"{cena:,}".replace(",", ".") + " €"
 
 
@@ -174,7 +200,7 @@ def main():
 
         print(f"Proveravam: {label}")
 
-        cena, aktivan = proveri_oglas(url)
+        cena, slika, aktivan = proveri_oglas(url)
 
         if not aktivan:
             print("Oglas nedostupan")
@@ -212,6 +238,7 @@ def main():
         baza[url] = {
             "label": label,
             "cena": cena,
+            "slika": slika,
             "prethodna_cena": prethodna_cena,
             "promena": promena,
             "promena_tip": promena_tip,
@@ -223,6 +250,7 @@ def main():
         time.sleep(PAUZA)
 
     sacuvaj_bazu(baza)
+
     posalji_email(snizenja)
 
     print("Gotovo.")
