@@ -1,42 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Pracenje Oglasa</title>
+
+    <style>
+        body { font-family: Arial; background:#f6f6f6; }
+
+        #topDeals, #list {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            padding: 20px;
+        }
+
+        .card, .top-card {
+            background: white;
+            border-radius: 10px;
+            padding: 10px;
+            border: 2px solid orange;
+        }
+
+        img {
+            width: 100%;
+            height: 180px;
+            object-fit: cover;
+            border-radius: 8px;
+        }
+
+        .no-img {
+            height: 180px;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            background:#eee;
+        }
+
+        .badge { color:red; font-weight:bold; }
+    </style>
+</head>
+
+<body>
+
+<h2>🚗 Praceni oglasi</h2>
+
+<!-- 🔥 OVO JE KLJUČ -->
+<div id="topDeals"></div>
+<div id="list"></div>
+
 <script>
 const API = "https://pratilac-cena-api.vojinovic82.workers.dev";
 
 let DATA = {};
-let FILTER = "all";
 
 async function load(){
-    try {
-        const r = await fetch(API + "/data");
-        DATA = await r.json();
-        render();
-    } catch (e) {
-        console.error("API error:", e);
-    }
-}
-
-function setFilter(f){
-    FILTER = f;
-
-    document.querySelectorAll(".filter-btn")
-        .forEach(b => b.classList.remove("active"));
-
-    const activeBtn = document.querySelector(`[data-filter="${f}"]`);
-    if (activeBtn) activeBtn.classList.add("active");
-
+    const r = await fetch(API + "/data");
+    DATA = await r.json();
     render();
 }
 
-function getImage(slika){
-    if (!slika) {
-        return `<div class="no-img">No Image</div>`;
-    }
-
-    return `
-        <img 
-            src="${slika}" 
-            onerror="this.src='https://via.placeholder.com/400x250?text=No+Image'"
-        />
-    `;
+function img(src){
+    if(!src) return `<div class="no-img">No Image</div>`;
+    return `<img src="${src}" onerror="this.src='https://via.placeholder.com/400x250'">`;
 }
 
 function render(){
@@ -44,112 +68,53 @@ function render(){
     const oglasi = DATA?.oglasi || [];
     const cene = DATA?.cene || {};
 
-    // FILTER
-    let list = oglasi.filter(o => {
-        const c = cene[o.url] || {};
+    const list = oglasi.sort((a,b)=>
+        (cene[b.url]?.score||0)-(cene[a.url]?.score||0)
+    );
 
-        if (FILTER === "active") return c.aktivan !== false;
-        if (FILTER === "inactive") return c.aktivan === false;
-        if (FILTER === "changes") return c.prethodna_cena;
+    // TOP 3
+    const top = document.getElementById("topDeals");
+    top.innerHTML = "";
 
-        return true;
-    });
-
-    // SORT BEST DEAL
-    list.sort((a, b) => {
-        return (cene[b.url]?.score || 0) - (cene[a.url]?.score || 0);
-    });
-
-    // TOP 3 DEALS
-    const topContainer = document.getElementById("topDeals");
-
-    if (topContainer) {
-        topContainer.innerHTML = "";
-
-        list.slice(0, 3).forEach(o => {
-            const c = cene[o.url] || {};
-            const score = c.score || 0;
-
-            let badge = "⚪";
-            if (score >= 80) badge = "🔥";
-            else if (score >= 60) badge = "🟢";
-            else if (score >= 40) badge = "🟡";
-            else badge = "🔴";
-
-            const card = document.createElement("div");
-            card.className = "top-card";
-
-            card.innerHTML = `
-                <div class="badge">🔥 BEST DEAL</div>
-
-                ${getImage(c.slika)}
-
-                <div class="title">
-                    ${o.label || "Oglas"} ${badge}
-                </div>
-
-                <div class="price">
-                    ${c.cena || "N/A"} €
-                </div>
-
-                <div class="score">
-                    Score: ${score}/100
-                </div>
-
-                <a href="${o.url}" target="_blank">Otvori oglas</a>
-            `;
-
-            topContainer.appendChild(card);
-        });
-    }
-
-    // FULL LIST
-    const container = document.getElementById("list");
-    if (!container) return;
-
-    container.innerHTML = "";
-
-    list.forEach(o => {
-        const c = cene[o.url] || {};
-        const score = c.score || 0;
-
-        let badge = "⚪";
-        if (score >= 80) badge = "🔥";
-        else if (score >= 60) badge = "🟢";
-        else if (score >= 40) badge = "🟡";
-        else badge = "🔴";
-
+    list.slice(0,3).forEach(o=>{
+        const c = cene[o.url]||{};
         const div = document.createElement("div");
-        div.className = "card";
+        div.className="top-card";
 
         div.innerHTML = `
-            ${getImage(c.slika)}
+            <div class="badge">🔥 BEST DEAL</div>
+            ${img(c.slika)}
+            <h3>${o.label}</h3>
+            <b>${c.cena} €</b><br>
+            Score: ${c.score||0}
+        `;
 
-            <div class="title">
-                ${o.label || "Oglas"} ${badge}
-            </div>
+        top.appendChild(div);
+    });
 
-            <div class="price">
-                ${c.cena || "N/A"} €
-            </div>
+    // LIST
+    const container = document.getElementById("list");
+    container.innerHTML="";
 
-            <div class="meta">
-                Prva: ${c.prethodna_cena || "N/A"} € <br>
-                Promena: ${c.promena || 0} € <br>
-                Score: ${score}/100
-            </div>
+    list.forEach(o=>{
+        const c = cene[o.url]||{};
+        const div = document.createElement("div");
+        div.className="card";
 
-            <div class="date">
-                Poslednja provera: ${c.poslednja_provera || "-"}
-            </div>
-
-            <a href="${o.url}" target="_blank">Otvori oglas</a>
+        div.innerHTML = `
+            ${img(c.slika)}
+            <h4>${o.label}</h4>
+            <b>${c.cena} €</b><br>
+            Score: ${c.score||0}<br>
+            <a href="${o.url}" target="_blank">Otvori</a>
         `;
 
         container.appendChild(div);
     });
 }
 
-// INIT
 load();
 </script>
+
+</body>
+</html>
