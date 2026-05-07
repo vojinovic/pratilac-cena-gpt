@@ -282,6 +282,10 @@ def main():
                 "datum_promene": sada,
                 "aktivan": False,
                 "problem_cena": stara_baza.get("problem_cena", False),
+                "prva_cena": stara_baza.get("prva_cena"),
+                "najmanja_cena": stara_baza.get("najmanja_cena"),
+                "broj_promena": stara_baza.get("broj_promena", 0),
+                "ukupno_snizenje": stara_baza.get("ukupno_snizenje", 0),
                 "poslednja_provera": sada
             }
 
@@ -313,12 +317,19 @@ def main():
         promena_tip = "bez_promene"
         datum_promene = stara_baza.get("datum_promene")
 
+        prva_cena = stara_baza.get("prva_cena", cena)
+        najmanja_cena = stara_baza.get("najmanja_cena", cena)
+        broj_promena = stara_baza.get("broj_promena", 0)
+        ukupno_snizenje = stara_baza.get("ukupno_snizenje", 0)
+
         if stara_cena and cena:
             if cena < stara_cena:
                 prethodna_cena = stara_cena
                 promena = stara_cena - cena
                 promena_tip = "snizenje"
                 datum_promene = sada
+                broj_promena += 1
+                ukupno_snizenje += promena
 
                 snizenja.append({
                     "url": url,
@@ -333,10 +344,18 @@ def main():
                 promena = cena - stara_cena
                 promena_tip = "povecanje"
                 datum_promene = sada
+                broj_promena += 1
+
+        if cena and najmanja_cena:
+            najmanja_cena = min(cena, najmanja_cena)
 
         baza[url] = {
             "label": label,
             "cena": cena if cena is not None else stara_baza.get("cena"),
+            "prva_cena": prva_cena,
+            "najmanja_cena": najmanja_cena,
+            "broj_promena": broj_promena,
+            "ukupno_snizenje": ukupno_snizenje,
             "slika": slika or stara_baza.get("slika"),
             "prethodna_cena": prethodna_cena,
             "promena": promena,
