@@ -34,6 +34,7 @@ def ucitaj_bazu():
     if os.path.exists(BAZA_FAJL):
         with open(BAZA_FAJL, "r", encoding="utf-8") as f:
             return json.load(f)
+
     return {}
 
 
@@ -130,6 +131,30 @@ def izvuci_sliku(soup):
     return None
 
 
+def izvuci_naziv(soup):
+    title = soup.find("title")
+
+    if title:
+        text = title.get_text(" ", strip=True)
+
+        text = text.replace("| Polovni Automobili", "")
+        text = text.replace("- Polovni automobili", "")
+        text = text.strip()
+
+        if text:
+            return text
+
+    h1 = soup.find("h1")
+
+    if h1:
+        text = h1.get_text(" ", strip=True)
+
+        if text:
+            return text
+
+    return "Oglas bez naziva"
+
+
 def proveri_oglas(url):
     try:
         resp = requests.get(url, headers=HEADERS, timeout=20)
@@ -137,16 +162,17 @@ def proveri_oglas(url):
 
     except Exception as e:
         print(f"Greška pri otvaranju oglasa: {e}")
-        return None, None, False
+        return None, None, None, False
 
     soup = BeautifulSoup(resp.text, "html.parser")
 
     cena = izvuci_cenu(soup, resp.text)
     slika = izvuci_sliku(soup)
+    naziv = izvuci_naziv(soup)
 
     print(f"Pronađena cena: {cena}")
 
-    return cena, slika, True
+    return cena, slika, naziv, True
 
 
 def format_cena(cena):
@@ -192,19 +218,21 @@ def main():
     baza = ucitaj_bazu()
 
     snizenja = []
+
     sada = datetime.now().strftime("%d.%m.%Y %H:%M")
 
     for oglas in oglasi:
         url = oglas["url"]
-        label = oglas["label"]
 
-        print(f"Proveravam: {label}")
+        print(f"Proveravam: {url}")
 
-        cena, slika, aktivan = proveri_oglas(url)
+        cena, slika, naziv, aktivan = proveri_oglas(url)
 
         if not aktivan:
             print("Oglas nedostupan")
             continue
+
+        label = oglas.get("label") or naziv
 
         stara_baza = baza.get(url, {})
         stara_cena = stara_baza.get("cena")
