@@ -1,3 +1,80 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8" />
+<title>Auto Pratilac Cena</title>
+
+<style>
+body {
+    font-family: Arial;
+    background: #f5f5f5;
+    margin: 0;
+    padding: 20px;
+}
+
+.card, .top-card {
+    background: white;
+    padding: 12px;
+    margin: 10px 0;
+    border-radius: 12px;
+}
+
+.top-card {
+    border: 2px solid gold;
+}
+
+img {
+    width: 100%;
+    border-radius: 10px;
+}
+
+.badge {
+    font-size: 12px;
+    font-weight: bold;
+    color: #ff3b30;
+}
+
+.price {
+    font-size: 18px;
+    font-weight: bold;
+}
+
+.meta {
+    font-size: 12px;
+    color: #666;
+}
+
+.filter-btn {
+    padding: 6px 10px;
+    margin-right: 5px;
+    cursor: pointer;
+}
+
+.filter-btn.active {
+    background: black;
+    color: white;
+}
+</style>
+</head>
+
+<body>
+
+<h2>🚗 Praceni oglasi</h2>
+
+<!-- FILTERI -->
+<div>
+    <button class="filter-btn active" data-filter="all" onclick="setFilter('all')">Svi</button>
+    <button class="filter-btn" data-filter="active" onclick="setFilter('active')">Aktivni</button>
+    <button class="filter-btn" data-filter="inactive" onclick="setFilter('inactive')">Nestali</button>
+    <button class="filter-btn" data-filter="changes" onclick="setFilter('changes')">Sa promenom</button>
+</div>
+
+<!-- TOP 3 -->
+<div id="topDeals"></div>
+
+<!-- LISTA -->
+<div id="list"></div>
+
 <script>
 const API = "https://pratilac-cena-api.vojinovic82.workers.dev";
 
@@ -20,8 +97,8 @@ function setFilter(f){
     document.querySelectorAll(".filter-btn")
         .forEach(b => b.classList.remove("active"));
 
-    const activeBtn = document.querySelector(`[data-filter="${f}"]`);
-    if (activeBtn) activeBtn.classList.add("active");
+    const btn = document.querySelector(`[data-filter="${f}"]`);
+    if (btn) btn.classList.add("active");
 
     render();
 }
@@ -31,7 +108,7 @@ function render(){
     const oglasi = DATA?.oglasi || [];
     const cene = DATA?.cene || {};
 
-    // 1. FILTER
+    // FILTER
     let list = oglasi.filter(o => {
         const c = cene[o.url] || {};
 
@@ -42,64 +119,46 @@ function render(){
         return true;
     });
 
-    // 2. SORT
+    // SORT
     list.sort((a, b) => {
         return (cene[b.url]?.score || 0) - (cene[a.url]?.score || 0);
     });
 
-    // =========================
-    // 🔥 TOP 3 DEALS
-    // =========================
+    // =====================
+    // TOP 3
+    // =====================
     const topContainer = document.getElementById("topDeals");
 
     if (topContainer) {
-        const top3 = list.slice(0, 3);
         topContainer.innerHTML = "";
 
-        top3.forEach(o => {
+        list.slice(0, 3).forEach(o => {
             const c = cene[o.url] || {};
             const score = c.score || 0;
 
-            let badge = "⚪";
-            if (score >= 80) badge = "🔥";
-            else if (score >= 60) badge = "🟢";
-            else if (score >= 40) badge = "🟡";
-            else badge = "🔴";
+            const div = document.createElement("div");
+            div.className = "top-card";
 
-            const card = document.createElement("div");
-            card.className = "top-card";
-
-            card.innerHTML = `
-                <div class="badge">BEST DEAL</div>
-
+            div.innerHTML = `
+                <div class="badge">🔥 BEST DEAL</div>
                 <img src="${c.slika || ""}" />
-
-                <div class="title">
-                    ${o.label || "Oglas"} ${badge}
-                </div>
-
-                <div class="price">
-                    ${c.cena || "N/A"} €
-                </div>
-
-                <div class="score">
-                    Score: ${score}/100
-                </div>
-
-                <a href="${o.url}" target="_blank">Otvori oglas</a>
+                <div class="price">${c.cena || "N/A"} €</div>
+                <div>${o.label || ""}</div>
+                <div>Score: ${score}/100</div>
+                <a href="${o.url}" target="_blank">Otvori</a>
             `;
 
-            topContainer.appendChild(card);
+            topContainer.appendChild(div);
         });
     }
 
-    // =========================
-    // FULL LIST
-    // =========================
+    // =====================
+    // LISTA
+    // =====================
     const container = document.getElementById("list");
 
     if (!container) {
-        console.error("Missing #list container in HTML");
+        console.error("Missing #list container");
         return;
     }
 
@@ -120,32 +179,28 @@ function render(){
 
         div.innerHTML = `
             <img src="${c.slika || ""}" />
-
-            <div class="title">
-                ${o.label || "Oglas"} ${badge}
-            </div>
-
-            <div class="price">
-                ${c.cena || "N/A"} €
-            </div>
+            <div><b>${o.label || "Oglas"} ${badge}</b></div>
+            <div class="price">${c.cena || "N/A"} €</div>
 
             <div class="meta">
-                Prva: ${c.prethodna_cena || "N/A"} € <br>
-                Promena: ${c.promena || 0} € <br>
+                Prva: ${c.prethodna_cena || "N/A"} €<br>
+                Promena: ${c.promena || 0} €<br>
                 Score: ${score}/100
             </div>
 
-            <div class="date">
-                Poslednja provera: ${c.poslednja_provera || "-"}
+            <div class="meta">
+                ${c.poslednja_provera || "-"}
             </div>
 
-            <a href="${o.url}" target="_blank">Otvori oglas</a>
+            <a href="${o.url}" target="_blank">Otvori</a>
         `;
 
         container.appendChild(div);
     });
 }
 
-// INIT (safe)
 window.addEventListener("DOMContentLoaded", load);
 </script>
+
+</body>
+</html>
