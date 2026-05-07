@@ -51,7 +51,7 @@
     "score": 92
   },
   "https://www.polovniautomobili.com/auto-oglasi/28451802/volvo-xc60-20b4mhev-momentum?attp=p9_pv0_pc0_pl11_plv0": {
-    "label": "Volvo XC60 2.0B4/MHEV MOMENTUM 2021. godište",
+    "label": "Volvo XC60 2.0B4/MHEV MOMENTUM 2021. godiÅ¡te",
     "cena": 27900,
     "prva_cena": 27900,
     "najmanja_cena": 27900,
@@ -68,7 +68,7 @@
     "score": 100
   },
   "https://www.polovniautomobili.com/auto-oglasi/28597036/volvo-xc60-b4-awd-inscription?attp=p9_pv0_pc0_pl11_plv0": {
-    "label": "Volvo XC60 B4 AWD Inscription 2021. godište",
+    "label": "Volvo XC60 B4 AWD Inscription 2021. godiÅ¡te",
     "cena": 32950,
     "prva_cena": 32950,
     "najmanja_cena": 32950,
@@ -102,7 +102,7 @@
     "score": 93
   },
   "https://www.polovniautomobili.com/auto-oglasi/28720117/skoda-kodiaq-20tdisport4x4pano?attp=p9_pv0_pc0_pl11_plv0": {
-    "label": "Škoda Kodiaq 20TDI/SPORT/4x4/PANO 2021. godište",
+    "label": "Å koda Kodiaq 20TDI/SPORT/4x4/PANO 2021. godiÅ¡te",
     "cena": 23999,
     "prva_cena": 23999,
     "najmanja_cena": 23999,
@@ -117,5 +117,16 @@
     "problem_cena": false,
     "poslednja_provera": "07.05.2026 20:10",
     "score": 84
+  },
+  "http://www.polovniautomobili.com/auto-oglasi/29216093/volvo-xc60-b4-d-awd-inscription": {
+    "label": "Volvo XC60 B4 D AWD INSCRIPTION\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t \n\t\t\t\t\t\t\t\t\t\t2021. godište",
+    "cena": 28690,
+    "slika": "https://gcdn.polovniautomobili.com/user-images/thumbs/2921/29216093/d955a3414c8d-1920x1080.jpg",
+    "prethodna_cena": null,
+    "promena": 0,
+    "promena_tip": "bez_promene",
+    "datum_promene": null,
+    "aktivan": true,
+    "poslednja_provera": "7. 5. 2026. 23:21:47"
   }
 }
