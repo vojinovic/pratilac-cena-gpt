@@ -4,12 +4,10 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-<title>Pratilac cena v2</title>
+<title>Pratilac cena</title>
 
 <style>
-    *{
-        box-sizing:border-box;
-    }
+    *{ box-sizing:border-box; }
 
     body{
         margin:0;
@@ -132,9 +130,7 @@
         min-width:86px;
     }
 
-    .empty{
-        color:#777;
-    }
+    .empty{ color:#777; }
 </style>
 </head>
 
@@ -149,7 +145,6 @@
     </div>
 
     <div class="box">
-
         <input
             id="url"
             type="text"
@@ -159,27 +154,21 @@
         <input
             id="label"
             type="text"
-            placeholder="Naziv oglasa"
+            placeholder="Naziv oglasa, opciono"
         >
 
         <button class="primary-btn" onclick="dodajOglas()">
             Dodaj oglas
         </button>
-
     </div>
 
     <div class="box">
-
         <div class="oglas-header">
             <h2>Praćeni oglasi</h2>
-
-            <div class="badge" id="count">
-                0
-            </div>
+            <div class="badge" id="count">0</div>
         </div>
 
         <div id="oglasi"></div>
-
     </div>
 
 </div>
@@ -189,74 +178,55 @@ const API = "https://pratilac-cena-api.vojinovic82.workers.dev";
 
 function formatCena(cena){
     if(!cena) return "N/A";
-
     return new Intl.NumberFormat("sr-RS").format(cena) + " €";
 }
 
 async function ucitaj(){
     const res = await fetch(API + "/data");
-
     const data = await res.json();
 
     const wrapper = document.getElementById("oglasi");
-
     const oglasi = data.oglasi || [];
-
     const cene = data.cene || {};
 
     document.getElementById("count").innerText = oglasi.length;
 
     if(!oglasi.length){
-        wrapper.innerHTML = `
-            <div class="empty">
-                Nema oglasa.
-            </div>
-        `;
+        wrapper.innerHTML = `<div class="empty">Nema oglasa.</div>`;
         return;
     }
 
     wrapper.innerHTML = "";
 
     oglasi.forEach(oglas => {
-
         const item = cene[oglas.url] || {};
+        const prikazNaziva = oglas.label || item.label || "Oglas bez naziva";
 
         let promenaHtml = "";
 
         if(item.prethodna_cena){
-
-            if(item.promena_tip === "pad"){
+            if(item.promena_tip === "snizenje"){
                 promenaHtml = `
                     <div class="stara-cena">
                         Pre: ${formatCena(item.prethodna_cena)}
-                        <span class="pad">
-                            ↓ ${formatCena(Math.abs(item.promena))}
-                        </span>
+                        <span class="pad">↓ ${formatCena(Math.abs(item.promena))}</span>
                     </div>
                 `;
-            }
-
-            else if(item.promena_tip === "rast"){
+            } else if(item.promena_tip === "povecanje"){
                 promenaHtml = `
                     <div class="stara-cena">
                         Pre: ${formatCena(item.prethodna_cena)}
-                        <span class="rast">
-                            ↑ ${formatCena(item.promena)}
-                        </span>
+                        <span class="rast">↑ ${formatCena(item.promena)}</span>
                     </div>
                 `;
-            }
-
-            else{
+            } else {
                 promenaHtml = `
                     <div class="stara-cena">
                         Pre: ${formatCena(item.prethodna_cena)}
                     </div>
                 `;
             }
-
         } else {
-
             promenaHtml = `
                 <div class="stara-cena">
                     Nema zabeležene promene
@@ -265,13 +235,11 @@ async function ucitaj(){
         }
 
         wrapper.innerHTML += `
-
             <div class="oglas-card">
-
                 ${item.slika ? `
                     <img
                         src="${item.slika}"
-                        alt="${item.label}"
+                        alt="${prikazNaziva}"
                         style="
                             width:100%;
                             height:180px;
@@ -283,64 +251,42 @@ async function ucitaj(){
                 ` : ""}
 
                 <div style="display:flex;justify-content:space-between;gap:12px;">
-
                     <div>
-
-                        <a
-                            href="${oglas.url}"
-                            target="_blank"
-                            class="oglas-link"
-                        >
-                            ${oglas.label}
+                        <a href="${oglas.url}" target="_blank" class="oglas-link">
+                            ${prikazNaziva}
                         </a>
 
-                        <div class="cena">
-                            ${formatCena(item.cena)}
-                        </div>
+                        <div class="cena">${formatCena(item.cena)}</div>
 
                         ${promenaHtml}
 
                         <div class="datum">
-                            Poslednja provera:
-                            ${item.poslednja_provera || "-"}
+                            Poslednja provera: ${item.poslednja_provera || "-"}
                         </div>
-
                     </div>
 
-                    <button
-                        class="delete-btn"
-                        onclick="obrisiOglas('${oglas.url}')"
-                    >
+                    <button class="delete-btn" onclick="obrisiOglas('${oglas.url}')">
                         Obriši
                     </button>
-
                 </div>
-
             </div>
         `;
     });
 }
 
 async function dodajOglas(){
-
     const url = document.getElementById("url").value.trim();
-
     const label = document.getElementById("label").value.trim();
 
-    if(!url || !label){
-        alert("Popuni oba polja");
+    if(!url){
+        alert("Unesi URL oglasa.");
         return;
     }
 
     await fetch(API + "/add", {
         method:"POST",
-        headers:{
-            "Content-Type":"application/json"
-        },
-        body:JSON.stringify({
-            url,
-            label
-        })
+        headers:{ "Content-Type":"application/json" },
+        body:JSON.stringify({ url, label })
     });
 
     document.getElementById("url").value = "";
@@ -350,15 +296,10 @@ async function dodajOglas(){
 }
 
 async function obrisiOglas(url){
-
     await fetch(API + "/delete", {
         method:"POST",
-        headers:{
-            "Content-Type":"application/json"
-        },
-        body:JSON.stringify({
-            url
-        })
+        headers:{ "Content-Type":"application/json" },
+        body:JSON.stringify({ url })
     });
 
     ucitaj();
