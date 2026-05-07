@@ -13,7 +13,7 @@
     "datum_promene": null,
     "aktivan": true,
     "problem_cena": false,
-    "poslednja_provera": "07.05.2026 14:26"
+    "poslednja_provera": "07.05.2026 16:05"
   },
   "https://www.polovniautomobili.com/auto-oglasi/28877577/volvo-xc60-20-awd?attp=p9_pv0_pc0_pl11_plv0": {
     "label": "Volvo XC60 AWD",
@@ -29,7 +29,7 @@
     "datum_promene": null,
     "aktivan": true,
     "problem_cena": false,
-    "poslednja_provera": "07.05.2026 14:26"
+    "poslednja_provera": "07.05.2026 16:05"
   },
   "https://www.polovniautomobili.com/auto-oglasi/29005264/volvo-xc60-4x4-d4kupljovde1vl?attp=p9_pv0_pc0_pl11_plv0": {
     "label": "Volvo smesna boja",
@@ -45,7 +45,7 @@
     "datum_promene": null,
     "aktivan": true,
     "problem_cena": false,
-    "poslednja_provera": "07.05.2026 14:26"
+    "poslednja_provera": "07.05.2026 16:05"
   },
   "https://www.polovniautomobili.com/auto-oglasi/28451802/volvo-xc60-20b4mhev-momentum?attp=p9_pv0_pc0_pl11_plv0": {
     "label": "Volvo XC60 2.0B4/MHEV MOMENTUM",
@@ -61,7 +61,7 @@
     "datum_promene": null,
     "aktivan": true,
     "problem_cena": false,
-    "poslednja_provera": "07.05.2026 14:26"
+    "poslednja_provera": "07.05.2026 16:05"
   },
   "https://www.polovniautomobili.com/auto-oglasi/28597036/volvo-xc60-b4-awd-inscription?attp=p9_pv0_pc0_pl11_plv0": {
     "label": "Volvo XC60 B4 AWD Inscription",
@@ -77,7 +77,7 @@
     "datum_promene": null,
     "aktivan": true,
     "problem_cena": false,
-    "poslednja_provera": "07.05.2026 14:26"
+    "poslednja_provera": "07.05.2026 16:05"
   },
   "https://www.polovniautomobili.com/auto-oglasi/29012594/volvo-xc60?attp=p9_pv0_pc0_pl11_plv0": {
     "label": "Xc60 daje ga za 27",
@@ -93,17 +93,22 @@
     "datum_promene": null,
     "aktivan": true,
     "problem_cena": false,
-    "poslednja_provera": "07.05.2026 14:26"
+    "poslednja_provera": "07.05.2026 16:05"
   },
   "https://www.polovniautomobili.com/auto-oglasi/28720117/skoda-kodiaq-20tdisport4x4pano?attp=p9_pv0_pc0_pl11_plv0": {
-    "label": "Škoda Kodiaq 20TDI/SPORT/4x4/PANO\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t \n\t\t\t\t\t\t\t\t\t\t2021. godište",
+    "label": "Škoda Kodiaq 20TDI/SPORT/4x4/PANO",
     "cena": 23999,
+    "prva_cena": 23999,
+    "najmanja_cena": 23999,
+    "broj_promena": 0,
+    "ukupno_snizenje": 0,
     "slika": "https://gcdn.polovniautomobili.com/user-images/thumbs/2872/28720117/86ae16620a09-1920x1080-dw.jpg",
     "prethodna_cena": null,
     "promena": 0,
     "promena_tip": "bez_promene",
     "datum_promene": null,
     "aktivan": true,
-    "poslednja_provera": "7. 5. 2026. 17:29:20"
+    "problem_cena": false,
+    "poslednja_provera": "07.05.2026 16:05"
   }
 }
