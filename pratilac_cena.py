@@ -1,5 +1,3 @@
-# pratilac_cena.py
-
 #!/usr/bin/env python3
 
 import json
@@ -13,11 +11,12 @@ from bs4 import BeautifulSoup
 
 OGLASI_FAJL = "oglasi.json"
 BAZA_FAJL = "cene_oglasa.json"
-
 PAUZA = 3
 
 HEADERS = {
-    "User-Agent": "Mozilla/5.0"
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36",
+    "Accept-Language": "sr-RS,sr;q=0.9,en-US;q=0.8,en;q=0.7",
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
 }
 
 
@@ -27,330 +26,288 @@ def ucitaj_oglase():
 
 
 def ucitaj_bazu():
-
     if os.path.exists(BAZA_FAJL):
-
         with open(BAZA_FAJL, "r", encoding="utf-8") as f:
             return json.load(f)
-
     return {}
 
 
 def sacuvaj_bazu(baza):
-
     with open(BAZA_FAJL, "w", encoding="utf-8") as f:
         json.dump(baza, f, ensure_ascii=False, indent=2)
 
 
-def izvuci_cenu(text):
+def normalizuj_cenu(text):
+    if not text:
+        return None
 
+    text = str(text)
     patterns = [
-        r'([\d\.]+)\s*€',
-        r'([\d\.]+)\s*EUR',
+        r"([\d\.\s]{4,})\s*€",
+        r"([\d\.\s]{4,})\s*EUR",
+        r'"price"\s*:\s*"?([\d\.]+)"?',
+        r'"amount"\s*:\s*"?([\d\.]+)"?',
+        r'"priceAmount"\s*:\s*"?([\d\.]+)"?',
     ]
 
     for pattern in patterns:
-
-        match = re.search(pattern, text)
-
+        match = re.search(pattern, text, re.IGNORECASE)
         if match:
-
-            cena = match.group(1)
-
-            cena = cena.replace(".", "")
-            cena = cena.replace(",", "")
-
-            try:
-                return int(cena)
-            except:
-                pass
+            cifre = re.sub(r"[^\d]", "", match.group(1))
+            if cifre:
+                cena = int(cifre)
+                if 1000 <= cena <= 500000:
+                    return cena
 
     return None
 
 
-def izvuci_sliku(soup):
+def izvuci_cenu(soup, html):
+    selektori = [
+        {"class": "price-box__price"},
+        {"class": "priceBox"},
+        {"class": "price"},
+        {"itemprop": "price"},
+        {"property": "product:price:amount"},
+        {"property": "og:price:amount"},
+        {"name": "price"},
+    ]
 
-    # og:image
-    meta = soup.find("meta", property="og:image")
+    for sel in selektori:
+        el = soup.find(attrs=sel)
+        if el:
+            cena = normalizuj_cenu(el.get("content") or el.get_text(" ", strip=True))
+            if cena:
+                return cena
 
-    if meta and meta.get("content"):
+    for meta in soup.find_all("meta"):
+        cena = normalizuj_cenu(meta.get("content"))
+        if cena:
+            return cena
 
-        url = meta.get("content").strip()
+    for script in soup.find_all("script"):
+        text = script.string or script.get_text(" ", strip=True)
+        cena = normalizuj_cenu(text)
+        if cena:
+            return cena
 
-        if url.startswith("http"):
-            return url
+    return normalizuj_cenu(html)
 
-    # twitter:image
-    meta2 = soup.find("meta", attrs={"name": "twitter:image"})
 
-    if meta2 and meta2.get("content"):
+def izvuci_sliku(soup, html):
+    meta_selectors = [
+        ("property", "og:image"),
+        ("name", "og:image"),
+        ("name", "twitter:image"),
+        ("property", "twitter:image"),
+    ]
 
-        url = meta2.get("content").strip()
+    for attr, value in meta_selectors:
+        el = soup.find("meta", attrs={attr: value})
+        if el and el.get("content"):
+            src = el.get("content").strip()
+            if src.startswith("http"):
+                return src
 
-        if url.startswith("http"):
-            return url
+    image_patterns = [
+        r'https://gcdn\.polovniautomobili\.com/[^"\']+\.(?:jpg|jpeg|png|webp)',
+        r'https:\\/\\/gcdn\.polovniautomobili\.com\\/[^"\']+\.(?:jpg|jpeg|png|webp)',
+    ]
 
-    # fallback
-    imgs = soup.find_all("img")
-
-    for img in imgs:
-
-        src = img.get("src")
-
-        if not src:
-            continue
-
-        src = src.strip()
-
-        if "gcdn.polovniautomobili.com" in src:
+    for pattern in image_patterns:
+        match = re.search(pattern, html, re.IGNORECASE)
+        if match:
+            src = match.group(0).replace("\\/", "/")
             return src
+
+    for img in soup.find_all("img"):
+        for attr in ["src", "data-src", "data-original", "data-lazy"]:
+            src = img.get(attr)
+            if src and "gcdn.polovniautomobili.com" in src:
+                return src.strip()
 
     return None
 
 
 def izvuci_naziv(soup):
+    h1 = soup.find("h1")
+    if h1:
+        text = h1.get_text(" ", strip=True)
+        if text:
+            return text
 
     title = soup.find("title")
-
     if title:
-
-        text = title.get_text(strip=True)
-
+        text = title.get_text(" ", strip=True)
         text = text.replace("| Polovni Automobili", "")
+        text = text.replace("- Polovni automobili", "")
+        text = text.replace("Polovni Automobili", "")
         text = text.strip()
-
-        return text
+        if text:
+            return text
 
     return "Oglas"
 
 
-def calculate_score(
-    label,
-    html,
-    cena,
-    prva_cena,
-    najmanja_cena,
-    broj_promena,
-    ukupno_snizenje,
-    promena_tip
-):
+def proveri_oglas(url):
+    try:
+        resp = requests.get(url, headers=HEADERS, timeout=20)
+        resp.raise_for_status()
+    except Exception as e:
+        print(f"Greška pri otvaranju oglasa: {e}")
+        return None, None, None, "", False
 
+    soup = BeautifulSoup(resp.text, "html.parser")
+
+    cena = izvuci_cenu(soup, resp.text)
+    slika = izvuci_sliku(soup, resp.text)
+    naziv = izvuci_naziv(soup)
+
+    print(f"Pronađena cena: {cena}")
+    print(f"Pronađena slika: {slika}")
+
+    return cena, slika, naziv, resp.text, True
+
+
+def calculate_score(label, html, cena, prva_cena, najmanja_cena, broj_promena, ukupno_snizenje, promena_tip):
     text = ((label or "") + " " + (html or "")).lower()
-
     score = 50
 
-    # cena
     if cena:
-
         if cena < 25000:
             score += 20
-
         elif cena < 30000:
             score += 15
-
         elif cena < 35000:
             score += 10
-
         elif cena > 45000:
             score -= 10
 
-    # snizenje
     if prva_cena and cena and prva_cena > cena:
-
         pad_proc = ((prva_cena - cena) / prva_cena) * 100
-
         if pad_proc > 15:
             score += 25
-
         elif pad_proc > 10:
             score += 20
-
         elif pad_proc > 5:
             score += 10
 
-    # oprema
     bonus_keywords = [
-        "r-design",
-        "inscription",
-        "momentum",
-        "awd",
-        "4x4",
-        "pano",
-        "panorama",
-        "matrix",
-        "hud",
-        "360",
-        "massage",
-        "memorija",
-        "acc",
-        "full",
-        "ful"
+        "r-design", "inscription", "momentum", "awd", "4x4", "pano",
+        "panorama", "matrix", "hud", "360", "massage", "memorija",
+        "acc", "full", "ful"
     ]
 
     for kw in bonus_keywords:
-
         if kw in text:
             score += 3
 
-    # dobri signali
     good_signals = [
-        "prvi vlasnik",
-        "1 vlasnik",
-        "servisna",
-        "garaza",
-        "garažiran",
-        "bez ulaganja",
-        "kao nov"
+        "prvi vlasnik", "1 vlasnik", "servisna", "garaza", "garažiran",
+        "bez ulaganja", "kao nov", "kupljen nov"
     ]
 
     for kw in good_signals:
-
         if kw in text:
             score += 5
 
-    # losi signali
-    bad_signals = [
-        "hitno",
-        "fiksno",
-        "zamena",
-        "ostecen",
-        "oštećen"
-    ]
+    bad_signals = ["hitno", "fiksno", "zamena", "ostecen", "oštećen"]
 
     for kw in bad_signals:
-
         if kw in text:
             score -= 5
 
-    score = max(0, min(score, 100))
-
-    return round(score)
-
-
-def proveri_oglas(url):
-
-    try:
-
-        resp = requests.get(
-            url,
-            headers=HEADERS,
-            timeout=20
-        )
-
-        html = resp.text
-
-        soup = BeautifulSoup(html, "html.parser")
-
-        cena = izvuci_cenu(html)
-
-        slika = izvuci_sliku(soup)
-
-        naziv = izvuci_naziv(soup)
-
-        return cena, slika, naziv, html, True
-
-    except Exception as e:
-
-        print("GRESKA:", e)
-
-        return None, None, None, "", False
+    return max(0, min(round(score), 100))
 
 
 def main():
-
     oglasi = ucitaj_oglase()
-
     baza = ucitaj_bazu()
-
     now = datetime.now().strftime("%d.%m.%Y %H:%M")
 
     for oglas in oglasi:
-
         url = oglas["url"]
-
         print("\nPROVERA:", url)
 
         cena, slika, naziv, html, aktivan = proveri_oglas(url)
+        stara = baza.get(url, {})
 
-        if url not in baza:
+        label = oglas.get("label") or stara.get("label") or naziv or "Oglas"
+        prethodna_cena = stara.get("cena")
 
+        if not aktivan:
             baza[url] = {
-                "label": oglas.get("label") or naziv,
-                "cena": cena,
-                "prva_cena": cena,
-                "najmanja_cena": cena,
-                "broj_promena": 0,
-                "ukupno_snizenje": 0,
-                "slika": slika,
-                "prethodna_cena": None,
-                "promena": 0,
-                "promena_tip": "bez_promene",
-                "datum_promene": None,
-                "aktivan": aktivan,
-                "problem_cena": False,
+                **stara,
+                "label": label,
+                "aktivan": False,
                 "poslednja_provera": now,
-                "score": 0
+                "slika": stara.get("slika"),
             }
+            time.sleep(PAUZA)
+            continue
 
-        else:
+        final_cena = cena if cena is not None else prethodna_cena
 
-            stara = baza[url]
+        prva_cena = stara.get("prva_cena") or final_cena
+        najmanja_cena = stara.get("najmanja_cena") or final_cena
 
-            prethodna_cena = stara.get("cena")
+        promena = 0
+        promena_tip = "bez_promene"
+        broj_promena = stara.get("broj_promena", 0)
+        ukupno_snizenje = stara.get("ukupno_snizenje", 0)
+        datum_promene = stara.get("datum_promene")
 
-            promena = 0
-
-            promena_tip = "bez_promene"
-
-            if cena and prethodna_cena:
-
-                promena = cena - prethodna_cena
-
-                if promena < 0:
-                    promena_tip = "snizenje"
-
-                elif promena > 0:
-                    promena_tip = "poskupljenje"
-
-            if cena and (
-                stara.get("najmanja_cena") is None
-                or cena < stara.get("najmanja_cena")
-            ):
-                stara["najmanja_cena"] = cena
-
-            if promena != 0:
-                stara["broj_promena"] += 1
+        if prethodna_cena and final_cena and final_cena != prethodna_cena:
+            promena = final_cena - prethodna_cena
+            broj_promena += 1
+            datum_promene = now
 
             if promena < 0:
-                stara["ukupno_snizenje"] += abs(promena)
+                promena_tip = "snizenje"
+                ukupno_snizenje += abs(promena)
+            else:
+                promena_tip = "poskupljenje"
 
-            stara["prethodna_cena"] = prethodna_cena
-            stara["cena"] = cena or prethodna_cena
-            stara["promena"] = promena
-            stara["promena_tip"] = promena_tip
-            stara["datum_promene"] = now if promena != 0 else stara.get("datum_promene")
-            stara["slika"] = slika or stara.get("slika")
-            stara["aktivan"] = aktivan
-            stara["problem_cena"] = cena is None
-            stara["poslednja_provera"] = now
+        if final_cena and najmanja_cena:
+            najmanja_cena = min(najmanja_cena, final_cena)
 
-        baza[url]["score"] = calculate_score(
-            baza[url].get("label"),
+        final_slika = slika or stara.get("slika")
+
+        score = calculate_score(
+            label,
             html,
-            baza[url].get("cena"),
-            baza[url].get("prva_cena"),
-            baza[url].get("najmanja_cena"),
-            baza[url].get("broj_promena"),
-            baza[url].get("ukupno_snizenje"),
-            baza[url].get("promena_tip")
+            final_cena,
+            prva_cena,
+            najmanja_cena,
+            broj_promena,
+            ukupno_snizenje,
+            promena_tip,
         )
 
-        print("SCORE:", baza[url]["score"])
+        baza[url] = {
+            "label": label,
+            "cena": final_cena,
+            "prva_cena": prva_cena,
+            "najmanja_cena": najmanja_cena,
+            "broj_promena": broj_promena,
+            "ukupno_snizenje": ukupno_snizenje,
+            "slika": final_slika,
+            "prethodna_cena": prethodna_cena,
+            "promena": promena,
+            "promena_tip": promena_tip,
+            "datum_promene": datum_promene,
+            "aktivan": True,
+            "problem_cena": cena is None,
+            "poslednja_provera": now,
+            "score": score,
+        }
+
+        print("SCORE:", score)
+        print("SLIKA FINAL:", final_slika)
 
         time.sleep(PAUZA)
 
     sacuvaj_bazu(baza)
-
     print("\nGOTOVO")
 
 
