@@ -42,6 +42,7 @@ def normalizuj_cenu(text):
         return None
 
     text = str(text)
+
     patterns = [
         r"([\d\.\s]{4,})\s*€",
         r"([\d\.\s]{4,})\s*EUR",
@@ -117,8 +118,7 @@ def izvuci_sliku(soup, html):
     for pattern in image_patterns:
         match = re.search(pattern, html, re.IGNORECASE)
         if match:
-            src = match.group(0).replace("\\/", "/")
-            return src
+            return match.group(0).replace("\\/", "/")
 
     for img in soup.find_all("img"):
         for attr in ["src", "data-src", "data-original", "data-lazy"]:
@@ -171,53 +171,136 @@ def proveri_oglas(url):
 
 def calculate_score(label, html, cena, prva_cena, najmanja_cena, broj_promena, ukupno_snizenje, promena_tip):
     text = ((label or "") + " " + (html or "")).lower()
+
     score = 50
 
+    # 1. Cena / value
     if cena:
-        if cena < 25000:
-            score += 20
+        if cena < 23000:
+            score += 18
+        elif cena < 26000:
+            score += 14
         elif cena < 30000:
-            score += 15
-        elif cena < 35000:
             score += 10
+        elif cena < 35000:
+            score += 5
         elif cena > 45000:
-            score -= 10
+            score -= 8
 
+    # 2. Trend cene
     if prva_cena and cena and prva_cena > cena:
         pad_proc = ((prva_cena - cena) / prva_cena) * 100
-        if pad_proc > 15:
-            score += 25
-        elif pad_proc > 10:
-            score += 20
-        elif pad_proc > 5:
+
+        if pad_proc >= 10:
+            score += 12
+        elif pad_proc >= 5:
+            score += 8
+        elif pad_proc >= 2:
+            score += 4
+
+    if ukupno_snizenje:
+        if ukupno_snizenje >= 2000:
             score += 10
-
-    bonus_keywords = [
-        "r-design", "inscription", "momentum", "awd", "4x4", "pano",
-        "panorama", "matrix", "hud", "360", "massage", "memorija",
-        "acc", "full", "ful"
-    ]
-
-    for kw in bonus_keywords:
-        if kw in text:
+        elif ukupno_snizenje >= 1000:
+            score += 7
+        elif ukupno_snizenje > 0:
             score += 3
 
-    good_signals = [
-        "prvi vlasnik", "1 vlasnik", "servisna", "garaza", "garažiran",
-        "bez ulaganja", "kao nov", "kupljen nov"
-    ]
+    if promena_tip == "snizenje":
+        score += 6
+    elif promena_tip in ["povecanje", "poskupljenje"]:
+        score -= 8
 
-    for kw in good_signals:
-        if kw in text:
-            score += 5
+    # 3. Oprema
+    oprema_signali = {
+        "awd": 5,
+        "4x4": 5,
+        "r-design": 5,
+        "r design": 5,
+        "inscription": 5,
+        "sport": 4,
+        "momentum": 3,
+        "pano": 5,
+        "panorama": 5,
+        "koža": 4,
+        "koza": 4,
+        "led": 3,
+        "matrix": 4,
+        "kamera": 3,
+        "360": 4,
+        "adaptivni tempomat": 5,
+        "acc": 4,
+        "keyless": 3,
+        "hud": 4,
+        "webasto": 4,
+        "memorija": 3,
+        "bowers": 4,
+        "harman": 3,
+    }
 
-    bad_signals = ["hitno", "fiksno", "zamena", "ostecen", "oštećen"]
+    oprema_score = 0
+    for signal, points in oprema_signali.items():
+        if signal in text:
+            oprema_score += points
 
-    for kw in bad_signals:
-        if kw in text:
-            score -= 5
+    score += min(oprema_score, 25)
 
-    return max(0, min(round(score), 100))
+    # 4. Stanje / opis
+    pozitivni_signali = {
+        "prvi vlasnik": 10,
+        "1 vlasnik": 10,
+        "jedan vlasnik": 10,
+        "prva vlasnica": 10,
+        "servisna knjiga": 8,
+        "servisna": 6,
+        "ovlašćeni servis": 8,
+        "ovlasceni servis": 8,
+        "redovno servisiran": 7,
+        "garaziran": 5,
+        "garažiran": 5,
+        "bez ulaganja": 8,
+        "kupljen nov": 8,
+        "kupljen u srbiji": 6,
+        "kao nov": 5,
+    }
+
+    stanje_score = 0
+    for signal, points in pozitivni_signali.items():
+        if signal in text:
+            stanje_score += points
+
+    negativni_signali = {
+        "udaren": -25,
+        "oštećen": -20,
+        "ostecen": -20,
+        "potrebna ulaganja": -15,
+        "ima ulaganja": -12,
+        "farban": -10,
+        "hitno": -5,
+        "zamena": -5,
+        "menjam": -5,
+        "fiksno": -3,
+        "uvoz": -4,
+    }
+
+    for signal, points in negativni_signali.items():
+        if signal in text:
+            stanje_score += points
+
+    if stanje_score > 25:
+        stanje_score = 25
+    if stanje_score < -30:
+        stanje_score = -30
+
+    score += stanje_score
+
+    if score > 100:
+        score = 100
+
+    if score < 0:
+        score = 0
+
+    return round(score)
 
 
 def main():
