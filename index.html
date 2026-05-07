@@ -31,7 +31,9 @@ function render(){
     const oglasi = DATA?.oglasi || [];
     const cene = DATA?.cene || {};
 
+    // =========================
     // 1. FILTER
+    // =========================
     let list = oglasi.filter(o => {
         const c = cene[o.url] || {};
 
@@ -42,13 +44,15 @@ function render(){
         return true;
     });
 
-    // 2. SORT (BEST DEAL FIRST)
+    // =========================
+    // 2. SORT
+    // =========================
     list.sort((a, b) => {
         return (cene[b.url]?.score || 0) - (cene[a.url]?.score || 0);
     });
 
     // =========================
-    // 🔥 TOP 3 DEALS (SAFE)
+    // 🔥 TOP 3 (SAFE + NO CRASH)
     // =========================
     const topContainer = document.getElementById("topDeals");
 
@@ -71,7 +75,6 @@ function render(){
 
             card.innerHTML = `
                 <div class="badge">BEST DEAL</div>
-
                 <img src="${c.slika || ""}" />
 
                 <div class="title">
@@ -98,7 +101,10 @@ function render(){
     // =========================
     const container = document.getElementById("list");
 
-    if (!container) return;
+    if (!container) {
+        console.error("Missing #list container in HTML");
+        return;
+    }
 
     container.innerHTML = "";
 
@@ -143,6 +149,6 @@ function render(){
     });
 }
 
-// init
-load();
+// init (SA SAFETY DELAY - bitno za GitHub Pages)
+window.addEventListener("DOMContentLoaded", load);
 </script>
