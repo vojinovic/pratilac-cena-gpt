@@ -1,131 +1,9 @@
-<!DOCTYPE html>
-<html lang="sr">
-<head>
-<meta charset="UTF-8" />
-<title>Pratilac Cena</title>
-
-<style>
-body {
-    font-family: Arial, sans-serif;
-    background: #f5f5f5;
-    margin: 0;
-    padding: 20px;
-    max-width: 1200px;
-    margin: 0 auto;
-}
-
-/* FILTERI */
-.filter-btn {
-    padding: 6px 10px;
-    margin-right: 5px;
-    cursor: pointer;
-    border: 1px solid #ddd;
-    background: white;
-    border-radius: 6px;
-}
-
-.filter-btn.active {
-    background: black;
-    color: white;
-}
-
-/* TOP SECTION */
-#topDeals {
-    margin-top: 20px;
-    margin-bottom: 30px;
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-    gap: 16px;
-}
-
-/* LIST */
-#list {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-    gap: 12px;
-}
-
-/* TITLE */
-.section-title {
-    margin-top: 30px;
-    font-weight: bold;
-    font-size: 16px;
-    color: #333;
-}
-
-/* CARD */
-.card, .top-card {
-    background: white;
-    border-radius: 12px;
-    padding: 12px;
-    overflow: hidden;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-}
-
-.top-card {
-    border: 2px solid #ffb100;
-    background: #fffdf6;
-    transform: scale(1.02);
-}
-
-/* IMAGE */
-.card img, .top-card img {
-    width: 100%;
-    height: 180px;
-    object-fit: cover;
-    border-radius: 10px;
-}
-
-/* TEXT */
-.price {
-    font-size: 18px;
-    font-weight: bold;
-    margin-top: 5px;
-}
-
-.meta {
-    font-size: 12px;
-    color: #666;
-    margin-top: 5px;
-}
-
-.badge {
-    font-size: 12px;
-    font-weight: bold;
-    color: #ff3b30;
-    margin: 5px 0;
-}
-</style>
-</head>
-
-<body>
-
-<h2>🚗 Praceni oglasi</h2>
-
-<!-- FILTER -->
-<div>
-    <button class="filter-btn active" data-filter="all" onclick="setFilter('all')">Svi</button>
-    <button class="filter-btn" data-filter="active" onclick="setFilter('active')">Aktivni</button>
-    <button class="filter-btn" data-filter="inactive" onclick="setFilter('inactive')">Nestali</button>
-    <button class="filter-btn" data-filter="changes" onclick="setFilter('changes')">Sa promenom</button>
-</div>
-
-<!-- TOP DEALS -->
-<div id="topDeals"></div>
-
-<!-- FULL LIST TITLE -->
-<div class="section-title">📊 Svi oglasi</div>
-
-<!-- LIST -->
-<div id="list"></div>
-
 <script>
 const API = "https://pratilac-cena-api.vojinovic82.workers.dev";
 
 let DATA = {};
 let FILTER = "all";
 
-/* LOAD */
 async function load(){
     try {
         const r = await fetch(API + "/data");
@@ -136,25 +14,37 @@ async function load(){
     }
 }
 
-/* FILTER */
 function setFilter(f){
     FILTER = f;
 
     document.querySelectorAll(".filter-btn")
         .forEach(b => b.classList.remove("active"));
 
-    const btn = document.querySelector(`[data-filter="${f}"]`);
-    if (btn) btn.classList.add("active");
+    const activeBtn = document.querySelector(`[data-filter="${f}"]`);
+    if (activeBtn) activeBtn.classList.add("active");
 
     render();
 }
 
-/* RENDER */
+function getImage(slika){
+    if (!slika) {
+        return `<div class="no-img">No Image</div>`;
+    }
+
+    return `
+        <img 
+            src="${slika}" 
+            onerror="this.src='https://via.placeholder.com/400x250?text=No+Image'"
+        />
+    `;
+}
+
 function render(){
 
     const oglasi = DATA?.oglasi || [];
     const cene = DATA?.cene || {};
 
+    // FILTER
     let list = oglasi.filter(o => {
         const c = cene[o.url] || {};
 
@@ -165,11 +55,12 @@ function render(){
         return true;
     });
 
+    // SORT BEST DEAL
     list.sort((a, b) => {
         return (cene[b.url]?.score || 0) - (cene[a.url]?.score || 0);
     });
 
-    /* ================= TOP 3 ================= */
+    // TOP 3 DEALS
     const topContainer = document.getElementById("topDeals");
 
     if (topContainer) {
@@ -179,29 +70,42 @@ function render(){
             const c = cene[o.url] || {};
             const score = c.score || 0;
 
-            const div = document.createElement("div");
-            div.className = "top-card";
+            let badge = "⚪";
+            if (score >= 80) badge = "🔥";
+            else if (score >= 60) badge = "🟢";
+            else if (score >= 40) badge = "🟡";
+            else badge = "🔴";
 
-            div.innerHTML = `
+            const card = document.createElement("div");
+            card.className = "top-card";
+
+            card.innerHTML = `
                 <div class="badge">🔥 BEST DEAL</div>
-                <img src="${c.slika || ""}" />
-                <div><b>${o.label || "Oglas"}</b></div>
-                <div class="price">${c.cena || "N/A"} €</div>
-                <div class="meta">Score: ${score}/100</div>
-                <a href="${o.url}" target="_blank">Otvori</a>
+
+                ${getImage(c.slika)}
+
+                <div class="title">
+                    ${o.label || "Oglas"} ${badge}
+                </div>
+
+                <div class="price">
+                    ${c.cena || "N/A"} €
+                </div>
+
+                <div class="score">
+                    Score: ${score}/100
+                </div>
+
+                <a href="${o.url}" target="_blank">Otvori oglas</a>
             `;
 
-            topContainer.appendChild(div);
+            topContainer.appendChild(card);
         });
     }
 
-    /* ================= LIST ================= */
+    // FULL LIST
     const container = document.getElementById("list");
-
-    if (!container) {
-        console.error("Missing #list container");
-        return;
-    }
+    if (!container) return;
 
     container.innerHTML = "";
 
@@ -219,32 +123,33 @@ function render(){
         div.className = "card";
 
         div.innerHTML = `
-            <img src="${c.slika || ""}" />
+            ${getImage(c.slika)}
 
-            <div><b>${o.label || "Oglas"} ${badge}</b></div>
+            <div class="title">
+                ${o.label || "Oglas"} ${badge}
+            </div>
 
-            <div class="price">${c.cena || "N/A"} €</div>
+            <div class="price">
+                ${c.cena || "N/A"} €
+            </div>
 
             <div class="meta">
-                Prva: ${c.prethodna_cena || "N/A"} €<br>
-                Promena: ${c.promena || 0} €<br>
+                Prva: ${c.prethodna_cena || "N/A"} € <br>
+                Promena: ${c.promena || 0} € <br>
                 Score: ${score}/100
             </div>
 
-            <div class="meta">
-                ${c.poslednja_provera || "-"}
+            <div class="date">
+                Poslednja provera: ${c.poslednja_provera || "-"}
             </div>
 
-            <a href="${o.url}" target="_blank">Otvori</a>
+            <a href="${o.url}" target="_blank">Otvori oglas</a>
         `;
 
         container.appendChild(div);
     });
 }
 
-/* INIT */
-window.addEventListener("DOMContentLoaded", load);
+// INIT
+load();
 </script>
-
-</body>
-</html>
