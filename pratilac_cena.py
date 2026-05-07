@@ -91,32 +91,20 @@ def izvuci_cenu(soup, html):
             if cena:
                 return cena
 
-    meta_tags = soup.find_all("meta")
-
-    for meta in meta_tags:
-        content = meta.get("content")
-
-        cena = normalizuj_cenu(content)
+    for meta in soup.find_all("meta"):
+        cena = normalizuj_cenu(meta.get("content"))
 
         if cena:
             return cena
 
-    scripts = soup.find_all("script")
-
-    for script in scripts:
+    for script in soup.find_all("script"):
         text = script.string or script.get_text(" ", strip=True)
-
         cena = normalizuj_cenu(text)
 
         if cena:
             return cena
 
-    cena = normalizuj_cenu(html)
-
-    if cena:
-        return cena
-
-    return None
+    return normalizuj_cenu(html)
 
 
 def proveri_oglas(url):
@@ -129,12 +117,17 @@ def proveri_oglas(url):
         return None, False
 
     soup = BeautifulSoup(resp.text, "html.parser")
-
     cena = izvuci_cenu(soup, resp.text)
 
     print(f"Pronađena cena: {cena}")
 
     return cena, True
+
+
+def format_cena(cena):
+    if cena is None:
+        return "N/A"
+    return f"{cena:,}".replace(",", ".") + " €"
 
 
 def posalji_email(snizenja):
@@ -147,7 +140,9 @@ def posalji_email(snizenja):
         html += f"""
         <p>
         <a href="{s['url']}">{s['label']}</a><br>
-        {s['stara']} € → <strong>{s['nova']} €</strong>
+        Prethodna cena: <s>{format_cena(s['stara'])}</s><br>
+        Nova cena: <strong>{format_cena(s['nova'])}</strong><br>
+        Sniženje: <strong>{format_cena(s['razlika'])}</strong>
         </p>
         """
 
@@ -160,7 +155,7 @@ def posalji_email(snizenja):
         json={
             "from": "Pratilac Cena <onboarding@resend.dev>",
             "to": [EMAIL_PRIMALAC],
-            "subject": "🚗 Sniženje cene oglasa",
+            "subject": f"🚗 Sniženje cene oglasa ({len(snizenja)})",
             "html": html,
         },
     )
@@ -171,6 +166,7 @@ def main():
     baza = ucitaj_bazu()
 
     snizenja = []
+    sada = datetime.now().strftime("%d.%m.%Y %H:%M")
 
     for oglas in oglasi:
         url = oglas["url"]
@@ -184,27 +180,49 @@ def main():
             print("Oglas nedostupan")
             continue
 
-        stara_cena = baza.get(url, {}).get("cena")
+        stara_baza = baza.get(url, {})
+        stara_cena = stara_baza.get("cena")
 
-        if stara_cena and cena and cena < stara_cena:
-            snizenja.append({
-                "url": url,
-                "label": label,
-                "stara": stara_cena,
-                "nova": cena,
-            })
+        prethodna_cena = stara_baza.get("prethodna_cena")
+        promena = 0
+        promena_tip = "bez_promene"
+        datum_promene = stara_baza.get("datum_promene")
+
+        if stara_cena and cena:
+            if cena < stara_cena:
+                prethodna_cena = stara_cena
+                promena = stara_cena - cena
+                promena_tip = "snizenje"
+                datum_promene = sada
+
+                snizenja.append({
+                    "url": url,
+                    "label": label,
+                    "stara": stara_cena,
+                    "nova": cena,
+                    "razlika": promena,
+                })
+
+            elif cena > stara_cena:
+                prethodna_cena = stara_cena
+                promena = cena - stara_cena
+                promena_tip = "povecanje"
+                datum_promene = sada
 
         baza[url] = {
             "label": label,
             "cena": cena,
+            "prethodna_cena": prethodna_cena,
+            "promena": promena,
+            "promena_tip": promena_tip,
+            "datum_promene": datum_promene,
             "aktivan": aktivan,
-            "poslednja_provera": datetime.now().strftime("%d.%m.%Y %H:%M")
+            "poslednja_provera": sada
         }
 
         time.sleep(PAUZA)
 
     sacuvaj_bazu(baza)
-
     posalji_email(snizenja)
 
     print("Gotovo.")
