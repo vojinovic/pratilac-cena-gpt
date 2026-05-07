@@ -190,6 +190,14 @@
         line-height:1.7;
     }
 
+    select{
+        padding:10px 14px;
+        border-radius:12px;
+        border:1px solid #ddd;
+        font-size:14px;
+        margin-bottom:18px;
+    }
+
     @media(max-width:640px){
         body{
             padding:14px;
@@ -247,6 +255,13 @@
             <button class="filter-btn" onclick="setFilter('inactive', this)">Nestali</button>
             <button class="filter-btn" onclick="setFilter('changes', this)">Sa promenom</button>
         </div>
+
+        <select id="sortSelect" onchange="render()">
+            <option value="default">Podrazumevano</option>
+            <option value="biggestDrop">🔥 Najveći pad</option>
+            <option value="lowestPrice">💸 Najjeftiniji</option>
+            <option value="latest">🆕 Poslednje provereni</option>
+        </select>
 
         <div id="oglasi"></div>
 
@@ -315,6 +330,44 @@ function render(){
 
         return true;
     });
+
+    const sort = document.getElementById("sortSelect")?.value;
+
+    if(sort === "biggestDrop"){
+
+        filtrirani.sort((a,b) => {
+
+            const aData = cene[a.url] || {};
+            const bData = cene[b.url] || {};
+
+            return (bData.ukupno_snizenje || 0)
+                - (aData.ukupno_snizenje || 0);
+        });
+    }
+
+    if(sort === "lowestPrice"){
+
+        filtrirani.sort((a,b) => {
+
+            const aData = cene[a.url] || {};
+            const bData = cene[b.url] || {};
+
+            return (aData.cena || 99999999)
+                - (bData.cena || 99999999);
+        });
+    }
+
+    if(sort === "latest"){
+
+        filtrirani.sort((a,b) => {
+
+            const aData = cene[a.url] || {};
+            const bData = cene[b.url] || {};
+
+            return (bData.poslednja_provera || "")
+                .localeCompare(aData.poslednja_provera || "");
+        });
+    }
 
     document.getElementById("count").innerText = filtrirani.length;
 
