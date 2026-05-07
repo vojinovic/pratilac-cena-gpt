@@ -4,25 +4,42 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Pracenje oglasa</title>
+<title>Auto Drukara</title>
 
 <style>
-
 body{
-    font-family:Arial;
+    font-family: Arial, sans-serif;
     background:#f5f5f5;
     margin:0;
     padding:30px;
 }
 
 h1{
-    margin-bottom:20px;
+    margin-bottom:10px;
 }
 
-.filters{
-    display:flex;
-    gap:10px;
-    margin-bottom:30px;
+.subtitle{
+    color:#666;
+    margin-bottom:25px;
+}
+
+.add-box{
+    background:white;
+    padding:18px;
+    border-radius:14px;
+    box-shadow:0 2px 10px rgba(0,0,0,0.06);
+    margin-bottom:25px;
+    max-width:720px;
+}
+
+input{
+    width:100%;
+    padding:12px;
+    margin-bottom:10px;
+    border:1px solid #ddd;
+    border-radius:10px;
+    font-size:15px;
+    box-sizing:border-box;
 }
 
 button{
@@ -31,6 +48,7 @@ button{
     border-radius:8px;
     cursor:pointer;
     background:#eee;
+    font-weight:bold;
 }
 
 button.active{
@@ -38,10 +56,27 @@ button.active{
     color:white;
 }
 
+.add-btn{
+    background:#5b4ce6;
+    color:white;
+}
+
+.delete-btn{
+    background:#ffe0e0;
+    color:#d10000;
+    margin-top:10px;
+}
+
+.filters{
+    display:flex;
+    gap:10px;
+    margin-bottom:25px;
+}
+
 #topDeals,
 #list{
     display:grid;
-    grid-template-columns:repeat(auto-fill,minmax(360px,1fr));
+    grid-template-columns:repeat(auto-fill,minmax(340px,1fr));
     gap:20px;
 }
 
@@ -56,6 +91,7 @@ button.active{
 
 .top-card{
     border:2px solid orange;
+    background:#fffdf6;
 }
 
 .img-wrap{
@@ -76,7 +112,7 @@ button.active{
 }
 
 .title{
-    font-size:24px;
+    font-size:22px;
     font-weight:bold;
     margin-top:14px;
 }
@@ -84,7 +120,7 @@ button.active{
 .price{
     font-size:28px;
     font-weight:bold;
-    margin-top:10px;
+    margin-top:8px;
 }
 
 .meta{
@@ -105,196 +141,246 @@ button.active{
     margin-bottom:10px;
 }
 
+.section-title{
+    margin:35px 0 15px;
+    font-size:22px;
+    font-weight:bold;
+}
+
+a{
+    display:inline-block;
+    margin-top:8px;
+}
 </style>
 </head>
 
 <body>
 
-<h1>🚗 Praceni oglasi</h1>
+<h1>🚗 Auto Drukara</h1>
+<div class="subtitle">Prati cene polovnih automobila i rangiraj najbolje ponude.</div>
+
+<div class="add-box">
+    <input id="urlInput" placeholder="URL oglasa sa PolovniAutomobili">
+    <input id="labelInput" placeholder="Naziv oglasa, opciono">
+    <button class="add-btn" onclick="addOglas()">Dodaj oglas</button>
+</div>
 
 <div class="filters">
-    <button class="filter-btn active" onclick="setFilter('all')">Svi</button>
-    <button class="filter-btn" onclick="setFilter('active')">Aktivni</button>
-    <button class="filter-btn" onclick="setFilter('inactive')">Nestali</button>
-    <button class="filter-btn" onclick="setFilter('changes')">Sa promenom</button>
+    <button class="filter-btn active" onclick="setFilter('all', event)">Svi</button>
+    <button class="filter-btn" onclick="setFilter('active', event)">Aktivni</button>
+    <button class="filter-btn" onclick="setFilter('inactive', event)">Nestali</button>
+    <button class="filter-btn" onclick="setFilter('changes', event)">Sa promenom</button>
 </div>
 
 <div id="topDeals"></div>
 
-<br><br>
-
-<h2>📊 Svi oglasi</h2>
+<div class="section-title">📊 Svi oglasi</div>
 
 <div id="list"></div>
 
 <script>
-
 const API = "https://pratilac-cena-api.vojinovic82.workers.dev";
 
 let DATA = {};
 let FILTER = "all";
 
 async function load(){
-
     try{
-
         const r = await fetch(API + "/data");
-
         DATA = await r.json();
-
         render();
-
     }catch(e){
-
         console.error(e);
-
+        alert("Greška pri učitavanju podataka.");
     }
 }
 
-function setFilter(f){
+function getName(o, c){
+    return c.label || o.label || "Oglas";
+}
 
+function formatPrice(value){
+    if(value === null || value === undefined || value === "") return "N/A";
+    return Number(value).toLocaleString("sr-RS") + " €";
+}
+
+function imageBlock(src){
+    if(!src){
+        return `<div class="img-wrap">No image</div>`;
+    }
+
+    return `
+        <div class="img-wrap">
+            <img src="${src}" onerror="this.parentElement.innerHTML='No image'">
+        </div>
+    `;
+}
+
+function setFilter(f, event){
     FILTER = f;
 
     document.querySelectorAll(".filter-btn")
         .forEach(b => b.classList.remove("active"));
 
-    event.target.classList.add("active");
+    if(event && event.target){
+        event.target.classList.add("active");
+    }
 
     render();
 }
 
-function render(){
+async function addOglas(){
+    const url = document.getElementById("urlInput").value.trim();
+    const label = document.getElementById("labelInput").value.trim();
 
+    if(!url){
+        alert("Unesi URL oglasa.");
+        return;
+    }
+
+    try{
+        const r = await fetch(API + "/add", {
+            method:"POST",
+            headers:{
+                "Content-Type":"application/json"
+            },
+            body:JSON.stringify({
+                url:url,
+                label:label
+            })
+        });
+
+        const data = await r.json();
+
+        if(!r.ok || data.error){
+            alert(data.error || "Greška pri dodavanju oglasa.");
+            return;
+        }
+
+        document.getElementById("urlInput").value = "";
+        document.getElementById("labelInput").value = "";
+
+        await load();
+
+    }catch(e){
+        console.error(e);
+        alert("Greška pri dodavanju oglasa.");
+    }
+}
+
+async function deleteOglas(url){
+    if(!confirm("Da li želiš da obrišeš ovaj oglas?")){
+        return;
+    }
+
+    try{
+        const r = await fetch(API + "/delete", {
+            method:"POST",
+            headers:{
+                "Content-Type":"application/json"
+            },
+            body:JSON.stringify({
+                url:url
+            })
+        });
+
+        const data = await r.json();
+
+        if(!r.ok || data.error){
+            alert(data.error || "Greška pri brisanju oglasa.");
+            return;
+        }
+
+        await load();
+
+    }catch(e){
+        console.error(e);
+        alert("Greška pri brisanju oglasa.");
+    }
+}
+
+function renderCard(o, c, top=false){
+    const score = c.score || 0;
+
+    let badge = "🔴";
+    if(score >= 80) badge = "🔥";
+    else if(score >= 60) badge = "🟢";
+    else if(score >= 40) badge = "🟡";
+
+    return `
+        ${top ? `<div class="badge">🔥 BEST DEAL</div>` : ""}
+
+        ${imageBlock(c.slika)}
+
+        <div class="title">
+            ${getName(o, c)} ${!top ? badge : ""}
+        </div>
+
+        <div class="price">
+            ${formatPrice(c.cena)}
+        </div>
+
+        <div class="meta">
+            Prva: ${formatPrice(c.prva_cena)}<br>
+            Najniža: ${formatPrice(c.najmanja_cena)}<br>
+            Promena: ${formatPrice(c.promena || 0)}<br>
+            Score: ${score}/100
+        </div>
+
+        <div class="date">
+            Poslednja provera: ${c.poslednja_provera || "-"}
+        </div>
+
+        <a href="${o.url}" target="_blank">Otvori</a><br>
+
+        <button class="delete-btn" onclick="deleteOglas('${o.url.replace(/'/g, "\\'")}')">
+            Obriši
+        </button>
+    `;
+}
+
+function render(){
     const oglasi = DATA?.oglasi || [];
     const cene = DATA?.cene || {};
 
     let list = oglasi.filter(o=>{
-
         const c = cene[o.url] || {};
 
         if(FILTER === "active") return c.aktivan !== false;
-
         if(FILTER === "inactive") return c.aktivan === false;
-
         if(FILTER === "changes") return c.prethodna_cena;
 
         return true;
-
     });
 
     list.sort((a,b)=>{
-
-        return (cene[b.url]?.score || 0)
-            - (cene[a.url]?.score || 0);
-
+        return (cene[b.url]?.score || 0) - (cene[a.url]?.score || 0);
     });
 
-    // TOP DEALS
-
     const top = document.getElementById("topDeals");
-
     top.innerHTML = "";
 
     list.slice(0,3).forEach(o=>{
-
         const c = cene[o.url] || {};
-
         const div = document.createElement("div");
-
         div.className = "top-card";
-
-        div.innerHTML = `
-
-            <div class="badge">🔥 BEST DEAL</div>
-
-            <div class="img-wrap">
-                <img
-                    src="${c.slika || ''}"
-                    onerror="this.src='https://placehold.co/600x400?text=No+Image'"
-                >
-            </div>
-
-            <div class="title">
-                ${o.label || "Oglas"}
-            </div>
-
-            <div class="price">
-                ${c.cena || "N/A"} €
-            </div>
-
-            <div class="meta">
-                Score: ${c.score || 0}/100
-            </div>
-
-        `;
-
+        div.innerHTML = renderCard(o, c, true);
         top.appendChild(div);
-
     });
 
-    // FULL LIST
-
     const container = document.getElementById("list");
-
     container.innerHTML = "";
 
     list.forEach(o=>{
-
         const c = cene[o.url] || {};
-
-        let badge = "🔴";
-
-        if(c.score >= 80) badge = "🔥";
-        else if(c.score >= 60) badge = "🟢";
-        else if(c.score >= 40) badge = "🟡";
-
         const div = document.createElement("div");
-
         div.className = "card";
-
-        div.innerHTML = `
-
-            <div class="img-wrap">
-                <img
-                    src="${c.slika || ''}"
-                    onerror="this.src='https://placehold.co/600x400?text=No+Image'"
-                >
-            </div>
-
-            <div class="title">
-                ${o.label || "Oglas"} ${badge}
-            </div>
-
-            <div class="price">
-                ${c.cena || "N/A"} €
-            </div>
-
-            <div class="meta">
-                Prva: ${c.prva_cena || "N/A"} €<br>
-                Promena: ${c.promena || 0} €<br>
-                Score: ${c.score || 0}/100
-            </div>
-
-            <div class="date">
-                ${c.poslednja_provera || "-"}
-            </div>
-
-            <br>
-
-            <a href="${o.url}" target="_blank">
-                Otvori
-            </a>
-
-        `;
-
+        div.innerHTML = renderCard(o, c, false);
         container.appendChild(div);
-
     });
-
 }
 
 load();
-
 </script>
 
 </body>
