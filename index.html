@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-<title>Pratilac cena v2</title>
+<title>Auto Drukara</title>
 
 <style>
     *{ box-sizing:border-box; }
@@ -24,12 +24,13 @@
 
     h1{
         margin-bottom:8px;
-        font-size:28px;
+        font-size:34px;
     }
 
     .subtitle{
         color:#666;
         margin-bottom:28px;
+        line-height:1.5;
     }
 
     .box{
@@ -63,6 +64,27 @@
         color:#fff;
     }
 
+    .filter-wrap{
+        display:flex;
+        gap:10px;
+        flex-wrap:wrap;
+        margin-bottom:18px;
+    }
+
+    .filter-btn{
+        background:#ececec;
+        color:#444;
+        padding:10px 14px;
+        border-radius:999px;
+        font-size:14px;
+        font-weight:700;
+    }
+
+    .filter-btn.active{
+        background:#5b4ce6;
+        color:#fff;
+    }
+
     .oglas-header{
         display:flex;
         justify-content:space-between;
@@ -87,11 +109,36 @@
         background:#fafafa;
     }
 
+    .oglas-card.neaktivan{
+        opacity:.72;
+        border:1px solid #ffb4b4;
+        background:#fff3f3;
+    }
+
     .oglas-link{
         font-size:17px;
         font-weight:700;
         color:#483dff;
         text-decoration:none;
+    }
+
+    .status{
+        margin-top:8px;
+        display:inline-block;
+        padding:6px 10px;
+        border-radius:999px;
+        font-size:12px;
+        font-weight:700;
+    }
+
+    .status.active{
+        background:#e8fff1;
+        color:#138a47;
+    }
+
+    .status.inactive{
+        background:#ffe3e3;
+        color:#d92d20;
     }
 
     .cena{
@@ -130,7 +177,23 @@
         min-width:86px;
     }
 
-    .empty{ color:#777; }
+    .empty{
+        color:#777;
+    }
+
+    @media(max-width:640px){
+        body{
+            padding:14px;
+        }
+
+        .oglas-flex{
+            flex-direction:column;
+        }
+
+        .delete-btn{
+            width:100%;
+        }
+    }
 </style>
 </head>
 
@@ -138,10 +201,10 @@
 
 <div class="container">
 
-    <h1>🚗 Pratilac cena</h1>
+    <h1>🚗 Auto Drukara</h1>
 
     <div class="subtitle">
-        Dodaj, prati i briši oglase bez GitHub tokena u browseru.
+        Prati cene polovnih automobila i dobij obaveštenje kada cena padne.
     </div>
 
     <div class="box">
@@ -163,12 +226,21 @@
     </div>
 
     <div class="box">
+
         <div class="oglas-header">
             <h2>Praćeni oglasi</h2>
             <div class="badge" id="count">0</div>
         </div>
 
+        <div class="filter-wrap">
+            <button class="filter-btn active" onclick="setFilter('all', this)">Svi</button>
+            <button class="filter-btn" onclick="setFilter('active', this)">Aktivni</button>
+            <button class="filter-btn" onclick="setFilter('inactive', this)">Nestali</button>
+            <button class="filter-btn" onclick="setFilter('changes', this)">Sa promenom</button>
+        </div>
+
         <div id="oglasi"></div>
+
     </div>
 
 </div>
@@ -176,57 +248,108 @@
 <script>
 const API = "https://pratilac-cena-api.vojinovic82.workers.dev";
 
+let CURRENT_FILTER = "all";
+let GLOBAL_DATA = null;
+
 function formatCena(cena){
     if(!cena) return "N/A";
     return new Intl.NumberFormat("sr-RS").format(cena) + " €";
 }
 
+function setFilter(filter, btn){
+    CURRENT_FILTER = filter;
+
+    document.querySelectorAll(".filter-btn")
+        .forEach(x => x.classList.remove("active"));
+
+    btn.classList.add("active");
+
+    render();
+}
+
 async function ucitaj(){
     const res = await fetch(API + "/data");
-    const data = await res.json();
+    GLOBAL_DATA = await res.json();
+    render();
+}
+
+function render(){
 
     const wrapper = document.getElementById("oglasi");
-    const oglasi = data.oglasi || [];
-    const cene = data.cene || {};
 
-    document.getElementById("count").innerText = oglasi.length;
+    const oglasi = GLOBAL_DATA?.oglasi || [];
+    const cene = GLOBAL_DATA?.cene || {};
 
-    if(!oglasi.length){
+    let filtrirani = oglasi.filter(oglas => {
+
+        const item = cene[oglas.url] || {};
+
+        if(CURRENT_FILTER === "active"){
+            return item.aktivan !== false;
+        }
+
+        if(CURRENT_FILTER === "inactive"){
+            return item.aktivan === false;
+        }
+
+        if(CURRENT_FILTER === "changes"){
+            return item.prethodna_cena;
+        }
+
+        return true;
+    });
+
+    document.getElementById("count").innerText = filtrirani.length;
+
+    if(!filtrirani.length){
         wrapper.innerHTML = `<div class="empty">Nema oglasa.</div>`;
         return;
     }
 
     wrapper.innerHTML = "";
 
-    oglasi.forEach(oglas => {
+    filtrirani.forEach(oglas => {
+
         const item = cene[oglas.url] || {};
         const prikazNaziva = oglas.label || item.label || "Oglas bez naziva";
 
         let promenaHtml = "";
 
         if(item.prethodna_cena){
+
             if(item.promena_tip === "snizenje"){
+
                 promenaHtml = `
                     <div class="stara-cena">
                         Pre: ${formatCena(item.prethodna_cena)}
-                        <span class="pad">↓ ${formatCena(Math.abs(item.promena))}</span>
+                        <span class="pad">
+                            ↓ ${formatCena(Math.abs(item.promena))}
+                        </span>
                     </div>
                 `;
+
             } else if(item.promena_tip === "povecanje"){
+
                 promenaHtml = `
                     <div class="stara-cena">
                         Pre: ${formatCena(item.prethodna_cena)}
-                        <span class="rast">↑ ${formatCena(item.promena)}</span>
+                        <span class="rast">
+                            ↑ ${formatCena(item.promena)}
+                        </span>
                     </div>
                 `;
+
             } else {
+
                 promenaHtml = `
                     <div class="stara-cena">
                         Pre: ${formatCena(item.prethodna_cena)}
                     </div>
                 `;
             }
+
         } else {
+
             promenaHtml = `
                 <div class="stara-cena">
                     Nema zabeležene promene
@@ -234,8 +357,13 @@ async function ucitaj(){
             `;
         }
 
+        const statusHtml = item.aktivan === false
+            ? `<div class="status inactive">Oglas više nije aktivan</div>`
+            : `<div class="status active">Aktivan oglas</div>`;
+
         wrapper.innerHTML += `
-            <div class="oglas-card">
+            <div class="oglas-card ${item.aktivan === false ? 'neaktivan' : ''}">
+
                 ${item.slika ? `
                     <img
                         src="${item.slika}"
@@ -250,24 +378,36 @@ async function ucitaj(){
                     >
                 ` : ""}
 
-                <div style="display:flex;justify-content:space-between;gap:12px;">
-                    <div>
-                        <a href="${oglas.url}" target="_blank" class="oglas-link">
-                            ${prikazNaziva}
+                <div class="oglas-flex" style="display:flex;justify-content:space-between;gap:12px;">
+
+                    <div style="flex:1;">
+
+                        <a href="${oglas.url}"
+                           target="_blank"
+                           class="oglas-link">
+                           ${prikazNaziva}
                         </a>
 
-                        <div class="cena">${formatCena(item.cena)}</div>
+                        ${statusHtml}
+
+                        <div class="cena">
+                            ${formatCena(item.cena)}
+                        </div>
 
                         ${promenaHtml}
 
                         <div class="datum">
-                            Poslednja provera: ${item.poslednja_provera || "-"}
+                            Poslednja provera:
+                            ${item.poslednja_provera || "-"}
                         </div>
+
                     </div>
 
-                    <button class="delete-btn" onclick="obrisiOglas('${oglas.url}')">
+                    <button class="delete-btn"
+                            onclick="obrisiOglas('${oglas.url}')">
                         Obriši
                     </button>
+
                 </div>
             </div>
         `;
@@ -275,6 +415,7 @@ async function ucitaj(){
 }
 
 async function dodajOglas(){
+
     const url = document.getElementById("url").value.trim();
     const label = document.getElementById("label").value.trim();
 
@@ -285,8 +426,13 @@ async function dodajOglas(){
 
     await fetch(API + "/add", {
         method:"POST",
-        headers:{ "Content-Type":"application/json" },
-        body:JSON.stringify({ url, label })
+        headers:{
+            "Content-Type":"application/json"
+        },
+        body:JSON.stringify({
+            url,
+            label
+        })
     });
 
     document.getElementById("url").value = "";
@@ -296,9 +442,12 @@ async function dodajOglas(){
 }
 
 async function obrisiOglas(url){
+
     await fetch(API + "/delete", {
         method:"POST",
-        headers:{ "Content-Type":"application/json" },
+        headers:{
+            "Content-Type":"application/json"
+        },
         body:JSON.stringify({ url })
     });
 
