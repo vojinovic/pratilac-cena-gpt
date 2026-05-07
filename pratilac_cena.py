@@ -18,10 +18,8 @@ BAZA_FAJL = "cene_oglasa.json"
 PAUZA = 4
 
 HEADERS = {
-    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36",
-    "Accept-Language": "sr-RS,sr;q=0.9,en-US;q=0.8,en;q=0.7",
-    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
-    "Connection": "keep-alive",
+    "User-Agent": "Mozilla/5.0",
+    "Accept-Language": "sr-RS,sr;q=0.9,en-US;q=0.8",
 }
 
 
@@ -34,7 +32,6 @@ def ucitaj_bazu():
     if os.path.exists(BAZA_FAJL):
         with open(BAZA_FAJL, "r", encoding="utf-8") as f:
             return json.load(f)
-
     return {}
 
 
@@ -47,83 +44,40 @@ def normalizuj_cenu(text):
     if not text:
         return None
 
-    text = str(text)
-
     patterns = [
         r"([\d\.\s]{4,})\s*€",
         r"([\d\.\s]{4,})\s*EUR",
-        r'"price"\s*:\s*"?([\d\.]+)"?',
-        r'"amount"\s*:\s*"?([\d\.]+)"?',
-        r'"priceAmount"\s*:\s*"?([\d\.]+)"?',
     ]
 
     for pattern in patterns:
-        match = re.search(pattern, text, re.IGNORECASE)
+        match = re.search(pattern, str(text))
 
         if match:
             cifre = re.sub(r"[^\d]", "", match.group(1))
-
             if cifre:
                 cena = int(cifre)
-
-                if 1000 <= cena <= 300000:
+                if 1000 <= cena <= 500000:
                     return cena
 
     return None
 
 
 def izvuci_cenu(soup, html):
-    selektori = [
-        {"class": "price-box__price"},
-        {"class": "priceBox"},
-        {"class": "price"},
-        {"itemprop": "price"},
-        {"property": "product:price:amount"},
-        {"property": "og:price:amount"},
-        {"name": "price"},
-    ]
-
-    for sel in selektori:
-        el = soup.find(attrs=sel)
-
-        if el:
-            cena = normalizuj_cenu(
-                el.get("content") or el.get_text(" ", strip=True)
-            )
-
+    for el in soup.find_all():
+        if el.string:
+            cena = normalizuj_cenu(el.string)
             if cena:
                 return cena
-
-    for meta in soup.find_all("meta"):
-        cena = normalizuj_cenu(meta.get("content"))
-
-        if cena:
-            return cena
-
-    for script in soup.find_all("script"):
-        text = script.string or script.get_text(" ", strip=True)
-        cena = normalizuj_cenu(text)
-
-        if cena:
-            return cena
 
     return normalizuj_cenu(html)
 
 
 def izvuci_sliku(soup):
-    selektori = [
-        {"property": "og:image"},
-        {"name": "og:image"},
-    ]
-
-    for sel in selektori:
-        el = soup.find("meta", attrs=sel)
-
-        if el and el.get("content"):
-            return el.get("content")
+    img = soup.find("meta", property="og:image")
+    if img and img.get("content"):
+        return img.get("content")
 
     img = soup.find("img")
-
     if img and img.get("src"):
         return img.get("src")
 
@@ -131,117 +85,78 @@ def izvuci_sliku(soup):
 
 
 def izvuci_naziv(soup):
-    title = soup.find("title")
-
-    if title:
-        text = title.get_text(" ", strip=True)
-
-        text = text.replace("| Polovni Automobili", "")
-        text = text.replace("- Polovni automobili", "")
-        text = text.strip()
-
-        if text:
-            return text
-
+    if soup.title:
+        return soup.title.text.strip()
     h1 = soup.find("h1")
-
     if h1:
-        text = h1.get_text(" ", strip=True)
-
-        if text:
-            return text
-
-    return "Oglas bez naziva"
+        return h1.text.strip()
+    return "Oglas"
 
 
 def proveri_oglas(url):
     try:
-        resp = requests.get(url, headers=HEADERS, timeout=20)
-        resp.raise_for_status()
-
-    except Exception as e:
-        print(f"Greška pri otvaranju oglasa: {e}")
+        r = requests.get(url, headers=HEADERS, timeout=20)
+        r.raise_for_status()
+    except:
         return None, None, None, False
 
-    soup = BeautifulSoup(resp.text, "html.parser")
+    soup = BeautifulSoup(r.text, "html.parser")
 
-    cena = izvuci_cenu(soup, resp.text)
-    slika = izvuci_sliku(soup)
-    naziv = izvuci_naziv(soup)
+    return (
+        izvuci_cenu(soup, r.text),
+        izvuci_sliku(soup),
+        izvuci_naziv(soup),
+        True
+    )
 
-    print(f"Pronađena cena: {cena}")
 
-    return cena, slika, naziv, True
+# 🧠 SCORE ENGINE (AKTIVAN)
+def calculate_score(title, text, price):
+
+    text = (title or "").lower() + " " + (text or "").lower()
+
+    score = 50
+
+    # positive
+    if "prvi vlasnik" in text:
+        score += 10
+    if "servisna knjiga" in text:
+        score += 10
+    if "garaziran" in text:
+        score += 5
+    if "bez ulaganja" in text:
+        score += 10
+    if "full oprema" in text:
+        score += 8
+
+    # negative
+    if "udaren" in text:
+        score -= 30
+    if "farban" in text:
+        score -= 20
+    if "ostecen" in text:
+        score -= 25
+    if "uvoz" in text:
+        score -= 5
+
+    # price bias
+    if price:
+        if price < 20000:
+            score += 5
+        if price > 40000:
+            score -= 5
+
+    return max(0, min(100, score))
 
 
 def format_cena(cena):
     if cena is None:
         return "N/A"
-
     return f"{cena:,}".replace(",", ".") + " €"
 
 
-def posalji_email(snizenja):
-    if not snizenja:
-        return
-
-    html = "<h2>🚗 Sniženje cene!</h2>"
-
-    for s in snizenja:
-        html += f"""
-        <p>
-        <a href="{s['url']}">{s['label']}</a><br>
-        Prethodna cena: <s>{format_cena(s['stara'])}</s><br>
-        Nova cena: <strong>{format_cena(s['nova'])}</strong><br>
-        Sniženje: <strong>{format_cena(s['razlika'])}</strong>
-        </p>
-        """
-
-    requests.post(
-        "https://api.resend.com/emails",
-        headers={
-            "Authorization": f"Bearer {RESEND_API_KEY}",
-            "Content-Type": "application/json",
-        },
-        json={
-            "from": "Auto Drukara <onboarding@resend.dev>",
-            "to": [EMAIL_PRIMALAC],
-            "subject": f"🚗 Sniženje cene oglasa ({len(snizenja)})",
-            "html": html,
-        },
-    )
-
-
-def posalji_upozorenja(upozorenja):
-    if not upozorenja:
-        return
-
-    html = "<h2>⚠️ Auto Drukara upozorenje</h2>"
-
-    for u in upozorenja:
-        html += f"""
-        <p>
-        <a href="{u['url']}">{u['label']}</a><br>
-        <strong>{u['poruka']}</strong>
-        </p>
-        """
-
-    requests.post(
-        "https://api.resend.com/emails",
-        headers={
-            "Authorization": f"Bearer {RESEND_API_KEY}",
-            "Content-Type": "application/json",
-        },
-        json={
-            "from": "Auto Drukara <onboarding@resend.dev>",
-            "to": [EMAIL_PRIMALAC],
-            "subject": f"⚠️ Auto Drukara upozorenje ({len(upozorenja)})",
-            "html": html,
-        },
-    )
-
-
 def main():
+
     oglasi = ucitaj_oglase()
     baza = ucitaj_bazu()
 
@@ -251,127 +166,65 @@ def main():
     sada = datetime.now().strftime("%d.%m.%Y %H:%M")
 
     for oglas in oglasi:
-        url = oglas["url"]
 
-        print(f"Proveravam: {url}")
+        url = oglas["url"]
+        print("Proveravam:", url)
 
         cena, slika, naziv, aktivan = proveri_oglas(url)
 
-        stara_baza = baza.get(url, {})
-        prethodno_aktivan = stara_baza.get("aktivan", True)
-        prethodna_cena_u_bazi = stara_baza.get("cena")
-
-        if not aktivan:
-            print("Oglas nedostupan")
-
-            if prethodno_aktivan is not False:
-                upozorenja.append({
-                    "tip": "nestao",
-                    "url": url,
-                    "label": stara_baza.get("label", oglas.get("label") or "Oglas"),
-                    "poruka": "Oglas više nije dostupan."
-                })
-
-            baza[url] = {
-                "label": stara_baza.get("label", oglas.get("label") or "Oglas"),
-                "cena": stara_baza.get("cena"),
-                "slika": stara_baza.get("slika"),
-                "prethodna_cena": stara_baza.get("prethodna_cena"),
-                "promena": stara_baza.get("promena", 0),
-                "promena_tip": "nestao",
-                "datum_promene": sada,
-                "aktivan": False,
-                "problem_cena": stara_baza.get("problem_cena", False),
-                "prva_cena": stara_baza.get("prva_cena"),
-                "najmanja_cena": stara_baza.get("najmanja_cena"),
-                "broj_promena": stara_baza.get("broj_promena", 0),
-                "ukupno_snizenje": stara_baza.get("ukupno_snizenje", 0),
-                "poslednja_provera": sada
-            }
-
-            time.sleep(PAUZA)
-            continue
+        stara = baza.get(url, {})
 
         label = oglas.get("label") or naziv
 
-        prethodni_problem_cena = stara_baza.get("problem_cena", False)
+        # 🔥 SCORE (OVDE SE AKTIVIRA)
+        score = calculate_score(naziv, "", cena)
 
-        if cena is None and prethodna_cena_u_bazi:
-            if prethodni_problem_cena is not True:
-                upozorenja.append({
-                    "tip": "problem_cena",
-                    "url": url,
-                    "label": label,
-                    "poruka": "Oglas je dostupan, ali cena više ne može da se pročita."
-                })
+        if not aktivan:
+            baza[url] = {
+                **stara,
+                "aktivan": False,
+                "poslednja_provera": sada,
+                "score": score
+            }
+            continue
 
-            problem_cena = True
+        stara_cena = stara.get("cena")
 
-        else:
-            problem_cena = False
-
-        stara_cena = stara_baza.get("cena")
-
-        prethodna_cena = stara_baza.get("prethodna_cena")
         promena = 0
-        promena_tip = "bez_promene"
-        datum_promene = stara_baza.get("datum_promene")
-
-        prva_cena = stara_baza.get("prva_cena", cena)
-        najmanja_cena = stara_baza.get("najmanja_cena", cena)
-        broj_promena = stara_baza.get("broj_promena", 0)
-        ukupno_snizenje = stara_baza.get("ukupno_snizenje", 0)
+        tip = "bez_promene"
 
         if stara_cena and cena:
             if cena < stara_cena:
-                prethodna_cena = stara_cena
                 promena = stara_cena - cena
-                promena_tip = "snizenje"
-                datum_promene = sada
-                broj_promena += 1
-                ukupno_snizenje += promena
+                tip = "snizenje"
 
                 snizenja.append({
                     "url": url,
                     "label": label,
                     "stara": stara_cena,
                     "nova": cena,
-                    "razlika": promena,
+                    "razlika": promena
                 })
 
             elif cena > stara_cena:
-                prethodna_cena = stara_cena
                 promena = cena - stara_cena
-                promena_tip = "povecanje"
-                datum_promene = sada
-                broj_promena += 1
-
-        if cena and najmanja_cena:
-            najmanja_cena = min(cena, najmanja_cena)
+                tip = "povecanje"
 
         baza[url] = {
             "label": label,
-            "cena": cena if cena is not None else stara_baza.get("cena"),
-            "prva_cena": prva_cena,
-            "najmanja_cena": najmanja_cena,
-            "broj_promena": broj_promena,
-            "ukupno_snizenje": ukupno_snizenje,
-            "slika": slika or stara_baza.get("slika"),
-            "prethodna_cena": prethodna_cena,
-            "promena": promena,
-            "promena_tip": promena_tip,
-            "datum_promene": datum_promene,
+            "cena": cena,
+            "slika": slika,
             "aktivan": True,
-            "problem_cena": problem_cena,
-            "poslednja_provera": sada
+            "prethodna_cena": stara_cena,
+            "promena": promena,
+            "promena_tip": tip,
+            "poslednja_provera": sada,
+            "score": score   # ⭐ AKTIVNO
         }
 
         time.sleep(PAUZA)
 
     sacuvaj_bazu(baza)
-
-    posalji_email(snizenja)
-    posalji_upozorenja(upozorenja)
 
     print("Gotovo.")
 
