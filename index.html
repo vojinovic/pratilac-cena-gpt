@@ -5,9 +5,13 @@ let DATA = {};
 let FILTER = "all";
 
 async function load(){
-    const r = await fetch(API + "/data");
-    DATA = await r.json();
-    render();
+    try {
+        const r = await fetch(API + "/data");
+        DATA = await r.json();
+        render();
+    } catch (e) {
+        console.error("API error:", e);
+    }
 }
 
 function setFilter(f){
@@ -16,8 +20,8 @@ function setFilter(f){
     document.querySelectorAll(".filter-btn")
         .forEach(b => b.classList.remove("active"));
 
-    document.querySelector(`[data-filter="${f}"]`)
-        .classList.add("active");
+    const activeBtn = document.querySelector(`[data-filter="${f}"]`);
+    if (activeBtn) activeBtn.classList.add("active");
 
     render();
 }
@@ -31,9 +35,9 @@ function render(){
     let list = oglasi.filter(o => {
         const c = cene[o.url] || {};
 
-        if(FILTER === "active") return c.aktivan !== false;
-        if(FILTER === "inactive") return c.aktivan === false;
-        if(FILTER === "changes") return c.prethodna_cena;
+        if (FILTER === "active") return c.aktivan !== false;
+        if (FILTER === "inactive") return c.aktivan === false;
+        if (FILTER === "changes") return c.prethodna_cena;
 
         return true;
     });
@@ -44,31 +48,32 @@ function render(){
     });
 
     // =========================
-    // 🔥 TOP 3 DEALS
+    // 🔥 TOP 3 DEALS (SAFE)
     // =========================
-    const top3 = list.slice(0, 3);
     const topContainer = document.getElementById("topDeals");
 
     if (topContainer) {
+        const top3 = list.slice(0, 3);
         topContainer.innerHTML = "";
 
         top3.forEach(o => {
             const c = cene[o.url] || {};
             const score = c.score || 0;
 
+            let badge = "⚪";
+            if (score >= 80) badge = "🔥";
+            else if (score >= 60) badge = "🟢";
+            else if (score >= 40) badge = "🟡";
+            else badge = "🔴";
+
             const card = document.createElement("div");
             card.className = "top-card";
 
-            let badge = "⚪";
-            if(score >= 80) badge = "🔥";
-            else if(score >= 60) badge = "🟢";
-            else if(score >= 40) badge = "🟡";
-            else badge = "🔴";
-
             card.innerHTML = `
                 <div class="badge">BEST DEAL</div>
+
                 <img src="${c.slika || ""}" />
-                
+
                 <div class="title">
                     ${o.label || "Oglas"} ${badge}
                 </div>
@@ -92,17 +97,19 @@ function render(){
     // FULL LIST
     // =========================
     const container = document.getElementById("list");
+
+    if (!container) return;
+
     container.innerHTML = "";
 
     list.forEach(o => {
         const c = cene[o.url] || {};
-
         const score = c.score || 0;
 
         let badge = "⚪";
-        if(score >= 80) badge = "🔥";
-        else if(score >= 60) badge = "🟢";
-        else if(score >= 40) badge = "🟡";
+        if (score >= 80) badge = "🔥";
+        else if (score >= 60) badge = "🟢";
+        else if (score >= 40) badge = "🟡";
         else badge = "🔴";
 
         const div = document.createElement("div");
@@ -110,7 +117,7 @@ function render(){
 
         div.innerHTML = `
             <img src="${c.slika || ""}" />
-            
+
             <div class="title">
                 ${o.label || "Oglas"} ${badge}
             </div>
