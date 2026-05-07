@@ -261,7 +261,7 @@ let CURRENT_FILTER = "all";
 let GLOBAL_DATA = null;
 
 function formatCena(cena){
-    if(!cena) return "N/A";
+    if(cena === null || cena === undefined) return "N/A";
     return new Intl.NumberFormat("sr-RS").format(cena) + " €";
 }
 
