@@ -1,66 +1,165 @@
+<!-- index.html -->
+
 <!DOCTYPE html>
-<html>
+<html lang="sr">
 <head>
-    <title>Pracenje Oglasa</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <style>
-        body { font-family: Arial; background:#f6f6f6; }
+<title>Pracenje oglasa</title>
 
-        #topDeals, #list {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 15px;
-            padding: 20px;
-        }
+<style>
 
-        .card, .top-card {
-            background: white;
-            border-radius: 10px;
-            padding: 10px;
-            border: 2px solid orange;
-        }
+body{
+    font-family: Arial;
+    background:#f5f5f5;
+    margin:0;
+    padding:30px;
+}
 
-        img {
-            width: 100%;
-            height: 180px;
-            object-fit: cover;
-            border-radius: 8px;
-        }
+h1{
+    margin-bottom:20px;
+}
 
-        .no-img {
-            height: 180px;
-            display:flex;
-            align-items:center;
-            justify-content:center;
-            background:#eee;
-        }
+#topDeals,
+#list{
+    display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(320px,1fr));
+    gap:20px;
+}
 
-        .badge { color:red; font-weight:bold; }
-    </style>
+.card,
+.top-card{
+    background:white;
+    border-radius:14px;
+    overflow:hidden;
+    box-shadow:0 2px 10px rgba(0,0,0,0.08);
+    padding:14px;
+}
+
+.top-card{
+    border:2px solid orange;
+}
+
+img{
+    width:100%;
+    height:220px;
+    object-fit:cover;
+    border-radius:10px;
+}
+
+.no-img{
+    width:100%;
+    height:220px;
+    background:#eee;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    border-radius:10px;
+}
+
+.title{
+    font-size:26px;
+    font-weight:bold;
+    margin-top:10px;
+}
+
+.price{
+    font-size:34px;
+    font-weight:bold;
+    margin-top:10px;
+}
+
+.meta{
+    margin-top:10px;
+    color:#666;
+    line-height:1.5;
+}
+
+.date{
+    margin-top:10px;
+    color:#999;
+    font-size:14px;
+}
+
+.badge{
+    color:red;
+    font-weight:bold;
+    margin-bottom:10px;
+}
+
+.filters{
+    display:flex;
+    gap:10px;
+    margin-bottom:30px;
+}
+
+button{
+    padding:10px 16px;
+    border:none;
+    border-radius:8px;
+    cursor:pointer;
+}
+
+button.active{
+    background:black;
+    color:white;
+}
+
+</style>
 </head>
 
 <body>
 
-<h2>🚗 Praceni oglasi</h2>
+<h1>🚗 Praceni oglasi</h1>
 
-<!-- 🔥 OVO JE KLJUČ -->
+<div class="filters">
+    <button class="filter-btn active" onclick="setFilter('all')">Svi</button>
+    <button class="filter-btn" onclick="setFilter('active')">Aktivni</button>
+    <button class="filter-btn" onclick="setFilter('inactive')">Nestali</button>
+    <button class="filter-btn" onclick="setFilter('changes')">Sa promenom</button>
+</div>
+
 <div id="topDeals"></div>
+
+<br><br>
+
 <div id="list"></div>
 
 <script>
+
 const API = "https://pratilac-cena-api.vojinovic82.workers.dev";
 
 let DATA = {};
+let FILTER = "all";
 
 async function load(){
-    const r = await fetch(API + "/data");
-    DATA = await r.json();
-    render();
+
+    try{
+
+        const r = await fetch(API + "/data");
+
+        DATA = await r.json();
+
+        render();
+
+    }catch(e){
+
+        console.error(e);
+
+    }
 }
 
-function img(src){
-    if(!src) return `<div class="no-img">No Image</div>`;
-    return `<img src="${src}" onerror="this.src='https://via.placeholder.com/400x250'">`;
+function setFilter(f){
+
+    FILTER = f;
+
+    document.querySelectorAll(".filter-btn")
+        .forEach(b => b.classList.remove("active"));
+
+    event.target.classList.add("active");
+
+    render();
 }
 
 function render(){
@@ -68,52 +167,130 @@ function render(){
     const oglasi = DATA?.oglasi || [];
     const cene = DATA?.cene || {};
 
-    const list = oglasi.sort((a,b)=>
-        (cene[b.url]?.score||0)-(cene[a.url]?.score||0)
-    );
+    let list = oglasi.filter(o => {
 
-    // TOP 3
+        const c = cene[o.url] || {};
+
+        if(FILTER === "active") return c.aktivan !== false;
+
+        if(FILTER === "inactive") return c.aktivan === false;
+
+        if(FILTER === "changes") return c.prethodna_cena;
+
+        return true;
+    });
+
+    list.sort((a,b)=>{
+
+        return (cene[b.url]?.score || 0)
+            - (cene[a.url]?.score || 0);
+
+    });
+
+    // TOP DEALS
+
     const top = document.getElementById("topDeals");
+
     top.innerHTML = "";
 
     list.slice(0,3).forEach(o=>{
-        const c = cene[o.url]||{};
+
+        const c = cene[o.url] || {};
+
         const div = document.createElement("div");
-        div.className="top-card";
+
+        div.className = "top-card";
 
         div.innerHTML = `
+
             <div class="badge">🔥 BEST DEAL</div>
-            ${img(c.slika)}
-            <h3>${o.label}</h3>
-            <b>${c.cena} €</b><br>
-            Score: ${c.score||0}
+
+            ${
+                c.slika
+                ? `<img src="${c.slika}">`
+                : `<div class="no-img">No image</div>`
+            }
+
+            <div class="title">
+                ${o.label || "Oglas"}
+            </div>
+
+            <div class="price">
+                ${c.cena || "N/A"} €
+            </div>
+
+            <div class="meta">
+                Score: ${c.score || 0}/100
+            </div>
+
         `;
 
         top.appendChild(div);
+
     });
 
-    // LIST
+    // FULL LIST
+
     const container = document.getElementById("list");
-    container.innerHTML="";
+
+    container.innerHTML = "";
 
     list.forEach(o=>{
-        const c = cene[o.url]||{};
+
+        const c = cene[o.url] || {};
+
+        let badge = "🔴";
+
+        if(c.score >= 80) badge = "🔥";
+        else if(c.score >= 60) badge = "🟢";
+        else if(c.score >= 40) badge = "🟡";
+
         const div = document.createElement("div");
-        div.className="card";
+
+        div.className = "card";
 
         div.innerHTML = `
-            ${img(c.slika)}
-            <h4>${o.label}</h4>
-            <b>${c.cena} €</b><br>
-            Score: ${c.score||0}<br>
-            <a href="${o.url}" target="_blank">Otvori</a>
+
+            ${
+                c.slika
+                ? `<img src="${c.slika}">`
+                : `<div class="no-img">No image</div>`
+            }
+
+            <div class="title">
+                ${o.label || "Oglas"} ${badge}
+            </div>
+
+            <div class="price">
+                ${c.cena || "N/A"} €
+            </div>
+
+            <div class="meta">
+                Prva: ${c.prva_cena || "N/A"} €<br>
+                Promena: ${c.promena || 0} €<br>
+                Score: ${c.score || 0}/100
+            </div>
+
+            <div class="date">
+                ${c.poslednja_provera || "-"}
+            </div>
+
+            <br>
+
+            <a href="${o.url}" target="_blank">
+                Otvori
+            </a>
+
         `;
 
         container.appendChild(div);
+
     });
+
 }
 
 load();
+
 </script>
 
 </body>
