@@ -194,7 +194,7 @@ function formatCena(cena){
 }
 
 async function ucitaj(){
-    const res = await fetch(API);
+    const res = await fetch(API + "/data");
 
     const data = await res.json();
 
