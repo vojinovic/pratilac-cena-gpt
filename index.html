@@ -220,7 +220,7 @@
       wrap.innerHTML = `<div class="empty">Učitavanje...</div>`;
 
       try {
-        const res = await fetch(API);
+        const res = await fetch(API + "/data");
         const data = await res.json();
 
         render(data);
