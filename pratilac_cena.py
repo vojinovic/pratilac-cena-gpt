@@ -19,7 +19,7 @@ PAUZA = 4
 
 HEADERS = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36",
-    "Accept-Language": "en-US,en;q=0.9",
+    "Accept-Language": "sr-RS,sr;q=0.9,en-US;q=0.8,en;q=0.7",
     "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
     "Connection": "keep-alive",
 }
@@ -42,36 +42,97 @@ def sacuvaj_bazu(baza):
         json.dump(baza, f, ensure_ascii=False, indent=2)
 
 
-def izvuci_cenu(soup):
+def normalizuj_cenu(text):
+    if not text:
+        return None
+
+    text = str(text)
+
+    patterns = [
+        r"([\d\.\s]{4,})\s*€",
+        r"([\d\.\s]{4,})\s*EUR",
+        r'"price"\s*:\s*"?([\d\.]+)"?',
+        r'"amount"\s*:\s*"?([\d\.]+)"?',
+        r'"priceAmount"\s*:\s*"?([\d\.]+)"?',
+    ]
+
+    for pattern in patterns:
+        match = re.search(pattern, text, re.IGNORECASE)
+
+        if match:
+            cifre = re.sub(r"[^\d]", "", match.group(1))
+
+            if cifre:
+                cena = int(cifre)
+
+                if 1000 <= cena <= 300000:
+                    return cena
+
+    return None
+
+
+def izvuci_cenu(soup, html):
     selektori = [
         {"class": "price-box__price"},
-        {"itemprop": "price"},
+        {"class": "priceBox"},
         {"class": "price"},
+        {"itemprop": "price"},
+        {"property": "product:price:amount"},
+        {"property": "og:price:amount"},
+        {"name": "price"},
     ]
 
     for sel in selektori:
         el = soup.find(attrs=sel)
 
         if el:
-            cifre = re.sub(r"[^\d]", "", el.get_text(strip=True))
+            cena = normalizuj_cenu(el.get("content") or el.get_text(" ", strip=True))
 
-            if cifre:
-                return int(cifre)
+            if cena:
+                return cena
+
+    meta_tags = soup.find_all("meta")
+
+    for meta in meta_tags:
+        content = meta.get("content")
+
+        cena = normalizuj_cenu(content)
+
+        if cena:
+            return cena
+
+    scripts = soup.find_all("script")
+
+    for script in scripts:
+        text = script.string or script.get_text(" ", strip=True)
+
+        cena = normalizuj_cenu(text)
+
+        if cena:
+            return cena
+
+    cena = normalizuj_cenu(html)
+
+    if cena:
+        return cena
 
     return None
 
 
 def proveri_oglas(url):
     try:
-        resp = requests.get(url, headers=HEADERS, timeout=15)
+        resp = requests.get(url, headers=HEADERS, timeout=20)
         resp.raise_for_status()
 
-    except Exception:
+    except Exception as e:
+        print(f"Greška pri otvaranju oglasa: {e}")
         return None, False
 
     soup = BeautifulSoup(resp.text, "html.parser")
 
-    cena = izvuci_cenu(soup)
+    cena = izvuci_cenu(soup, resp.text)
+
+    print(f"Pronađena cena: {cena}")
 
     return cena, True
 
