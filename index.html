@@ -1,5 +1,4 @@
 <script>
-    console.log("JS STARTED");
 const API = "https://pratilac-cena-api.vojinovic82.workers.dev";
 
 let DATA = {};
@@ -32,9 +31,7 @@ function render(){
     const oglasi = DATA?.oglasi || [];
     const cene = DATA?.cene || {};
 
-    // =========================
     // 1. FILTER
-    // =========================
     let list = oglasi.filter(o => {
         const c = cene[o.url] || {};
 
@@ -45,15 +42,13 @@ function render(){
         return true;
     });
 
-    // =========================
     // 2. SORT
-    // =========================
     list.sort((a, b) => {
         return (cene[b.url]?.score || 0) - (cene[a.url]?.score || 0);
     });
 
     // =========================
-    // 🔥 TOP 3 (SAFE + NO CRASH)
+    // 🔥 TOP 3 DEALS
     // =========================
     const topContainer = document.getElementById("topDeals");
 
@@ -76,6 +71,7 @@ function render(){
 
             card.innerHTML = `
                 <div class="badge">BEST DEAL</div>
+
                 <img src="${c.slika || ""}" />
 
                 <div class="title">
@@ -150,6 +146,6 @@ function render(){
     });
 }
 
-// init (SA SAFETY DELAY - bitno za GitHub Pages)
+// INIT (safe)
 window.addEventListener("DOMContentLoaded", load);
 </script>
