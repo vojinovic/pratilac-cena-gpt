@@ -8,7 +8,7 @@
     "promena_tip": "bez_promene",
     "datum_promene": null,
     "aktivan": true,
-    "poslednja_provera": "07.05.2026 13:45"
+    "poslednja_provera": "07.05.2026 13:48"
   },
   "https://www.polovniautomobili.com/auto-oglasi/28877577/volvo-xc60-20-awd?attp=p9_pv0_pc0_pl11_plv0": {
     "label": "Volvo XC60 AWD",
@@ -19,7 +19,7 @@
     "promena_tip": "bez_promene",
     "datum_promene": null,
     "aktivan": true,
-    "poslednja_provera": "07.05.2026 13:45"
+    "poslednja_provera": "07.05.2026 13:48"
   },
   "https://www.polovniautomobili.com/auto-oglasi/29005264/volvo-xc60-4x4-d4kupljovde1vl?attp=p9_pv0_pc0_pl11_plv0": {
     "label": "Volvo smesna boja",
@@ -30,6 +30,17 @@
     "promena_tip": "bez_promene",
     "datum_promene": null,
     "aktivan": true,
-    "poslednja_provera": "07.05.2026 13:45"
+    "poslednja_provera": "07.05.2026 13:48"
+  },
+  "https://www.polovniautomobili.com/auto-oglasi/28451802/volvo-xc60-20b4mhev-momentum?attp=p9_pv0_pc0_pl11_plv0": {
+    "label": "Volvo XC60 2.0B4/MHEV MOMENTUM",
+    "cena": 27900,
+    "slika": "https://gcdn.polovniautomobili.com/user-images/thumbs/2845/28451802/cbb46d95a253-1920x1080-dw.jpg",
+    "prethodna_cena": null,
+    "promena": 0,
+    "promena_tip": "bez_promene",
+    "datum_promene": null,
+    "aktivan": true,
+    "poslednja_provera": "07.05.2026 13:48"
   }
 }
