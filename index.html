@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pratilac cena</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #f3f4f6;
+      margin: 0;
+      padding: 30px 15px;
+      color: #111827;
+    }
+
+    .wrap {
+      max-width: 760px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      margin-bottom: 4px;
+      font-size: 28px;
+    }
+
+    .subtitle {
+      color: #6b7280;
+      margin-bottom: 25px;
+    }
+
+    .card {
+      background: white;
+      border: 1px solid #e5e7eb;
+      border-radius: 16px;
+      padding: 20px;
+      margin-bottom: 18px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    }
+
+    label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 6px;
+      color: #374151;
+    }
+
+    input {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 12px 14px;
+      border-radius: 10px;
+      border: 1px solid #d1d5db;
+      font-size: 15px;
+      margin-bottom: 12px;
+    }
+
+    button {
+      border: 0;
+      border-radius: 10px;
+      padding: 10px 15px;
+      font-weight: 700;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    .primary {
+      background: #4f46e5;
+      color: white;
+    }
+
+    .danger {
+      background: #fee2e2;
+      color: #dc2626;
+    }
+
+    .muted {
+      color: #6b7280;
+      font-size: 14px;
+    }
+
+    .item {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: flex-start;
+      border: 1px solid #e5e7eb;
+      background: #f9fafb;
+      padding: 14px;
+      border-radius: 12px;
+      margin-bottom: 10px;
+    }
+
+    .title {
+      font-weight: 700;
+      margin-bottom: 5px;
+    }
+
+    .title a {
+      color: #4f46e5;
+      text-decoration: none;
+    }
+
+    .price {
+      color: #15803d;
+      font-weight: 700;
+    }
+
+    .status {
+      padding: 12px 14px;
+      border-radius: 10px;
+      margin-top: 12px;
+      font-size: 14px;
+    }
+
+    .success {
+      background: #ecfdf5;
+      color: #047857;
+      border: 1px solid #a7f3d0;
+    }
+
+    .error {
+      background: #fef2f2;
+      color: #b91c1c;
+      border: 1px solid #fecaca;
+    }
+
+    .info {
+      background: #eff6ff;
+      color: #1d4ed8;
+      border: 1px solid #bfdbfe;
+    }
+
+    .top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 14px;
+    }
+
+    .count {
+      background: #ede9fe;
+      color: #6d28d9;
+      padding: 3px 9px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 700;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>🚗 Pratilac cena</h1>
+    <div class="subtitle">Dodaj, prati i briši oglase bez GitHub tokena u browseru.</div>
+
+    <div class="card">
+      <label>URL oglasa</label>
+      <input id="url" placeholder="https://www.polovniautomobili.com/auto-oglasi/..." />
+
+      <label>Naziv oglasa</label>
+      <input id="label" placeholder="npr. Volvo XC60 beli iz Novog Sada" />
+
+      <button class="primary" onclick="dodajOglas()">Dodaj oglas</button>
+
+      <div id="status"></div>
+    </div>
+
+    <div class="card">
+      <div class="top">
+        <strong>Praćeni oglasi</strong>
+        <span class="count" id="count">0</span>
+      </div>
+
+      <div id="lista">
+        <div class="muted">Učitavanje...</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const API = "https://pratilac-cena-api.vojinovic82.workers.dev";
+
+    let oglasi = [];
+    let cene = {};
+
+    function status(msg, type = "info") {
+      document.getElementById("status").innerHTML =
+        `<div class="status ${type}">${msg}</div>`;
+    }
+
+    function formatCena(cena) {
+      if (!cena) return "Cena nepoznata";
+      return cena.toLocaleString("sr-RS") + " €";
+    }
+
+    async function ucitaj() {
+      try {
+        const res = await fetch(API + "/data");
+        const data = await res.json();
+
+        oglasi = data.oglasi || [];
+        cene = data.cene || {};
+
+        render();
+      } catch (e) {
+        document.getElementById("lista").innerHTML =
+          `<div class="status error">Greška pri učitavanju: ${e.message}</div>`;
+      }
+    }
+
+    function render() {
+      document.getElementById("count").textContent = oglasi.length;
+
+      if (!oglasi.length) {
+        document.getElementById("lista").innerHTML =
+          `<div class="muted">Nema dodatih oglasa.</div>`;
+        return;
+      }
+
+      document.getElementById("lista").innerHTML = oglasi.map(oglas => {
+        const info = cene[oglas.url] || {};
+        const cena = info.cena;
+        const vreme = info.poslednja_provera || "";
+        const aktivan = info.aktivan !== false;
+
+        return `
+          <div class="item">
+            <div>
+              <div class="title">
+                <a href="${oglas.url}" target="_blank">${oglas.label}</a>
+              </div>
+              <div class="price">${formatCena(cena)}</div>
+              <div class="muted">${vreme ? "Poslednja provera: " + vreme : "Još nije provereno"}</div>
+              ${!aktivan ? `<div class="muted" style="color:#dc2626;">Oglas nedostupan</div>` : ""}
+            </div>
+            <button class="danger" onclick="obrisiOglas('${encodeURIComponent(oglas.url)}')">Obriši</button>
+          </div>
+        `;
+      }).join("");
+    }
+
+    async function dodajOglas() {
+      const url = document.getElementById("url").value.trim();
+      const label = document.getElementById("label").value.trim();
+
+      if (!url.includes("polovniautomobili.com")) {
+        status("Unesi validan URL sa polovniautomobili.com", "error");
+        return;
+      }
+
+      if (!label) {
+        status("Unesi naziv oglasa da znaš koji je koji.", "error");
+        return;
+      }
+
+      status("Dodajem oglas...", "info");
+
+      try {
+        const res = await fetch(API + "/add", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ url, label })
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          status(data.error || "Greška pri dodavanju.", "error");
+          return;
+        }
+
+        document.getElementById("url").value = "";
+        document.getElementById("label").value = "";
+
+        status("Oglas dodat. Cena će se pojaviti posle sledeće provere.", "success");
+        await ucitaj();
+      } catch (e) {
+        status("Greška: " + e.message, "error");
+      }
+    }
+
+    async function obrisiOglas(encodedUrl) {
+      const url = decodeURIComponent(encodedUrl);
+
+      if (!confirm("Da li želiš da obrišeš ovaj oglas?")) return;
+
+      status("Brišem oglas...", "info");
+
+      try {
+        const res = await fetch(API + "/delete", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ url })
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          status(data.error || "Greška pri brisanju.", "error");
+          return;
+        }
+
+        status("Oglas obrisan.", "success");
+        await ucitaj();
+      } catch (e) {
+        status("Greška: " + e.message, "error");
+      }
+    }
+
+    ucitaj();
+  </script>
+</body>
+</html>
