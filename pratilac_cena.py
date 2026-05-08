@@ -46,7 +46,6 @@ def sacuvaj_bazu(baza):
 
 
 def parsiraj_broj(text):
-    """Iz string-a kao '34.990 €' ili '31.950 €' vrati int 34990."""
     if not text:
         return None
 
@@ -64,14 +63,6 @@ def parsiraj_broj(text):
 
 
 def izvuci_cenu(soup):
-    """
-    Polovniautomobili struktura:
-    - Bez popusta: <span class="priceClassified regularPriceColor">34.990 €</span>
-    - Sa popustom: <span class="priceClassified discountedPriceColor">31.950 €</span>
-                   plus <div class="discount regularPriceColor">34.950 €</div> (precrtana)
-    
-    Uvek uzimamo priceClassified jer je to AKTUELNA cena.
-    """
     el = soup.find("span", class_="priceClassified")
 
     if el:
@@ -121,22 +112,9 @@ def izvuci_naziv(soup):
 
 
 def extract_model(url):
-    """
-    Izvlači model iz polovniautomobili URL-a.
-    
-    URL format: https://www.polovniautomobili.com/auto-oglasi/29005264/volvo-xc60-4x4-d4kupljovde1vl?...
-    
-    Logika:
-    1. Uzmi deo posle ID-a oglasa
-    2. Ukloni query string (?...)
-    3. Uzmi prve dve reči odvojene crticom (brand + model)
-    
-    Vraća: 'volvo-xc60', 'skoda-kodiaq', 'bmw-x5', itd.
-    """
     if not url:
         return "unknown"
 
-    # Uzmi deo posle /auto-oglasi/<id>/
     match = re.search(r"/auto-oglasi/\d+/([^/?#]+)", url)
 
     if not match:
@@ -144,11 +122,9 @@ def extract_model(url):
 
     slug = match.group(1).lower()
 
-    # Razdvoji po crticama
     delovi = slug.split("-")
 
     if len(delovi) >= 2:
-        # Brand + model (npr. "volvo-xc60", "skoda-kodiaq", "bmw-x5")
         return delovi[0] + "-" + delovi[1]
 
     if len(delovi) == 1:
@@ -184,7 +160,6 @@ def calculate_score(
 
     score = 50
 
-    # MARKET INTELLIGENCE
     if market_avg and cena:
         diff_percent = ((market_avg - cena) / market_avg) * 100
 
@@ -199,7 +174,6 @@ def calculate_score(
         elif diff_percent <= -10:
             score -= 10
 
-    # OPREMA
     plus_keywords = {
         "awd": 5,
         "4x4": 5,
@@ -222,7 +196,6 @@ def calculate_score(
         if keyword in text:
             score += points
 
-    # STANJE
     stanje_plus = {
         "prvi vlasnik": 10,
         "1 vlasnik": 10,
@@ -251,7 +224,6 @@ def calculate_score(
         if keyword in text:
             score += points
 
-    # TREND CENE
     if ukupno_snizenje >= 2000:
         score += 12
     elif ukupno_snizenje >= 1000:
@@ -265,7 +237,6 @@ def calculate_score(
     if promena_tip == "poskupljenje":
         score -= 8
 
-    # LIMIT
     if score > 100:
         score = 100
 
@@ -279,6 +250,9 @@ def proveri_oglas(url):
     try:
         response = requests.get(url, headers=HEADERS, timeout=20)
         response.raise_for_status()
+
+        # FIX: prisilno postavi UTF-8 jer requests pogađa Latin-1 i to lomi naše š/č/ć/ž
+        response.encoding = "utf-8"
 
     except Exception as e:
         print("Greška:", e)
@@ -308,14 +282,15 @@ def main():
 
         stara = baza.get(url, {})
 
+        # Custom label korisnika -> ako nema, sveži naziv iz HTML -> tek onda stari
+        # (sveži pre starog jer je možda ranije bio polomljen UTF-8)
         label = (
             oglas.get("label")
-            or stara.get("label")
             or naziv
+            or stara.get("label")
             or "Oglas"
         )
 
-        # Model se sad izvlači iz URL-a, ne iz label-a
         model = extract_model(url)
 
         if not aktivan:
@@ -386,6 +361,7 @@ def main():
         print("MARKET AVG:", market_avg)
         print("CENA:", cena)
         print("SCORE:", score)
+        print("LABEL:", label)
 
         baza[url] = {
             "label": label,
