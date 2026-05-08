@@ -141,6 +141,18 @@ button.active{
     margin-bottom:10px;
 }
 
+.problem-badge{
+    background:#fff3cd;
+    color:#856404;
+    border:1px solid #ffeaa7;
+    padding:6px 10px;
+    border-radius:8px;
+    font-size:13px;
+    font-weight:bold;
+    margin-bottom:10px;
+    display:inline-block;
+}
+
 .section-title{
     margin:35px 0 15px;
     font-size:22px;
@@ -170,6 +182,7 @@ a{
     <button class="filter-btn" onclick="setFilter('active', event)">Aktivni</button>
     <button class="filter-btn" onclick="setFilter('inactive', event)">Nestali</button>
     <button class="filter-btn" onclick="setFilter('changes', event)">Sa promenom</button>
+    <button class="filter-btn" onclick="setFilter('problem', event)">Problem</button>
 </div>
 
 <div id="topDeals"></div>
@@ -196,7 +209,8 @@ async function load(){
 }
 
 function getName(o, c){
-    return c.label || o.label || "Oglas";
+    // Korisnikov custom label ima prioritet
+    return o.label || c.label || "Oglas";
 }
 
 function formatPrice(value){
@@ -307,8 +321,13 @@ function renderCard(o, c, top=false){
     else if(score >= 60) badge = "🟢";
     else if(score >= 40) badge = "🟡";
 
+    const problemBadge = c.problem_cena
+        ? `<div class="problem-badge">⚠️ Cena nije ažurirana u poslednjoj proveri</div>`
+        : "";
+
     return `
         ${top ? `<div class="badge">🔥 BEST DEAL</div>` : ""}
+        ${problemBadge}
 
         ${imageBlock(c.slika)}
 
@@ -349,6 +368,7 @@ function render(){
         if(FILTER === "active") return c.aktivan !== false;
         if(FILTER === "inactive") return c.aktivan === false;
         if(FILTER === "changes") return c.prethodna_cena;
+        if(FILTER === "problem") return c.problem_cena === true;
 
         return true;
     });
@@ -360,13 +380,16 @@ function render(){
     const top = document.getElementById("topDeals");
     top.innerHTML = "";
 
-    list.slice(0,3).forEach(o=>{
-        const c = cene[o.url] || {};
-        const div = document.createElement("div");
-        div.className = "top-card";
-        div.innerHTML = renderCard(o, c, true);
-        top.appendChild(div);
-    });
+    // Top 3 prikazujemo samo kad smo na "all" filteru
+    if(FILTER === "all"){
+        list.slice(0,3).forEach(o=>{
+            const c = cene[o.url] || {};
+            const div = document.createElement("div");
+            div.className = "top-card";
+            div.innerHTML = renderCard(o, c, true);
+            top.appendChild(div);
+        });
+    }
 
     const container = document.getElementById("list");
     container.innerHTML = "";
