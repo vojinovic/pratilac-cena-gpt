@@ -36,6 +36,7 @@ input, select{
     border-radius:8px;
     font-size:14px;
     box-sizing:border-box;
+    background:white;
 }
 
 button{
@@ -52,7 +53,6 @@ button.active{
     color:white;
 }
 
-/* SEARCH SEKCIJA */
 .search-box{
     background:white;
     padding:20px;
@@ -81,13 +81,39 @@ button.active{
     cursor:wait;
 }
 
-.search-info{
+.search-info-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
     margin:15px 0 10px;
+    flex-wrap:wrap;
+    gap:10px;
+}
+
+.search-info{
     color:#666;
     font-size:14px;
 }
 
-/* AUTOCOMPLETE */
+.sort-control{
+    display:flex;
+    align-items:center;
+    gap:8px;
+}
+
+.sort-control label{
+    font-size:14px;
+    color:#666;
+    white-space:nowrap;
+}
+
+.sort-control select{
+    width:auto;
+    min-width:180px;
+    padding:8px 10px;
+    font-size:14px;
+}
+
 .autocomplete{
     position:relative;
 }
@@ -150,11 +176,17 @@ button.active{
     padding:10px;
     display:flex;
     flex-direction:column;
+    position:relative;
 }
 
 .search-card.tracked{
     border:2px solid #28a745;
     background:#f8fff8;
+}
+
+.search-card.score-fire{
+    border:2px solid #ff6b35;
+    background:#fff8f0;
 }
 
 .search-card .thumb{
@@ -164,12 +196,25 @@ button.active{
     border-radius:6px;
     overflow:hidden;
     margin-bottom:8px;
+    position:relative;
 }
 
 .search-card .thumb img{
     width:100%;
     height:100%;
     object-fit:cover;
+}
+
+.score-badge{
+    position:absolute;
+    top:8px;
+    right:8px;
+    background:rgba(0,0,0,0.7);
+    color:white;
+    padding:4px 8px;
+    border-radius:6px;
+    font-size:13px;
+    font-weight:bold;
 }
 
 .search-card .name{
@@ -199,6 +244,46 @@ button.active{
     color:#856404;
     font-size:11px;
     padding:2px 6px;
+    border-radius:4px;
+    display:inline-block;
+    margin-bottom:6px;
+    margin-right:4px;
+}
+
+.search-card .age-tag{
+    font-size:11px;
+    padding:2px 6px;
+    border-radius:4px;
+    display:inline-block;
+    margin-bottom:6px;
+    margin-right:4px;
+}
+
+.age-tag.fresh{
+    background:#d4edda;
+    color:#155724;
+}
+
+.age-tag.normal{
+    background:#e2e3e5;
+    color:#495057;
+}
+
+.age-tag.stale{
+    background:#fff3cd;
+    color:#856404;
+}
+
+.age-tag.old{
+    background:#f8d7da;
+    color:#721c24;
+}
+
+.outlier-warning{
+    background:#fff3cd;
+    color:#856404;
+    font-size:11px;
+    padding:3px 6px;
     border-radius:4px;
     display:inline-block;
     margin-bottom:6px;
@@ -453,7 +538,19 @@ button.active{
         <button class="search-btn" id="searchBtn" onclick="doSearch()">Pretraži</button>
     </div>
 
-    <div id="searchInfo" class="search-info"></div>
+    <div class="search-info-row">
+        <div id="searchInfo" class="search-info"></div>
+        <div class="sort-control" id="sortControl" style="display:none;">
+            <label>Sortiraj:</label>
+            <select id="sortSelect" onchange="renderSearch()">
+                <option value="newest">Najnoviji</option>
+                <option value="score">Najveći score</option>
+                <option value="price">Najjeftiniji</option>
+                <option value="km">Najmanje km</option>
+                <option value="year">Najmlađi godište</option>
+            </select>
+        </div>
+    </div>
 
     <div id="searchResults"></div>
 
@@ -493,6 +590,7 @@ let FILTER = "all";
 let SEARCH_DATA = null;
 let SEARCH_PARAMS = null;
 let SEARCH_PAGE = 1;
+let SEARCH_RESULTS_WITH_SCORE = [];
 
 let BRANDS = [];
 let MODELS = [];
@@ -751,7 +849,6 @@ function renderCard(o, c, top=false){
         ? `<div class="problem-badge">⚠️ Cena nije ažurirana u poslednjoj proveri</div>`
         : "";
 
-    // Specs tagovi
     const specs = [];
     if(c.godiste) specs.push(`<span class="spec-tag highlight">${c.godiste}.</span>`);
     if(c.kilometraza) specs.push(`<span class="spec-tag">${formatKm(c.kilometraza)}</span>`);
@@ -847,6 +944,214 @@ function isAlreadyTracked(url){
     return DATA.oglasi.some(o => o.url.split("?")[0] === cleanUrl);
 }
 
+// ================= SCORE LOGIKA ZA SEARCH =================
+
+function extractModelFromUrl(url){
+    if(!url) return "unknown";
+    const match = url.match(/\/auto-oglasi\/\d+\/([^/?#]+)/);
+    if(!match) return "unknown";
+    const slug = match[1].toLowerCase();
+    const parts = slug.split("-");
+    if(parts.length >= 2) return parts[0] + "-" + parts[1];
+    return parts[0] || "unknown";
+}
+
+function daysSinceRenew(renewdate){
+    if(!renewdate) return null;
+    const date = new Date(renewdate.replace(" ", "T"));
+    if(isNaN(date.getTime())) return null;
+    const now = new Date();
+    const diffMs = now - date;
+    return Math.floor(diffMs / (1000 * 60 * 60 * 24));
+}
+
+function buildHybridStats(searchResults, brandValue, modelValue){
+    // Computes market avg from search results PLUS tracked oglasi of same model
+    const cene = [];
+    const kms = [];
+    const godine = [];
+
+    // Search rezultati
+    searchResults.forEach(r => {
+        if(r.cena) cene.push(r.cena);
+        if(r.kilometraza) kms.push(r.kilometraza);
+        if(r.godina) godine.push(r.godina);
+    });
+
+    // Tvoji praćeni oglasi istog brand-modela
+    if(brandValue && modelValue && DATA?.cene){
+        const targetModel = brandValue + "-" + modelValue;
+        Object.values(DATA.cene).forEach(c => {
+            if(c.model === targetModel){
+                if(c.cena) cene.push(c.cena);
+                if(c.kilometraza) kms.push(c.kilometraza);
+                if(c.godiste) godine.push(c.godiste);
+            }
+        });
+    }
+
+    const avg = arr => arr.length > 0 ? arr.reduce((a,b)=>a+b,0) / arr.length : null;
+
+    return {
+        avgCena: avg(cene),
+        avgKm: avg(kms),
+        avgGod: avg(godine),
+        sampleSize: cene.length
+    };
+}
+
+function calculateSearchScore(result, stats){
+    const text = (result.naslov || "").toLowerCase();
+
+    let score = 50;
+    let reasons = [];
+
+    // 1. CENA vs HYBRID MARKET (±20)
+    if(stats.avgCena && result.cena){
+        const diffPercent = ((stats.avgCena - result.cena) / stats.avgCena) * 100;
+
+        if(diffPercent >= 15){
+            score += 20;
+            reasons.push(`Cena ${diffPercent.toFixed(0)}% ispod proseka (+20)`);
+        }else if(diffPercent >= 10){
+            score += 15;
+            reasons.push(`Cena ${diffPercent.toFixed(0)}% ispod proseka (+15)`);
+        }else if(diffPercent >= 5){
+            score += 8;
+            reasons.push(`Cena ${diffPercent.toFixed(0)}% ispod proseka (+8)`);
+        }else if(diffPercent <= -15){
+            score -= 20;
+            reasons.push(`Cena ${Math.abs(diffPercent).toFixed(0)}% iznad proseka (-20)`);
+        }else if(diffPercent <= -10){
+            score -= 10;
+            reasons.push(`Cena ${Math.abs(diffPercent).toFixed(0)}% iznad proseka (-10)`);
+        }
+    }
+
+    // 2. KM vs MARKET (±15)
+    if(stats.avgKm && result.kilometraza){
+        const ratio = result.kilometraza / stats.avgKm;
+
+        if(ratio <= 0.5){
+            score += 15;
+            reasons.push("Mnogo manje km od proseka (+15)");
+        }else if(ratio <= 0.75){
+            score += 8;
+            reasons.push("Manje km (+8)");
+        }else if(ratio <= 0.9){
+            score += 3;
+        }else if(ratio >= 1.5){
+            score -= 10;
+            reasons.push("Mnogo više km (-10)");
+        }else if(ratio >= 1.25){
+            score -= 5;
+            reasons.push("Više km (-5)");
+        }
+    }
+
+    // 3. GODIŠTE vs MARKET (±10)
+    if(stats.avgGod && result.godina){
+        const diff = result.godina - stats.avgGod;
+
+        if(diff >= 2){
+            score += 10;
+            reasons.push("2+ godine novije (+10)");
+        }else if(diff >= 1){
+            score += 5;
+        }else if(diff <= -2){
+            score -= 8;
+            reasons.push("2+ godine starije (-8)");
+        }else if(diff <= -1){
+            score -= 3;
+        }
+    }
+
+    // 4. OPREMA iz naslova
+    const plusKeywords = {
+        "awd": 5, "4x4": 5, "r-design": 5, "inscription": 5,
+        "momentum": 3, "sport": 4, "pano": 5, "panorama": 5,
+        "kamera": 3, "matrix": 4, "harman": 3, "bowers": 4,
+    };
+
+    for(const [kw, pts] of Object.entries(plusKeywords)){
+        if(text.includes(kw)){
+            score += pts;
+        }
+    }
+
+    // 5. STANJE - negativni signali iz naslova
+    const minusKeywords = {
+        "udaren": -25, "ostecen": -20, "oštećen": -20,
+        "hitno": -5, "zamena": -5,
+    };
+
+    for(const [kw, pts] of Object.entries(minusKeywords)){
+        if(text.includes(kw)){
+            score += pts;
+            reasons.push(`Naslov sadrži "${kw}" (${pts})`);
+        }
+    }
+
+    // 6. VREMENSKI TREND
+    const days = daysSinceRenew(result.renewdate);
+    let ageStatus = null;
+
+    if(days !== null){
+        if(days <= 7){
+            score += 5;
+            ageStatus = "fresh";
+            reasons.push("Svež oglas (+5)");
+        }else if(days <= 30){
+            ageStatus = "normal";
+        }else if(days <= 60){
+            score -= 3;
+            ageStatus = "stale";
+            reasons.push("Stoji preko mesec dana (-3)");
+        }else{
+            score -= 8;
+            ageStatus = "old";
+            reasons.push("Stoji preko 2 meseca (-8)");
+        }
+    }
+
+    // 7. OUTLIER DETECTION
+    // Ako je cena dramatično ispod proseka uz velike km ili negativne signale, sumnjivo
+    let outlier = false;
+    if(stats.avgCena && result.cena){
+        const diffPercent = ((stats.avgCena - result.cena) / stats.avgCena) * 100;
+
+        if(diffPercent >= 25){
+            // Cena je 25%+ ispod proseka
+            const hasNegative = Object.keys(minusKeywords).some(kw => text.includes(kw));
+            const highKm = stats.avgKm && result.kilometraza && (result.kilometraza / stats.avgKm) > 1.4;
+
+            if(hasNegative || highKm){
+                outlier = true;
+                reasons.push("⚠️ Outlier: previše dobro da bude istina");
+            }
+        }
+    }
+
+    // LIMIT
+    if(score > 100) score = 100;
+    if(score < 0) score = 0;
+
+    // Outlier kapira score na 65
+    if(outlier && score > 65){
+        score = 65;
+    }
+
+    return {
+        score: Math.round(score),
+        reasons,
+        ageStatus,
+        ageDays: days,
+        outlier
+    };
+}
+
+// ================= SEARCH =================
+
 async function doSearch(page = 1){
     if(!SELECTED_BRAND){
         alert("Izaberi brend iz liste.");
@@ -881,6 +1186,7 @@ async function doSearch(page = 1){
     document.getElementById("searchInfo").textContent = "";
     document.getElementById("searchResults").innerHTML = "";
     document.getElementById("searchPagination").innerHTML = "";
+    document.getElementById("sortControl").style.display = "none";
 
     try{
         const r = await fetch(API + "/search?" + params.toString());
@@ -892,6 +1198,23 @@ async function doSearch(page = 1){
         }
 
         SEARCH_DATA = data;
+
+        // Compute scores za sve rezultate jednom
+        const stats = buildHybridStats(
+            data.results,
+            SELECTED_BRAND ? SELECTED_BRAND.value : "",
+            SELECTED_MODEL ? SELECTED_MODEL.value : ""
+        );
+
+        SEARCH_RESULTS_WITH_SCORE = data.results.map(r => {
+            const scoreInfo = calculateSearchScore(r, stats);
+            return {
+                ...r,
+                ...scoreInfo,
+                _stats: stats
+            };
+        });
+
         renderSearch();
 
     }catch(e){
@@ -903,6 +1226,36 @@ async function doSearch(page = 1){
     }
 }
 
+function getSortedResults(){
+    const sortBy = document.getElementById("sortSelect").value;
+    const arr = [...SEARCH_RESULTS_WITH_SCORE];
+
+    switch(sortBy){
+        case "score":
+            arr.sort((a,b) => (b.score || 0) - (a.score || 0));
+            break;
+        case "price":
+            arr.sort((a,b) => (a.cena || Infinity) - (b.cena || Infinity));
+            break;
+        case "km":
+            arr.sort((a,b) => (a.kilometraza || Infinity) - (b.kilometraza || Infinity));
+            break;
+        case "year":
+            arr.sort((a,b) => (b.godina || 0) - (a.godina || 0));
+            break;
+        case "newest":
+        default:
+            arr.sort((a,b) => {
+                const da = a.renewdate ? new Date(a.renewdate.replace(" ", "T")).getTime() : 0;
+                const db = b.renewdate ? new Date(b.renewdate.replace(" ", "T")).getTime() : 0;
+                return db - da;
+            });
+            break;
+    }
+
+    return arr;
+}
+
 function renderSearch(){
     if(!SEARCH_DATA) return;
 
@@ -910,22 +1263,62 @@ function renderSearch(){
     const info = document.getElementById("searchInfo");
     const container = document.getElementById("searchResults");
     const pagination = document.getElementById("searchPagination");
+    const sortControl = document.getElementById("sortControl");
 
-    info.innerHTML = `Ukupno <strong>${data.total || data.count}</strong> oglasa, prikazano ${data.count} (stranica ${data.page}).`;
+    const stats = SEARCH_RESULTS_WITH_SCORE[0]?._stats;
+
+    let infoHtml = `Ukupno <strong>${data.total || data.count}</strong> oglasa, prikazano ${data.count} (stranica ${data.page}).`;
+
+    if(stats && stats.avgCena){
+        infoHtml += ` Prosek u pretrazi: <strong>${Math.round(stats.avgCena).toLocaleString("sr-RS")} €</strong>`;
+        if(stats.avgKm){
+            infoHtml += `, <strong>${Math.round(stats.avgKm).toLocaleString("sr-RS")} km</strong>`;
+        }
+        if(stats.avgGod){
+            infoHtml += `, <strong>${stats.avgGod.toFixed(1)}.</strong> godište`;
+        }
+    }
+
+    info.innerHTML = infoHtml;
+
+    sortControl.style.display = "flex";
 
     container.innerHTML = "";
 
-    data.results.forEach(r => {
+    const sorted = getSortedResults();
+
+    sorted.forEach(r => {
         const tracked = isAlreadyTracked(r.url);
+        const score = r.score || 0;
+
+        let scoreEmoji = "🔴";
+        if(score >= 80) scoreEmoji = "🔥";
+        else if(score >= 60) scoreEmoji = "🟢";
+        else if(score >= 40) scoreEmoji = "🟡";
 
         const div = document.createElement("div");
-        div.className = "search-card" + (tracked ? " tracked" : "");
+        div.className = "search-card" + (tracked ? " tracked" : "") + (score >= 80 ? " score-fire" : "");
 
         const featuredTag = r.featured ? `<span class="featured-tag">⭐ Premium</span>` : "";
 
+        const ageTagText = {
+            "fresh": `🟢 Svež (${r.ageDays}d)`,
+            "normal": `${r.ageDays}d star`,
+            "stale": `🟡 ${r.ageDays}d star`,
+            "old": `🔴 ${r.ageDays}d star`
+        };
+
+        const ageTag = r.ageStatus
+            ? `<span class="age-tag ${r.ageStatus}">${ageTagText[r.ageStatus]}</span>`
+            : "";
+
+        const outlierTag = r.outlier
+            ? `<div class="outlier-warning">⚠️ Sumnjivo dobra cena, proveri</div>`
+            : "";
+
         const thumb = r.slika
-            ? `<div class="thumb"><img src="${r.slika}" onerror="this.parentElement.innerHTML='No image'"></div>`
-            : `<div class="thumb">No image</div>`;
+            ? `<div class="thumb"><img src="${r.slika}" onerror="this.parentElement.innerHTML='No image'"><div class="score-badge">${scoreEmoji} ${score}</div></div>`
+            : `<div class="thumb">No image<div class="score-badge">${scoreEmoji} ${score}</div></div>`;
 
         const trackButton = tracked
             ? `<div class="tracked-tag">✅ Već pratiš</div>`
@@ -935,7 +1328,8 @@ function renderSearch(){
 
         div.innerHTML = `
             ${thumb}
-            ${featuredTag}
+            ${featuredTag}${ageTag}
+            ${outlierTag}
             <div class="name">${r.naslov}</div>
             <div class="price-row">${formatPrice(r.cena)}</div>
             <div class="meta">
