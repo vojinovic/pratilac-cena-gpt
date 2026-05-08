@@ -13,6 +13,13 @@ OGLASI_FAJL = "oglasi.json"
 BAZA_FAJL = "cene_oglasa.json"
 PAUZA = 4
 
+# Email pragovi za sniženja
+PRAG_PROCENT = 1.0      # 1%
+PRAG_APSOLUT = 200      # 200 evra
+
+RESEND_API_KEY = os.environ.get("RESEND_API_KEY", "")
+EMAIL_PRIMALAC = os.environ.get("EMAIL_PRIMALAC", "")
+
 HEADERS = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
     "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8",
@@ -175,21 +182,10 @@ def calculate_score(
             score -= 10
 
     plus_keywords = {
-        "awd": 5,
-        "4x4": 5,
-        "r-design": 5,
-        "inscription": 5,
-        "momentum": 3,
-        "sport": 4,
-        "pano": 5,
-        "panorama": 5,
-        "kamera": 3,
-        "hud": 4,
-        "webasto": 4,
-        "led": 3,
-        "matrix": 4,
-        "harman": 3,
-        "bowers": 4,
+        "awd": 5, "4x4": 5, "r-design": 5, "inscription": 5,
+        "momentum": 3, "sport": 4, "pano": 5, "panorama": 5,
+        "kamera": 3, "hud": 4, "webasto": 4, "led": 3,
+        "matrix": 4, "harman": 3, "bowers": 4,
     }
 
     for keyword, points in plus_keywords.items():
@@ -197,13 +193,9 @@ def calculate_score(
             score += points
 
     stanje_plus = {
-        "prvi vlasnik": 10,
-        "1 vlasnik": 10,
-        "servisna": 6,
-        "servisna knjiga": 8,
-        "bez ulaganja": 8,
-        "kupljen u srbiji": 6,
-        "garaziran": 5,
+        "prvi vlasnik": 10, "1 vlasnik": 10, "servisna": 6,
+        "servisna knjiga": 8, "bez ulaganja": 8,
+        "kupljen u srbiji": 6, "garaziran": 5,
     }
 
     for keyword, points in stanje_plus.items():
@@ -211,12 +203,8 @@ def calculate_score(
             score += points
 
     stanje_minus = {
-        "udaren": -25,
-        "ostecen": -20,
-        "oštećen": -20,
-        "hitno": -5,
-        "zamena": -5,
-        "fiksno": -3,
+        "udaren": -25, "ostecen": -20, "oštećen": -20,
+        "hitno": -5, "zamena": -5, "fiksno": -3,
         "potrebna ulaganja": -15,
     }
 
@@ -250,8 +238,6 @@ def proveri_oglas(url):
     try:
         response = requests.get(url, headers=HEADERS, timeout=20)
         response.raise_for_status()
-
-        # FIX: prisilno postavi UTF-8 jer requests pogađa Latin-1 i to lomi naše š/č/ć/ž
         response.encoding = "utf-8"
 
     except Exception as e:
@@ -267,11 +253,105 @@ def proveri_oglas(url):
     return cena, slika, naziv, response.text, True
 
 
+def posalji_email(snizenja, nestali):
+    """Šalje jedan email sa svim sniženjima i nestalim oglasima."""
+    if not snizenja and not nestali:
+        return
+
+    if not RESEND_API_KEY or not EMAIL_PRIMALAC:
+        print("UPOZORENJE: RESEND_API_KEY ili EMAIL_PRIMALAC nije postavljen, preskačem email")
+        return
+
+    # Subject summary
+    delovi = []
+    if snizenja:
+        delovi.append(f"{len(snizenja)} sniženja")
+    if nestali:
+        delovi.append(f"{len(nestali)} nestao oglas" if len(nestali) == 1 else f"{len(nestali)} nestala oglasa")
+
+    subject = "🚗 Auto Drukara: " + ", ".join(delovi)
+
+    # HTML body
+    html = """
+    <div style="font-family: Arial, sans-serif; max-width: 600px;">
+        <h2 style="color: #5b4ce6;">🚗 Auto Drukara - Promene</h2>
+    """
+
+    if snizenja:
+        html += '<h3 style="color: #28a745; margin-top: 30px;">🎉 Sniženja cene</h3>'
+        for s in snizenja:
+            slika_html = f'<img src="{s["slika"]}" style="max-width: 300px; border-radius: 8px; margin: 10px 0;">' if s.get("slika") else ""
+            procenat = (s["razlika"] / s["stara"]) * 100
+            html += f"""
+            <div style="border: 1px solid #e0e0e0; border-radius: 10px; padding: 15px; margin-bottom: 15px; background: #f8fff8;">
+                <h4 style="margin: 0 0 10px 0;">{s["label"]}</h4>
+                {slika_html}
+                <p style="font-size: 18px; margin: 8px 0;">
+                    <span style="text-decoration: line-through; color: #999;">{s["stara"]:,} €</span>
+                    →
+                    <strong style="color: #28a745; font-size: 22px;">{s["nova"]:,} €</strong>
+                </p>
+                <p style="color: #28a745; margin: 4px 0;">
+                    Pad: <strong>{s["razlika"]:,} €</strong> ({procenat:.1f}%)
+                </p>
+                <a href="{s["url"]}" style="color: #5b4ce6;">Otvori oglas</a>
+            </div>
+            """
+
+    if nestali:
+        html += '<h3 style="color: #d10000; margin-top: 30px;">❌ Nestali oglasi</h3>'
+        for n in nestali:
+            html += f"""
+            <div style="border: 1px solid #e0e0e0; border-radius: 10px; padding: 15px; margin-bottom: 15px; background: #fff8f8;">
+                <h4 style="margin: 0 0 10px 0;">{n["label"]}</h4>
+                <p style="color: #666; margin: 4px 0;">
+                    Poslednja cena: <strong>{n["poslednja_cena"]:,} €</strong>
+                </p>
+                <a href="{n["url"]}" style="color: #5b4ce6;">Otvori oglas (možda 404)</a>
+            </div>
+            """
+
+    html += """
+        <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;">
+        <p style="color: #999; font-size: 13px;">
+            Obaveštenje od Auto Drukara aplikacije.
+        </p>
+    </div>
+    """
+
+    try:
+        resp = requests.post(
+            "https://api.resend.com/emails",
+            headers={
+                "Authorization": f"Bearer {RESEND_API_KEY}",
+                "Content-Type": "application/json",
+            },
+            json={
+                "from": "Auto Drukara <onboarding@resend.dev>",
+                "to": [EMAIL_PRIMALAC],
+                "subject": subject,
+                "html": html,
+            },
+            timeout=10,
+        )
+
+        if resp.status_code == 200:
+            print(f"EMAIL POSLAT: {subject}")
+        else:
+            print(f"EMAIL GREŠKA: {resp.status_code} - {resp.text[:200]}")
+
+    except Exception as e:
+        print(f"EMAIL EXCEPTION: {e}")
+
+
 def main():
     oglasi = ucitaj_oglase()
     baza = ucitaj_bazu()
 
     now = datetime.now().strftime("%d.%m.%Y %H:%M")
+
+    snizenja_za_email = []
+    nestali_za_email = []
 
     for oglas in oglasi:
         url = oglas["url"]
@@ -282,8 +362,6 @@ def main():
 
         stara = baza.get(url, {})
 
-        # Custom label korisnika -> ako nema, sveži naziv iz HTML -> tek onda stari
-        # (sveži pre starog jer je možda ranije bio polomljen UTF-8)
         label = (
             oglas.get("label")
             or naziv
@@ -294,10 +372,23 @@ def main():
         model = extract_model(url)
 
         if not aktivan:
+            # Oglas nedostupan - ako je do sad bio aktivan, šaljemo notifikaciju
+            bio_aktivan = stara.get("aktivan", True)
+            poslednja_cena = stara.get("cena")
+
+            if bio_aktivan and poslednja_cena:
+                nestali_za_email.append({
+                    "url": url,
+                    "label": label,
+                    "poslednja_cena": poslednja_cena,
+                })
+                print(f"NESTAO OGLAS: {label}")
+
             baza[url] = {
                 **stara,
                 "label": label,
                 "model": model,
+                "aktivan": False,
                 "problem_cena": True,
                 "poslednja_provera": now,
             }
@@ -338,7 +429,23 @@ def main():
 
                 if promena < 0:
                     promena_tip = "snizenje"
-                    ukupno_snizenje += abs(promena)
+                    razlika = abs(promena)
+                    ukupno_snizenje += razlika
+
+                    # Provera pragova za email
+                    procenat = (razlika / prethodna_cena) * 100
+                    if procenat >= PRAG_PROCENT or razlika >= PRAG_APSOLUT:
+                        snizenja_za_email.append({
+                            "url": url,
+                            "label": label,
+                            "stara": prethodna_cena,
+                            "nova": cena,
+                            "razlika": razlika,
+                            "slika": slika or stara.get("slika"),
+                        })
+                        print(f"SNIŽENJE ZA EMAIL: {label} -{razlika}€ ({procenat:.1f}%)")
+                    else:
+                        print(f"sniženje ispod praga, preskačem email: {label} -{razlika}€ ({procenat:.1f}%)")
                 else:
                     promena_tip = "poskupljenje"
 
@@ -385,6 +492,13 @@ def main():
         time.sleep(PAUZA)
 
     sacuvaj_bazu(baza)
+
+    # Email na kraju, ako ima nešto
+    if snizenja_za_email or nestali_za_email:
+        print(f"\nŠaljem email: {len(snizenja_za_email)} sniženja, {len(nestali_za_email)} nestala oglasa")
+        posalji_email(snizenja_za_email, nestali_za_email)
+    else:
+        print("\nNema promena za email")
 
     print("\nGOTOVO")
 
