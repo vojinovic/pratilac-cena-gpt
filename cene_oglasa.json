@@ -13,7 +13,7 @@
     "datum_promene": "07.05.2026 16:58",
     "aktivan": true,
     "problem_cena": true,
-    "poslednja_provera": "08.05.2026 11:54",
+    "poslednja_provera": "08.05.2026 12:00",
     "score": 88,
     "model": "xc60"
   },
@@ -31,7 +31,7 @@
     "datum_promene": "07.05.2026 16:58",
     "aktivan": true,
     "problem_cena": true,
-    "poslednja_provera": "08.05.2026 11:54",
+    "poslednja_provera": "08.05.2026 12:00",
     "score": 93,
     "model": "xc60"
   },
@@ -49,7 +49,7 @@
     "datum_promene": "07.05.2026 16:58",
     "aktivan": true,
     "problem_cena": true,
-    "poslednja_provera": "08.05.2026 11:54",
+    "poslednja_provera": "08.05.2026 12:00",
     "score": 92,
     "model": "smesna"
   },
@@ -67,7 +67,7 @@
     "datum_promene": "07.05.2026 16:58",
     "aktivan": true,
     "problem_cena": true,
-    "poslednja_provera": "08.05.2026 11:54",
+    "poslednja_provera": "08.05.2026 12:00",
     "score": 100,
     "model": "xc60"
   },
@@ -85,7 +85,7 @@
     "datum_promene": "07.05.2026 16:58",
     "aktivan": true,
     "problem_cena": true,
-    "poslednja_provera": "08.05.2026 11:54",
+    "poslednja_provera": "08.05.2026 12:00",
     "score": 88,
     "model": "xc60"
   },
@@ -103,7 +103,7 @@
     "datum_promene": "07.05.2026 16:58",
     "aktivan": true,
     "problem_cena": true,
-    "poslednja_provera": "08.05.2026 11:54",
+    "poslednja_provera": "08.05.2026 12:00",
     "score": 93,
     "model": "xc60"
   },
@@ -121,7 +121,7 @@
     "datum_promene": "07.05.2026 16:58",
     "aktivan": true,
     "problem_cena": true,
-    "poslednja_provera": "08.05.2026 11:54",
+    "poslednja_provera": "08.05.2026 12:00",
     "score": 84,
     "model": "kodiaq"
   },
@@ -134,7 +134,7 @@
     "promena_tip": "bez_promene",
     "datum_promene": null,
     "aktivan": true,
-    "poslednja_provera": "08.05.2026 11:54",
+    "poslednja_provera": "08.05.2026 12:00",
     "model": "xc60",
     "problem_cena": true
   },
@@ -147,13 +147,13 @@
     "promena_tip": "bez_promene",
     "datum_promene": null,
     "aktivan": true,
-    "poslednja_provera": "08.05.2026 11:54",
+    "poslednja_provera": "08.05.2026 12:00",
     "model": "kodiaq",
     "problem_cena": true
   },
   "https://www.polovniautomobili.com/auto-oglasi/28666773/skoda-kodiaq-20tdi-4x4-dsg-style?attp=p9_pv0_pc0_pl11_plv0": {
     "aktivan": true,
-    "poslednja_provera": "08.05.2026 11:54",
+    "poslednja_provera": "08.05.2026 12:00",
     "label": "Oglas",
     "model": "oglas",
     "slika": null,
