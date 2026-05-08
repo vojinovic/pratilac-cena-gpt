@@ -87,6 +87,55 @@ button.active{
     font-size:14px;
 }
 
+/* AUTOCOMPLETE */
+.autocomplete{
+    position:relative;
+}
+
+.autocomplete-list{
+    position:absolute;
+    top:100%;
+    left:0;
+    right:0;
+    background:white;
+    border:1px solid #ddd;
+    border-radius:8px;
+    max-height:240px;
+    overflow-y:auto;
+    z-index:1000;
+    box-shadow:0 4px 12px rgba(0,0,0,0.1);
+    margin-top:2px;
+    display:none;
+}
+
+.autocomplete-list.open{
+    display:block;
+}
+
+.autocomplete-item{
+    padding:10px 14px;
+    cursor:pointer;
+    font-size:14px;
+    border-bottom:1px solid #f0f0f0;
+}
+
+.autocomplete-item:last-child{
+    border-bottom:none;
+}
+
+.autocomplete-item:hover,
+.autocomplete-item.highlight{
+    background:#f5f3ff;
+    color:#5b4ce6;
+}
+
+.autocomplete-empty{
+    padding:10px 14px;
+    color:#999;
+    font-size:14px;
+    font-style:italic;
+}
+
 #searchResults{
     display:grid;
     grid-template-columns:repeat(auto-fill, minmax(240px, 1fr));
@@ -204,7 +253,6 @@ button.active{
     margin-top:20px;
 }
 
-/* DODAJ RUKA - RUCNO POJEDINACNO */
 .add-box{
     background:white;
     padding:18px;
@@ -229,7 +277,6 @@ button.active{
     margin-top:10px;
 }
 
-/* PRACENI OGLASI */
 .filters{
     display:flex;
     gap:10px;
@@ -371,8 +418,14 @@ button.active{
 
     <div class="search-box">
         <div class="search-grid">
-            <input id="brandInput" placeholder="Brend (npr. volvo)" value="volvo">
-            <input id="modelInput" placeholder="Model (npr. xc60)">
+            <div class="autocomplete">
+                <input id="brandInput" placeholder="Brend" autocomplete="off">
+                <div class="autocomplete-list" id="brandList"></div>
+            </div>
+            <div class="autocomplete">
+                <input id="modelInput" placeholder="Model" autocomplete="off" disabled>
+                <div class="autocomplete-list" id="modelList"></div>
+            </div>
             <input id="yearFromInput" type="number" placeholder="Godište od">
             <input id="yearToInput" type="number" placeholder="Godište do">
             <input id="priceToInput" type="number" placeholder="Max cena (€)">
@@ -422,6 +475,12 @@ let SEARCH_DATA = null;
 let SEARCH_PARAMS = null;
 let SEARCH_PAGE = 1;
 
+// Autocomplete state
+let BRANDS = [];
+let MODELS = [];
+let SELECTED_BRAND = null;
+let SELECTED_MODEL = null;
+
 // ================= TABS =================
 
 function showSection(name, event){
@@ -433,6 +492,123 @@ function showSection(name, event){
     }
 
     document.getElementById("section-" + name).classList.add("active");
+}
+
+// ================= AUTOCOMPLETE =================
+
+async function loadBrands(){
+    try{
+        const r = await fetch(API + "/brands");
+        const data = await r.json();
+        BRANDS = data.brands || [];
+    }catch(e){
+        console.error("Greška pri učitavanju brendova:", e);
+    }
+}
+
+async function loadModels(brandValue){
+    try{
+        const r = await fetch(API + "/models?brand=" + encodeURIComponent(brandValue));
+        const data = await r.json();
+        MODELS = data.models || [];
+    }catch(e){
+        console.error("Greška pri učitavanju modela:", e);
+        MODELS = [];
+    }
+}
+
+function filterItems(items, query){
+    if(!query) return items;
+    const q = query.toLowerCase();
+    return items.filter(item => item.label.toLowerCase().includes(q));
+}
+
+function renderAutocompleteList(listEl, items, onSelect){
+    listEl.innerHTML = "";
+
+    if(items.length === 0){
+        const empty = document.createElement("div");
+        empty.className = "autocomplete-empty";
+        empty.textContent = "Nema rezultata";
+        listEl.appendChild(empty);
+        return;
+    }
+
+    items.forEach(item => {
+        const div = document.createElement("div");
+        div.className = "autocomplete-item";
+        div.textContent = item.label;
+        div.onclick = () => onSelect(item);
+        listEl.appendChild(div);
+    });
+}
+
+function setupAutocomplete(inputId, listId, getItems, onSelect){
+    const input = document.getElementById(inputId);
+    const list = document.getElementById(listId);
+
+    input.addEventListener("focus", () => {
+        const items = filterItems(getItems(), input.value);
+        renderAutocompleteList(list, items, onSelect);
+        list.classList.add("open");
+    });
+
+    input.addEventListener("input", () => {
+        const items = filterItems(getItems(), input.value);
+        renderAutocompleteList(list, items, onSelect);
+        list.classList.add("open");
+
+        // Ako se input prazni, čistimo selekciju
+        if(inputId === "brandInput" && input.value === ""){
+            SELECTED_BRAND = null;
+            SELECTED_MODEL = null;
+            const modelInput = document.getElementById("modelInput");
+            modelInput.value = "";
+            modelInput.disabled = true;
+            MODELS = [];
+        }
+
+        if(inputId === "modelInput" && input.value === ""){
+            SELECTED_MODEL = null;
+        }
+    });
+
+    document.addEventListener("click", (e) => {
+        if(!input.contains(e.target) && !list.contains(e.target)){
+            list.classList.remove("open");
+        }
+    });
+}
+
+function selectBrand(item){
+    SELECTED_BRAND = item;
+    SELECTED_MODEL = null;
+
+    const brandInput = document.getElementById("brandInput");
+    const brandList = document.getElementById("brandList");
+    const modelInput = document.getElementById("modelInput");
+
+    brandInput.value = item.label;
+    brandList.classList.remove("open");
+
+    // Aktiviraj model input i učitaj modele
+    modelInput.disabled = false;
+    modelInput.value = "";
+    modelInput.placeholder = "Učitavam modele...";
+
+    loadModels(item.value).then(() => {
+        modelInput.placeholder = "Model (opciono)";
+    });
+}
+
+function selectModel(item){
+    SELECTED_MODEL = item;
+
+    const modelInput = document.getElementById("modelInput");
+    const modelList = document.getElementById("modelList");
+
+    modelInput.value = item.label;
+    modelList.classList.remove("open");
 }
 
 // ================= PRACENI OGLASI =================
@@ -651,23 +827,27 @@ function isAlreadyTracked(url){
 }
 
 async function doSearch(page = 1){
-    const brand = document.getElementById("brandInput").value.trim();
-    const model = document.getElementById("modelInput").value.trim();
+    if(!SELECTED_BRAND){
+        alert("Izaberi brend iz liste.");
+        return;
+    }
+
     const yearFrom = document.getElementById("yearFromInput").value.trim();
     const yearTo = document.getElementById("yearToInput").value.trim();
     const priceTo = document.getElementById("priceToInput").value.trim();
 
-    if(!brand){
-        alert("Brend je obavezan.");
-        return;
-    }
-
-    SEARCH_PARAMS = {brand, model, year_from: yearFrom, year_to: yearTo, price_to: priceTo};
+    SEARCH_PARAMS = {
+        brand: SELECTED_BRAND.value,
+        model: SELECTED_MODEL ? SELECTED_MODEL.value : "",
+        year_from: yearFrom,
+        year_to: yearTo,
+        price_to: priceTo,
+    };
     SEARCH_PAGE = page;
 
     const params = new URLSearchParams();
-    params.set("brand", brand);
-    if(model) params.set("model", model);
+    params.set("brand", SELECTED_BRAND.value);
+    if(SELECTED_MODEL) params.set("model", SELECTED_MODEL.value);
     if(yearFrom) params.set("year_from", yearFrom);
     if(yearTo) params.set("year_to", yearTo);
     if(priceTo) params.set("price_to", priceTo);
@@ -783,8 +963,18 @@ async function trackFromSearch(url, label){
     }
 }
 
-// init
-load();
+// ================= INIT =================
+
+async function init(){
+    await loadBrands();
+
+    setupAutocomplete("brandInput", "brandList", () => BRANDS, selectBrand);
+    setupAutocomplete("modelInput", "modelList", () => MODELS, selectModel);
+
+    await load();
+}
+
+init();
 </script>
 
 </body>
