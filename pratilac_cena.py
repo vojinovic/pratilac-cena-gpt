@@ -14,8 +14,8 @@ BAZA_FAJL = "cene_oglasa.json"
 PAUZA = 4
 
 # Email pragovi za sniženja
-PRAG_PROCENT = 1.0      # 1%
-PRAG_APSOLUT = 200      # 200 evra
+PRAG_PROCENT = 1.0
+PRAG_APSOLUT = 200
 
 RESEND_API_KEY = os.environ.get("RESEND_API_KEY", "")
 EMAIL_PRIMALAC = os.environ.get("EMAIL_PRIMALAC", "")
@@ -55,30 +55,23 @@ def sacuvaj_bazu(baza):
 def parsiraj_broj(text):
     if not text:
         return None
-
     cifre = re.sub(r"[^\d]", "", str(text))
-
     if not cifre:
         return None
-
     cena = int(cifre)
-
     if 1000 <= cena <= 500000:
         return cena
-
     return None
 
 
 def izvuci_cenu(soup):
     el = soup.find("span", class_="priceClassified")
-
     if el:
         cena = parsiraj_broj(el.get_text(" ", strip=True))
         if cena:
             return cena
 
     el = soup.find(class_=re.compile(r"priceClassified"))
-
     if el:
         cena = parsiraj_broj(el.get_text(" ", strip=True))
         if cena:
@@ -95,21 +88,17 @@ def izvuci_cenu(soup):
 
 def izvuci_sliku(soup):
     meta = soup.find("meta", property="og:image")
-
     if meta and meta.get("content"):
         return meta.get("content")
-
     return None
 
 
 def izvuci_naziv(soup):
     h1 = soup.find("h1")
-
     if h1:
         return h1.get_text(" ", strip=True)
 
     title = soup.find("title")
-
     if title:
         text = title.get_text(" ", strip=True)
         text = text.replace("| Polovni Automobili", "").replace("- Polovni automobili", "").replace("Polovni Automobili", "").strip()
@@ -118,46 +107,124 @@ def izvuci_naziv(soup):
     return "Oglas"
 
 
+def izvuci_specs(soup):
+    """
+    Parsira sve label/value parove iz "Opšte informacije" sekcije.
+    
+    Struktura na polovniautomobili je:
+    <div class="divider">
+        <div class="uk-grid">
+            <div class="uk-width-1-2">Godište</div>
+            <div class="uk-width-1-2 uk-text-bold">2022.</div>
+        </div>
+    </div>
+    
+    Vraća rečnik: {"godiste": 2022, "kilometraza": 158216, "karoserija": "Džip/SUV", ...}
+    """
+    specs = {}
+
+    # Sve uk-grid divove koji sadrže labele i vrednosti
+    grids = soup.find_all("div", class_="uk-grid")
+
+    for grid in grids:
+        cells = grid.find_all("div", class_="uk-width-1-2")
+
+        if len(cells) >= 2:
+            label = cells[0].get_text(" ", strip=True).lower()
+            value = cells[1].get_text(" ", strip=True)
+
+            if not label or not value:
+                continue
+
+            # Mapiranje labela na ključeve
+            if "godište" in label or "godiste" in label:
+                godina = re.sub(r"[^\d]", "", value)
+                if godina and len(godina) == 4:
+                    specs["godiste"] = int(godina)
+
+            elif "kilometraža" in label or "kilometraza" in label:
+                km = re.sub(r"[^\d]", "", value)
+                if km:
+                    specs["kilometraza"] = int(km)
+
+            elif "karoserija" in label:
+                specs["karoserija"] = value
+
+            elif "gorivo" in label:
+                specs["gorivo"] = value
+
+            elif "snaga" in label:
+                specs["snaga"] = value
+
+            elif "kubikaža" in label or "kubikaza" in label:
+                specs["kubikaza"] = value
+
+            elif "marka" in label and "modela" not in label:
+                specs["marka"] = value
+
+            elif label == "model":
+                specs["model_naziv"] = value
+
+    return specs
+
+
 def extract_model(url):
     if not url:
         return "unknown"
 
     match = re.search(r"/auto-oglasi/\d+/([^/?#]+)", url)
-
     if not match:
         return "unknown"
 
     slug = match.group(1).lower()
-
     delovi = slug.split("-")
 
     if len(delovi) >= 2:
         return delovi[0] + "-" + delovi[1]
-
     if len(delovi) == 1:
         return delovi[0]
-
     return "unknown"
 
 
-def market_average(model, baza):
+def market_average_cena(model, baza):
     cene = []
-
     for _, data in baza.items():
         if data.get("model") == model and data.get("cena"):
             cene.append(data["cena"])
-
     if not cene:
         return None
-
     return sum(cene) / len(cene)
+
+
+def market_average_km(model, baza):
+    kms = []
+    for _, data in baza.items():
+        if data.get("model") == model and data.get("kilometraza"):
+            kms.append(data["kilometraza"])
+    if not kms:
+        return None
+    return sum(kms) / len(kms)
+
+
+def market_average_godiste(model, baza):
+    godine = []
+    for _, data in baza.items():
+        if data.get("model") == model and data.get("godiste"):
+            godine.append(data["godiste"])
+    if not godine:
+        return None
+    return sum(godine) / len(godine)
 
 
 def calculate_score(
     label,
     html,
     cena,
-    market_avg,
+    market_avg_cena,
+    kilometraza,
+    market_avg_km,
+    godiste,
+    market_avg_godiste,
     prva_cena,
     najmanja_cena,
     ukupno_snizenje,
@@ -167,8 +234,9 @@ def calculate_score(
 
     score = 50
 
-    if market_avg and cena:
-        diff_percent = ((market_avg - cena) / market_avg) * 100
+    # 1. CENA vs MARKET (±20)
+    if market_avg_cena and cena:
+        diff_percent = ((market_avg_cena - cena) / market_avg_cena) * 100
 
         if diff_percent >= 15:
             score += 20
@@ -181,6 +249,43 @@ def calculate_score(
         elif diff_percent <= -10:
             score -= 10
 
+    # 2. KILOMETRAŽA vs MARKET (±15)
+    if market_avg_km and kilometraza:
+        # Manje km = bolje
+        ratio = kilometraza / market_avg_km
+
+        if ratio <= 0.5:
+            score += 15
+        elif ratio <= 0.75:
+            score += 8
+        elif ratio <= 0.9:
+            score += 3
+        elif ratio >= 1.5:
+            score -= 10
+        elif ratio >= 1.25:
+            score -= 5
+
+    # 3. GODIŠTE vs MARKET (±10)
+    if market_avg_godiste and godiste:
+        diff = godiste - market_avg_godiste
+
+        if diff >= 2:
+            score += 10
+        elif diff >= 1:
+            score += 5
+        elif diff <= -2:
+            score -= 8
+        elif diff <= -1:
+            score -= 3
+
+    # 4. BONUS DEAL: niže km + mlađe + niža cena
+    if (market_avg_cena and cena and cena < market_avg_cena and
+        market_avg_km and kilometraza and kilometraza < market_avg_km and
+        market_avg_godiste and godiste and godiste >= market_avg_godiste):
+        score += 10
+        print("BONUS DEAL: ispod proseka u sve tri kategorije!")
+
+    # 5. OPREMA
     plus_keywords = {
         "awd": 5, "4x4": 5, "r-design": 5, "inscription": 5,
         "momentum": 3, "sport": 4, "pano": 5, "panorama": 5,
@@ -192,6 +297,7 @@ def calculate_score(
         if keyword in text:
             score += points
 
+    # 6. STANJE
     stanje_plus = {
         "prvi vlasnik": 10, "1 vlasnik": 10, "servisna": 6,
         "servisna knjiga": 8, "bez ulaganja": 8,
@@ -212,6 +318,7 @@ def calculate_score(
         if keyword in text:
             score += points
 
+    # 7. TREND CENE
     if ukupno_snizenje >= 2000:
         score += 12
     elif ukupno_snizenje >= 1000:
@@ -225,9 +332,9 @@ def calculate_score(
     if promena_tip == "poskupljenje":
         score -= 8
 
+    # LIMIT
     if score > 100:
         score = 100
-
     if score < 0:
         score = 0
 
@@ -242,19 +349,19 @@ def proveri_oglas(url):
 
     except Exception as e:
         print("Greška:", e)
-        return None, None, None, "", False
+        return None, None, None, "", {}, False
 
     soup = BeautifulSoup(response.text, "html.parser")
 
     cena = izvuci_cenu(soup)
     slika = izvuci_sliku(soup)
     naziv = izvuci_naziv(soup)
+    specs = izvuci_specs(soup)
 
-    return cena, slika, naziv, response.text, True
+    return cena, slika, naziv, response.text, specs, True
 
 
 def posalji_email(snizenja, nestali):
-    """Šalje jedan email sa svim sniženjima i nestalim oglasima."""
     if not snizenja and not nestali:
         return
 
@@ -262,7 +369,6 @@ def posalji_email(snizenja, nestali):
         print("UPOZORENJE: RESEND_API_KEY ili EMAIL_PRIMALAC nije postavljen, preskačem email")
         return
 
-    # Subject summary
     delovi = []
     if snizenja:
         delovi.append(f"{len(snizenja)} sniženja")
@@ -271,7 +377,6 @@ def posalji_email(snizenja, nestali):
 
     subject = "🚗 Auto Drukara: " + ", ".join(delovi)
 
-    # HTML body
     html = """
     <div style="font-family: Arial, sans-serif; max-width: 600px;">
         <h2 style="color: #5b4ce6;">🚗 Auto Drukara - Promene</h2>
@@ -358,7 +463,7 @@ def main():
 
         print("\nPROVERA:", url)
 
-        cena, slika, naziv, html, aktivan = proveri_oglas(url)
+        cena, slika, naziv, html, specs, aktivan = proveri_oglas(url)
 
         stara = baza.get(url, {})
 
@@ -372,7 +477,6 @@ def main():
         model = extract_model(url)
 
         if not aktivan:
-            # Oglas nedostupan - ako je do sad bio aktivan, šaljemo notifikaciju
             bio_aktivan = stara.get("aktivan", True)
             poslednja_cena = stara.get("cena")
 
@@ -392,7 +496,6 @@ def main():
                 "problem_cena": True,
                 "poslednja_provera": now,
             }
-
             continue
 
         if cena is None:
@@ -410,6 +513,12 @@ def main():
 
             time.sleep(PAUZA)
             continue
+
+        # Sad imamo cenu i specs
+        godiste = specs.get("godiste") or stara.get("godiste")
+        kilometraza = specs.get("kilometraza") or stara.get("kilometraza")
+        karoserija = specs.get("karoserija") or stara.get("karoserija")
+        gorivo = specs.get("gorivo") or stara.get("gorivo")
 
         prethodna_cena = stara.get("cena")
 
@@ -432,7 +541,6 @@ def main():
                     razlika = abs(promena)
                     ukupno_snizenje += razlika
 
-                    # Provera pragova za email
                     procenat = (razlika / prethodna_cena) * 100
                     if procenat >= PRAG_PROCENT or razlika >= PRAG_APSOLUT:
                         snizenja_za_email.append({
@@ -451,29 +559,50 @@ def main():
 
         najmanja_cena = min(cena, najmanja_cena)
 
-        market_avg = market_average(model, baza)
+        # Privremeno upiši nove podatke u baza pre nego što izračunamo prosek
+        # (da bi prosek uključio i ovaj auto)
+        baza[url] = {
+            **stara,
+            "model": model,
+            "cena": cena,
+            "kilometraza": kilometraza,
+            "godiste": godiste,
+        }
+
+        market_cena = market_average_cena(model, baza)
+        market_km = market_average_km(model, baza)
+        market_god = market_average_godiste(model, baza)
 
         score = calculate_score(
             label=label,
             html=html,
             cena=cena,
-            market_avg=market_avg,
+            market_avg_cena=market_cena,
+            kilometraza=kilometraza,
+            market_avg_km=market_km,
+            godiste=godiste,
+            market_avg_godiste=market_god,
             prva_cena=prva_cena,
             najmanja_cena=najmanja_cena,
             ukupno_snizenje=ukupno_snizenje,
             promena_tip=promena_tip,
         )
 
-        print("MODEL:", model)
-        print("MARKET AVG:", market_avg)
-        print("CENA:", cena)
-        print("SCORE:", score)
-        print("LABEL:", label)
+        print(f"MODEL: {model}")
+        print(f"CENA: {cena}€ | MARKET AVG: {market_cena:.0f}€" if market_cena else f"CENA: {cena}€")
+        print(f"KM: {kilometraza} | MARKET AVG: {market_km:.0f}" if (kilometraza and market_km) else f"KM: {kilometraza}")
+        print(f"GODIŠTE: {godiste} | MARKET AVG: {market_god:.1f}" if (godiste and market_god) else f"GODIŠTE: {godiste}")
+        print(f"SCORE: {score}")
+        print(f"LABEL: {label}")
 
         baza[url] = {
             "label": label,
             "model": model,
             "cena": cena,
+            "godiste": godiste,
+            "kilometraza": kilometraza,
+            "karoserija": karoserija,
+            "gorivo": gorivo,
             "prva_cena": prva_cena,
             "najmanja_cena": najmanja_cena,
             "broj_promena": broj_promena,
@@ -493,7 +622,6 @@ def main():
 
     sacuvaj_bazu(baza)
 
-    # Email na kraju, ako ima nešto
     if snizenja_za_email or nestali_za_email:
         print(f"\nŠaljem email: {len(snizenja_za_email)} sniženja, {len(nestali_za_email)} nestala oglasa")
         posalji_email(snizenja_za_email, nestali_za_email)
