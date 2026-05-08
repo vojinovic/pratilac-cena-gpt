@@ -362,12 +362,12 @@ button.active{
 <div class="subtitle">Pretraži polovniautomobili.com i prati cene najboljih ponuda.</div>
 
 <div class="tabs">
-    <button class="tab active" onclick="showSection('search', event)">🔍 Pretraga</button>
-    <button class="tab" onclick="showSection('tracked', event)">📊 Praćeni oglasi</button>
+    <button class="tab" onclick="showSection('search', event)">🔍 Pretraga</button>
+    <button class="tab active" onclick="showSection('tracked', event)">📊 Praćeni oglasi</button>
 </div>
 
 <!-- ================= SEARCH SEKCIJA ================= -->
-<div id="section-search" class="section active">
+<div id="section-search" class="section">
 
     <div class="search-box">
         <div class="search-grid">
@@ -388,7 +388,7 @@ button.active{
 </div>
 
 <!-- ================= PRACENI OGLASI SEKCIJA ================= -->
-<div id="section-tracked" class="section">
+<div id="section-tracked" class="section active">
 
     <div class="add-box">
         <input id="urlInput" placeholder="URL oglasa sa PolovniAutomobili">
@@ -512,7 +512,6 @@ async function addOglasByUrl(url, label){
         }
 
         await load();
-        // Ako smo trenutno na search-u, treba da renderujemo opet da označimo "već pratiš"
         if(SEARCH_DATA){
             renderSearch();
         }
@@ -647,10 +646,7 @@ function render(){
 
 function isAlreadyTracked(url){
     if(!DATA?.oglasi) return false;
-
-    // Strip query params zbog različitih attp varijanti istog oglasa
     const cleanUrl = url.split("?")[0];
-
     return DATA.oglasi.some(o => o.url.split("?")[0] === cleanUrl);
 }
 
@@ -753,7 +749,6 @@ function renderSearch(){
         container.appendChild(div);
     });
 
-    // Pagination
     pagination.innerHTML = "";
     const total = data.total || 0;
     const totalPages = Math.ceil(total / 25);
@@ -784,7 +779,6 @@ function renderSearch(){
 async function trackFromSearch(url, label){
     const ok = await addOglasByUrl(url, label);
     if(ok){
-        // Re-render search da označi oglas kao "već pratiš"
         renderSearch();
     }
 }
