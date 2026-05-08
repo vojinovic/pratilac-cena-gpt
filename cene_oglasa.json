@@ -1,7 +1,7 @@
 {
   "https://www.polovniautomobili.com/auto-oglasi/28482744/volvo-xc60-20b4-mhev-r-design?attp=p9_pv0_pc0_pl11_plv0": {
     "label": "Volvo XC60 R-Design",
-    "model": "xc60",
+    "model": "volvo-xc60",
     "cena": 31950,
     "prva_cena": 31950,
     "najmanja_cena": 31950,
@@ -14,12 +14,12 @@
     "datum_promene": "07.05.2026 16:58",
     "aktivan": true,
     "problem_cena": false,
-    "poslednja_provera": "08.05.2026 13:40",
+    "poslednja_provera": "08.05.2026 13:46",
     "score": 64
   },
   "https://www.polovniautomobili.com/auto-oglasi/28877577/volvo-xc60-20-awd?attp=p9_pv0_pc0_pl11_plv0": {
     "label": "Volvo XC60 AWD",
-    "model": "xc60",
+    "model": "volvo-xc60",
     "cena": 34990,
     "prva_cena": 34990,
     "najmanja_cena": 34990,
@@ -32,12 +32,12 @@
     "datum_promene": "07.05.2026 16:58",
     "aktivan": true,
     "problem_cena": false,
-    "poslednja_provera": "08.05.2026 13:40",
-    "score": 69
+    "poslednja_provera": "08.05.2026 13:46",
+    "score": 79
   },
   "https://www.polovniautomobili.com/auto-oglasi/29005264/volvo-xc60-4x4-d4kupljovde1vl?attp=p9_pv0_pc0_pl11_plv0": {
     "label": "Volvo smesna boja",
-    "model": "smesna",
+    "model": "volvo-xc60",
     "cena": 26999,
     "prva_cena": 26999,
     "najmanja_cena": 26999,
@@ -50,12 +50,12 @@
     "datum_promene": "07.05.2026 16:58",
     "aktivan": true,
     "problem_cena": false,
-    "poslednja_provera": "08.05.2026 13:40",
-    "score": 70
+    "poslednja_provera": "08.05.2026 13:46",
+    "score": 90
   },
   "https://www.polovniautomobili.com/auto-oglasi/28451802/volvo-xc60-20b4mhev-momentum?attp=p9_pv0_pc0_pl11_plv0": {
     "label": "Volvo XC60 2.0B4/MHEV MOMENTUM 2021. godiÃÂ¡te",
-    "model": "xc60",
+    "model": "volvo-xc60",
     "cena": 27900,
     "prva_cena": 27900,
     "najmanja_cena": 27900,
@@ -68,12 +68,12 @@
     "datum_promene": "07.05.2026 16:58",
     "aktivan": true,
     "problem_cena": false,
-    "poslednja_provera": "08.05.2026 13:40",
-    "score": 84
+    "poslednja_provera": "08.05.2026 13:46",
+    "score": 91
   },
   "https://www.polovniautomobili.com/auto-oglasi/28597036/volvo-xc60-b4-awd-inscription?attp=p9_pv0_pc0_pl11_plv0": {
     "label": "Volvo XC60 B4 AWD Inscription 2021. godiÃÂ¡te",
-    "model": "xc60",
+    "model": "volvo-xc60",
     "cena": 32950,
     "prva_cena": 32950,
     "najmanja_cena": 32950,
@@ -86,12 +86,12 @@
     "datum_promene": "07.05.2026 16:58",
     "aktivan": true,
     "problem_cena": false,
-    "poslednja_provera": "08.05.2026 13:40",
+    "poslednja_provera": "08.05.2026 13:46",
     "score": 75
   },
   "https://www.polovniautomobili.com/auto-oglasi/29012594/volvo-xc60?attp=p9_pv0_pc0_pl11_plv0": {
     "label": "Xc60 daje ga za 27",
-    "model": "xc60",
+    "model": "volvo-xc60",
     "cena": 29500,
     "prva_cena": 29500,
     "najmanja_cena": 29500,
@@ -104,12 +104,12 @@
     "datum_promene": "07.05.2026 16:58",
     "aktivan": true,
     "problem_cena": false,
-    "poslednja_provera": "08.05.2026 13:40",
+    "poslednja_provera": "08.05.2026 13:46",
     "score": 74
   },
   "https://www.polovniautomobili.com/auto-oglasi/28720117/skoda-kodiaq-20tdisport4x4pano?attp=p9_pv0_pc0_pl11_plv0": {
     "label": "ÃÂ koda Kodiaq 20TDI/SPORT/4x4/PANO 2021. godiÃÂ¡te",
-    "model": "kodiaq",
+    "model": "skoda-kodiaq",
     "cena": 23999,
     "prva_cena": 23999,
     "najmanja_cena": 23999,
@@ -122,12 +122,12 @@
     "datum_promene": "07.05.2026 16:58",
     "aktivan": true,
     "problem_cena": false,
-    "poslednja_provera": "08.05.2026 13:40",
-    "score": 90
+    "poslednja_provera": "08.05.2026 13:46",
+    "score": 70
   },
   "http://www.polovniautomobili.com/auto-oglasi/29216093/volvo-xc60-b4-d-awd-inscription": {
     "label": "Volvo XC60 B4 D AWD INSCRIPTION\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t \n\t\t\t\t\t\t\t\t\t\t2021. godiÅ¡te",
-    "model": "xc60",
+    "model": "volvo-xc60",
     "cena": 28690,
     "prva_cena": 28690,
     "najmanja_cena": 28690,
@@ -140,12 +140,12 @@
     "datum_promene": null,
     "aktivan": true,
     "problem_cena": false,
-    "poslednja_provera": "08.05.2026 13:40",
+    "poslednja_provera": "08.05.2026 13:46",
     "score": 82
   },
   "http://www.polovniautomobili.com/auto-oglasi/29091836/skoda-kodiaq-style-20": {
     "label": "Škoda Kodiaq Style 2.0\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t \n\t\t\t\t\t\t\t\t\t\t2023. godište",
-    "model": "kodiaq",
+    "model": "skoda-kodiaq",
     "cena": 34000,
     "prva_cena": 34000,
     "najmanja_cena": 34000,
@@ -158,25 +158,25 @@
     "datum_promene": null,
     "aktivan": true,
     "problem_cena": false,
-    "poslednja_provera": "08.05.2026 13:40",
+    "poslednja_provera": "08.05.2026 13:46",
     "score": 45
   },
   "https://www.polovniautomobili.com/auto-oglasi/28666773/skoda-kodiaq-20tdi-4x4-dsg-style?attp=p9_pv0_pc0_pl11_plv0": {
     "label": "Oglas",
-    "model": "oglas",
+    "model": "skoda-kodiaq",
     "cena": 27990,
     "prva_cena": 27990,
     "najmanja_cena": 27990,
     "broj_promena": 0,
     "ukupno_snizenje": 0,
     "slika": "https://gcdn.polovniautomobili.com/user-images/thumbs/2866/28666773/fb751c283730-1920x1080.jpg",
-    "prethodna_cena": null,
+    "prethodna_cena": 27990,
     "promena": 0,
     "promena_tip": "bez_promene",
     "datum_promene": null,
     "aktivan": true,
     "problem_cena": false,
-    "poslednja_provera": "08.05.2026 13:40",
+    "poslednja_provera": "08.05.2026 13:46",
     "score": 65
   }
 }
