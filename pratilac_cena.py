@@ -11,10 +11,20 @@ from bs4 import BeautifulSoup
 
 OGLASI_FAJL = "oglasi.json"
 BAZA_FAJL = "cene_oglasa.json"
-PAUZA = 3
+PAUZA = 4
 
 HEADERS = {
-    "User-Agent": "Mozilla/5.0",
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8",
+    "Accept-Language": "sr-RS,sr;q=0.9,en-US;q=0.8,en;q=0.7",
+    "Accept-Encoding": "gzip, deflate, br",
+    "Connection": "keep-alive",
+    "Upgrade-Insecure-Requests": "1",
+    "Sec-Fetch-Dest": "document",
+    "Sec-Fetch-Mode": "navigate",
+    "Sec-Fetch-Site": "none",
+    "Sec-Fetch-User": "?1",
+    "Cache-Control": "max-age=0",
 }
 
 
@@ -88,11 +98,6 @@ def izvuci_sliku(soup):
     if meta and meta.get("content"):
         return meta.get("content")
 
-    img = soup.find("img")
-
-    if img:
-        return img.get("src")
-
     return None
 
 
@@ -105,7 +110,9 @@ def izvuci_naziv(soup):
     title = soup.find("title")
 
     if title:
-        return title.get_text(" ", strip=True)
+        text = title.get_text(" ", strip=True)
+        text = text.replace("| Polovni Automobili", "").replace("- Polovni automobili", "").replace("Polovni Automobili", "").strip()
+        return text
 
     return "Oglas"
 
@@ -301,21 +308,39 @@ def main():
 
         model = extract_model(label)
 
-        prethodna_cena = stara.get("cena")
-
         if not aktivan:
+            # Scraping nije uspeo - zadrži stare podatke, samo označi problem
             baza[url] = {
                 **stara,
-                "aktivan": False,
+                "label": label,
+                "model": model,
+                "problem_cena": True,
                 "poslednja_provera": now,
             }
 
             continue
 
-        final_cena = cena if cena else prethodna_cena
+        # Ako scraping uspeo ali nije našao cenu, ne diraj baznu cenu
+        if cena is None:
+            print("UPOZORENJE: Stranica učitana ali cena nije pronađena")
 
-        prva_cena = stara.get("prva_cena") or final_cena
-        najmanja_cena = stara.get("najmanja_cena") or final_cena
+            baza[url] = {
+                **stara,
+                "label": label,
+                "model": model,
+                "slika": slika or stara.get("slika"),
+                "problem_cena": True,
+                "aktivan": True,
+                "poslednja_provera": now,
+            }
+
+            time.sleep(PAUZA)
+            continue
+
+        prethodna_cena = stara.get("cena")
+
+        prva_cena = stara.get("prva_cena") or cena
+        najmanja_cena = stara.get("najmanja_cena") or cena
 
         promena = 0
         promena_tip = "bez_promene"
@@ -323,9 +348,9 @@ def main():
         ukupno_snizenje = stara.get("ukupno_snizenje", 0)
         broj_promena = stara.get("broj_promena", 0)
 
-        if prethodna_cena and final_cena:
-            if final_cena != prethodna_cena:
-                promena = final_cena - prethodna_cena
+        if prethodna_cena:
+            if cena != prethodna_cena:
+                promena = cena - prethodna_cena
                 broj_promena += 1
 
                 if promena < 0:
@@ -334,15 +359,14 @@ def main():
                 else:
                     promena_tip = "poskupljenje"
 
-        if final_cena and najmanja_cena:
-            najmanja_cena = min(final_cena, najmanja_cena)
+        najmanja_cena = min(cena, najmanja_cena)
 
         market_avg = market_average(model, baza)
 
         score = calculate_score(
             label=label,
             html=html,
-            cena=final_cena,
+            cena=cena,
             market_avg=market_avg,
             prva_cena=prva_cena,
             najmanja_cena=najmanja_cena,
@@ -352,12 +376,13 @@ def main():
 
         print("MODEL:", model)
         print("MARKET AVG:", market_avg)
+        print("CENA:", cena)
         print("SCORE:", score)
 
         baza[url] = {
             "label": label,
             "model": model,
-            "cena": final_cena,
+            "cena": cena,
             "prva_cena": prva_cena,
             "najmanja_cena": najmanja_cena,
             "broj_promena": broj_promena,
@@ -368,7 +393,7 @@ def main():
             "promena_tip": promena_tip,
             "datum_promene": now if promena != 0 else stara.get("datum_promene"),
             "aktivan": True,
-            "problem_cena": cena is None,
+            "problem_cena": False,
             "poslednja_provera": now,
             "score": score,
         }
