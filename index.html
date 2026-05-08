@@ -281,4 +281,722 @@ button.active{
     display:flex;
     gap:10px;
     margin-bottom:25px;
-    flex-w
+    flex-wrap:wrap;
+}
+
+#topDeals,
+#list{
+    display:grid;
+    grid-template-columns:repeat(auto-fill, minmax(340px, 1fr));
+    gap:20px;
+}
+
+.card,
+.top-card{
+    background:white;
+    border-radius:14px;
+    overflow:hidden;
+    box-shadow:0 2px 10px rgba(0,0,0,0.08);
+    padding:14px;
+}
+
+.top-card{
+    border:2px solid orange;
+    background:#fffdf6;
+}
+
+.img-wrap{
+    width:100%;
+    height:220px;
+    background:#eee;
+    border-radius:10px;
+    overflow:hidden;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+}
+
+.img-wrap img{
+    width:100%;
+    height:100%;
+    object-fit:cover;
+}
+
+.title{
+    font-size:22px;
+    font-weight:bold;
+    margin-top:14px;
+}
+
+.price{
+    font-size:28px;
+    font-weight:bold;
+    margin-top:8px;
+}
+
+.meta{
+    margin-top:10px;
+    color:#666;
+    line-height:1.5;
+}
+
+.specs-row{
+    display:flex;
+    gap:8px;
+    margin-top:10px;
+    flex-wrap:wrap;
+}
+
+.spec-tag{
+    background:#f0f0f0;
+    color:#444;
+    padding:4px 10px;
+    border-radius:6px;
+    font-size:13px;
+    font-weight:500;
+}
+
+.spec-tag.highlight{
+    background:#e8f4ff;
+    color:#0066cc;
+}
+
+.date{
+    margin-top:10px;
+    color:#999;
+    font-size:14px;
+}
+
+.badge{
+    color:red;
+    font-weight:bold;
+    margin-bottom:10px;
+}
+
+.problem-badge{
+    background:#fff3cd;
+    color:#856404;
+    border:1px solid #ffeaa7;
+    padding:6px 10px;
+    border-radius:8px;
+    font-size:13px;
+    font-weight:bold;
+    margin-bottom:10px;
+    display:inline-block;
+}
+
+.card a, .top-card a{
+    display:inline-block;
+    margin-top:8px;
+}
+
+.tabs{
+    display:flex;
+    gap:8px;
+    margin-bottom:20px;
+    border-bottom:2px solid #ddd;
+}
+
+.tab{
+    padding:12px 20px;
+    background:none;
+    border:none;
+    cursor:pointer;
+    font-size:16px;
+    font-weight:bold;
+    color:#888;
+    border-bottom:3px solid transparent;
+    margin-bottom:-2px;
+}
+
+.tab.active{
+    color:#5b4ce6;
+    border-bottom-color:#5b4ce6;
+}
+
+.section{
+    display:none;
+}
+
+.section.active{
+    display:block;
+}
+</style>
+</head>
+
+<body>
+
+<h1>🚗 Auto Drukara</h1>
+<div class="subtitle">Pretraži polovniautomobili.com i prati cene najboljih ponuda.</div>
+
+<div class="tabs">
+    <button class="tab" onclick="showSection('search', event)">🔍 Pretraga</button>
+    <button class="tab active" onclick="showSection('tracked', event)">📊 Praćeni oglasi</button>
+</div>
+
+<div id="section-search" class="section">
+
+    <div class="search-box">
+        <div class="search-grid">
+            <div class="autocomplete">
+                <input id="brandInput" placeholder="Brend" autocomplete="off">
+                <div class="autocomplete-list" id="brandList"></div>
+            </div>
+            <div class="autocomplete">
+                <input id="modelInput" placeholder="Model" autocomplete="off" disabled>
+                <div class="autocomplete-list" id="modelList"></div>
+            </div>
+            <input id="yearFromInput" type="number" placeholder="Godište od">
+            <input id="yearToInput" type="number" placeholder="Godište do">
+            <input id="priceToInput" type="number" placeholder="Max cena (€)">
+        </div>
+        <button class="search-btn" id="searchBtn" onclick="doSearch()">Pretraži</button>
+    </div>
+
+    <div id="searchInfo" class="search-info"></div>
+
+    <div id="searchResults"></div>
+
+    <div id="searchPagination" class="pagination"></div>
+</div>
+
+<div id="section-tracked" class="section active">
+
+    <div class="add-box">
+        <input id="urlInput" placeholder="URL oglasa sa PolovniAutomobili">
+        <input id="labelInput" placeholder="Naziv oglasa, opciono">
+        <button class="add-btn" onclick="addOglas()">Dodaj oglas</button>
+    </div>
+
+    <div class="filters">
+        <button class="filter-btn active" onclick="setFilter('all', event)">Svi</button>
+        <button class="filter-btn" onclick="setFilter('active', event)">Aktivni</button>
+        <button class="filter-btn" onclick="setFilter('inactive', event)">Nestali</button>
+        <button class="filter-btn" onclick="setFilter('changes', event)">Sa promenom</button>
+        <button class="filter-btn" onclick="setFilter('problem', event)">Problem</button>
+    </div>
+
+    <div id="topDeals"></div>
+
+    <div class="section-title">📊 Svi oglasi</div>
+
+    <div id="list"></div>
+</div>
+
+
+<script>
+const API = "https://pratilac-cena-api.vojinovic82.workers.dev";
+
+let DATA = {};
+let FILTER = "all";
+
+let SEARCH_DATA = null;
+let SEARCH_PARAMS = null;
+let SEARCH_PAGE = 1;
+
+let BRANDS = [];
+let MODELS = [];
+let SELECTED_BRAND = null;
+let SELECTED_MODEL = null;
+
+function showSection(name, event){
+    document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+    document.querySelectorAll(".section").forEach(s => s.classList.remove("active"));
+
+    if(event && event.target){
+        event.target.classList.add("active");
+    }
+
+    document.getElementById("section-" + name).classList.add("active");
+}
+
+async function loadBrands(){
+    try{
+        const r = await fetch(API + "/brands");
+        const data = await r.json();
+        BRANDS = data.brands || [];
+    }catch(e){
+        console.error("Greška pri učitavanju brendova:", e);
+    }
+}
+
+async function loadModels(brandValue){
+    try{
+        const r = await fetch(API + "/models?brand=" + encodeURIComponent(brandValue));
+        const data = await r.json();
+        MODELS = data.models || [];
+    }catch(e){
+        console.error("Greška pri učitavanju modela:", e);
+        MODELS = [];
+    }
+}
+
+function filterItems(items, query){
+    if(!query) return items;
+    const q = query.toLowerCase();
+    return items.filter(item => item.label.toLowerCase().includes(q));
+}
+
+function renderAutocompleteList(listEl, items, onSelect){
+    listEl.innerHTML = "";
+
+    if(items.length === 0){
+        const empty = document.createElement("div");
+        empty.className = "autocomplete-empty";
+        empty.textContent = "Nema rezultata";
+        listEl.appendChild(empty);
+        return;
+    }
+
+    items.forEach(item => {
+        const div = document.createElement("div");
+        div.className = "autocomplete-item";
+        div.textContent = item.label;
+        div.onclick = () => onSelect(item);
+        listEl.appendChild(div);
+    });
+}
+
+function setupAutocomplete(inputId, listId, getItems, onSelect){
+    const input = document.getElementById(inputId);
+    const list = document.getElementById(listId);
+
+    input.addEventListener("focus", () => {
+        const items = filterItems(getItems(), input.value);
+        renderAutocompleteList(list, items, onSelect);
+        list.classList.add("open");
+    });
+
+    input.addEventListener("input", () => {
+        const items = filterItems(getItems(), input.value);
+        renderAutocompleteList(list, items, onSelect);
+        list.classList.add("open");
+
+        if(inputId === "brandInput" && input.value === ""){
+            SELECTED_BRAND = null;
+            SELECTED_MODEL = null;
+            const modelInput = document.getElementById("modelInput");
+            modelInput.value = "";
+            modelInput.disabled = true;
+            MODELS = [];
+        }
+
+        if(inputId === "modelInput" && input.value === ""){
+            SELECTED_MODEL = null;
+        }
+    });
+
+    document.addEventListener("click", (e) => {
+        if(!input.contains(e.target) && !list.contains(e.target)){
+            list.classList.remove("open");
+        }
+    });
+}
+
+function selectBrand(item){
+    SELECTED_BRAND = item;
+    SELECTED_MODEL = null;
+
+    const brandInput = document.getElementById("brandInput");
+    const brandList = document.getElementById("brandList");
+    const modelInput = document.getElementById("modelInput");
+
+    brandInput.value = item.label;
+    brandList.classList.remove("open");
+
+    modelInput.disabled = false;
+    modelInput.value = "";
+    modelInput.placeholder = "Učitavam modele...";
+
+    loadModels(item.value).then(() => {
+        modelInput.placeholder = "Model (opciono)";
+    });
+}
+
+function selectModel(item){
+    SELECTED_MODEL = item;
+
+    const modelInput = document.getElementById("modelInput");
+    const modelList = document.getElementById("modelList");
+
+    modelInput.value = item.label;
+    modelList.classList.remove("open");
+}
+
+async function load(){
+    try{
+        const r = await fetch(API + "/data");
+        DATA = await r.json();
+        render();
+    }catch(e){
+        console.error(e);
+        alert("Greška pri učitavanju podataka.");
+    }
+}
+
+function getName(o, c){
+    return o.label || c.label || "Oglas";
+}
+
+function formatPrice(value){
+    if(value === null || value === undefined || value === "") return "N/A";
+    return Number(value).toLocaleString("sr-RS") + " €";
+}
+
+function formatKm(value){
+    if(value === null || value === undefined) return null;
+    return Number(value).toLocaleString("sr-RS") + " km";
+}
+
+function imageBlock(src){
+    if(!src){
+        return `<div class="img-wrap">No image</div>`;
+    }
+    return `
+        <div class="img-wrap">
+            <img src="${src}" onerror="this.parentElement.innerHTML='No image'">
+        </div>
+    `;
+}
+
+function setFilter(f, event){
+    FILTER = f;
+    document.querySelectorAll(".filter-btn").forEach(b => b.classList.remove("active"));
+    if(event && event.target){
+        event.target.classList.add("active");
+    }
+    render();
+}
+
+async function addOglas(){
+    const url = document.getElementById("urlInput").value.trim();
+    const label = document.getElementById("labelInput").value.trim();
+
+    if(!url){
+        alert("Unesi URL oglasa.");
+        return;
+    }
+
+    await addOglasByUrl(url, label);
+    document.getElementById("urlInput").value = "";
+    document.getElementById("labelInput").value = "";
+}
+
+async function addOglasByUrl(url, label){
+    try{
+        const r = await fetch(API + "/add", {
+            method:"POST",
+            headers:{"Content-Type":"application/json"},
+            body:JSON.stringify({url:url, label:label || ""})
+        });
+
+        const data = await r.json();
+
+        if(!r.ok || data.error){
+            alert(data.error || "Greška pri dodavanju oglasa.");
+            return false;
+        }
+
+        await load();
+        if(SEARCH_DATA){
+            renderSearch();
+        }
+        return true;
+
+    }catch(e){
+        console.error(e);
+        alert("Greška pri dodavanju oglasa.");
+        return false;
+    }
+}
+
+async function deleteOglas(url){
+    if(!confirm("Da li želiš da obrišeš ovaj oglas?")){
+        return;
+    }
+
+    try{
+        const r = await fetch(API + "/delete", {
+            method:"POST",
+            headers:{"Content-Type":"application/json"},
+            body:JSON.stringify({url:url})
+        });
+
+        const data = await r.json();
+
+        if(!r.ok || data.error){
+            alert(data.error || "Greška pri brisanju oglasa.");
+            return;
+        }
+
+        await load();
+        if(SEARCH_DATA){
+            renderSearch();
+        }
+    }catch(e){
+        console.error(e);
+        alert("Greška pri brisanju oglasa.");
+    }
+}
+
+function renderCard(o, c, top=false){
+    const score = c.score || 0;
+
+    let badge = "🔴";
+    if(score >= 80) badge = "🔥";
+    else if(score >= 60) badge = "🟢";
+    else if(score >= 40) badge = "🟡";
+
+    const problemBadge = c.problem_cena
+        ? `<div class="problem-badge">⚠️ Cena nije ažurirana u poslednjoj proveri</div>`
+        : "";
+
+    // Specs tagovi
+    const specs = [];
+    if(c.godiste) specs.push(`<span class="spec-tag highlight">${c.godiste}.</span>`);
+    if(c.kilometraza) specs.push(`<span class="spec-tag">${formatKm(c.kilometraza)}</span>`);
+    if(c.gorivo) specs.push(`<span class="spec-tag">${c.gorivo}</span>`);
+    if(c.karoserija) specs.push(`<span class="spec-tag">${c.karoserija}</span>`);
+
+    const specsRow = specs.length > 0
+        ? `<div class="specs-row">${specs.join("")}</div>`
+        : "";
+
+    return `
+        ${top ? `<div class="badge">🔥 BEST DEAL</div>` : ""}
+        ${problemBadge}
+
+        ${imageBlock(c.slika)}
+
+        <div class="title">
+            ${getName(o, c)} ${!top ? badge : ""}
+        </div>
+
+        <div class="price">
+            ${formatPrice(c.cena)}
+        </div>
+
+        ${specsRow}
+
+        <div class="meta">
+            Prva: ${formatPrice(c.prva_cena)}<br>
+            Najniža: ${formatPrice(c.najmanja_cena)}<br>
+            Promena: ${formatPrice(c.promena || 0)}<br>
+            Score: ${score}/100
+        </div>
+
+        <div class="date">
+            Poslednja provera: ${c.poslednja_provera || "-"}
+        </div>
+
+        <a href="${o.url}" target="_blank">Otvori</a><br>
+
+        <button class="delete-btn" onclick="deleteOglas('${o.url.replace(/'/g, "\\'")}')">
+            Obriši
+        </button>
+    `;
+}
+
+function render(){
+    const oglasi = DATA?.oglasi || [];
+    const cene = DATA?.cene || {};
+
+    let list = oglasi.filter(o=>{
+        const c = cene[o.url] || {};
+
+        if(FILTER === "active") return c.aktivan !== false;
+        if(FILTER === "inactive") return c.aktivan === false;
+        if(FILTER === "changes") return c.prethodna_cena;
+        if(FILTER === "problem") return c.problem_cena === true;
+
+        return true;
+    });
+
+    list.sort((a,b)=>{
+        return (cene[b.url]?.score || 0) - (cene[a.url]?.score || 0);
+    });
+
+    const top = document.getElementById("topDeals");
+    top.innerHTML = "";
+
+    if(FILTER === "all"){
+        list.slice(0,3).forEach(o=>{
+            const c = cene[o.url] || {};
+            const div = document.createElement("div");
+            div.className = "top-card";
+            div.innerHTML = renderCard(o, c, true);
+            top.appendChild(div);
+        });
+    }
+
+    const container = document.getElementById("list");
+    container.innerHTML = "";
+
+    list.forEach(o=>{
+        const c = cene[o.url] || {};
+        const div = document.createElement("div");
+        div.className = "card";
+        div.innerHTML = renderCard(o, c, false);
+        container.appendChild(div);
+    });
+}
+
+function isAlreadyTracked(url){
+    if(!DATA?.oglasi) return false;
+    const cleanUrl = url.split("?")[0];
+    return DATA.oglasi.some(o => o.url.split("?")[0] === cleanUrl);
+}
+
+async function doSearch(page = 1){
+    if(!SELECTED_BRAND){
+        alert("Izaberi brend iz liste.");
+        return;
+    }
+
+    const yearFrom = document.getElementById("yearFromInput").value.trim();
+    const yearTo = document.getElementById("yearToInput").value.trim();
+    const priceTo = document.getElementById("priceToInput").value.trim();
+
+    SEARCH_PARAMS = {
+        brand: SELECTED_BRAND.value,
+        model: SELECTED_MODEL ? SELECTED_MODEL.value : "",
+        year_from: yearFrom,
+        year_to: yearTo,
+        price_to: priceTo,
+    };
+    SEARCH_PAGE = page;
+
+    const params = new URLSearchParams();
+    params.set("brand", SELECTED_BRAND.value);
+    if(SELECTED_MODEL) params.set("model", SELECTED_MODEL.value);
+    if(yearFrom) params.set("year_from", yearFrom);
+    if(yearTo) params.set("year_to", yearTo);
+    if(priceTo) params.set("price_to", priceTo);
+    if(page > 1) params.set("page", page);
+
+    const btn = document.getElementById("searchBtn");
+    btn.disabled = true;
+    btn.textContent = "Pretražujem...";
+
+    document.getElementById("searchInfo").textContent = "";
+    document.getElementById("searchResults").innerHTML = "";
+    document.getElementById("searchPagination").innerHTML = "";
+
+    try{
+        const r = await fetch(API + "/search?" + params.toString());
+        const data = await r.json();
+
+        if(!r.ok || data.error){
+            alert(data.error || "Greška pri pretrazi.");
+            return;
+        }
+
+        SEARCH_DATA = data;
+        renderSearch();
+
+    }catch(e){
+        console.error(e);
+        alert("Greška pri pretrazi.");
+    }finally{
+        btn.disabled = false;
+        btn.textContent = "Pretraži";
+    }
+}
+
+function renderSearch(){
+    if(!SEARCH_DATA) return;
+
+    const data = SEARCH_DATA;
+    const info = document.getElementById("searchInfo");
+    const container = document.getElementById("searchResults");
+    const pagination = document.getElementById("searchPagination");
+
+    info.innerHTML = `Ukupno <strong>${data.total || data.count}</strong> oglasa, prikazano ${data.count} (stranica ${data.page}).`;
+
+    container.innerHTML = "";
+
+    data.results.forEach(r => {
+        const tracked = isAlreadyTracked(r.url);
+
+        const div = document.createElement("div");
+        div.className = "search-card" + (tracked ? " tracked" : "");
+
+        const featuredTag = r.featured ? `<span class="featured-tag">⭐ Premium</span>` : "";
+
+        const thumb = r.slika
+            ? `<div class="thumb"><img src="${r.slika}" onerror="this.parentElement.innerHTML='No image'"></div>`
+            : `<div class="thumb">No image</div>`;
+
+        const trackButton = tracked
+            ? `<div class="tracked-tag">✅ Već pratiš</div>`
+            : `<button class="track-btn" onclick="trackFromSearch('${r.url.replace(/'/g, "\\'")}', '${r.naslov.replace(/'/g, "\\'")}')">➕ Prati</button>`;
+
+        const km = r.kilometraza ? formatKm(r.kilometraza) : "N/A";
+
+        div.innerHTML = `
+            ${thumb}
+            ${featuredTag}
+            <div class="name">${r.naslov}</div>
+            <div class="price-row">${formatPrice(r.cena)}</div>
+            <div class="meta">
+                ${r.godina ? r.godina + ". " : ""}${r.gorivo || ""}<br>
+                ${km}<br>
+                ${r.lokacija || ""}
+            </div>
+            <div class="actions">
+                <a href="${r.url}" target="_blank" class="open-btn">Otvori</a>
+                ${trackButton}
+            </div>
+        `;
+
+        container.appendChild(div);
+    });
+
+    pagination.innerHTML = "";
+    const total = data.total || 0;
+    const totalPages = Math.ceil(total / 25);
+    const currentPage = data.page;
+
+    if(totalPages > 1){
+        if(currentPage > 1){
+            const prev = document.createElement("button");
+            prev.textContent = "← Prethodna";
+            prev.onclick = () => doSearch(currentPage - 1);
+            pagination.appendChild(prev);
+        }
+
+        const pageInfo = document.createElement("span");
+        pageInfo.style.padding = "10px 16px";
+        pageInfo.textContent = `Stranica ${currentPage} od ${totalPages}`;
+        pagination.appendChild(pageInfo);
+
+        if(currentPage < totalPages){
+            const next = document.createElement("button");
+            next.textContent = "Sledeća →";
+            next.onclick = () => doSearch(currentPage + 1);
+            pagination.appendChild(next);
+        }
+    }
+}
+
+async function trackFromSearch(url, label){
+    const ok = await addOglasByUrl(url, label);
+    if(ok){
+        renderSearch();
+    }
+}
+
+async function init(){
+    await loadBrands();
+
+    setupAutocomplete("brandInput", "brandList", () => BRANDS, selectBrand);
+    setupAutocomplete("modelInput", "modelList", () => MODELS, selectModel);
+
+    await load();
+}
+
+init();
+</script>
+
+</body>
+</html>
