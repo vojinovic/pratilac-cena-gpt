@@ -45,51 +45,57 @@ def sacuvaj_bazu(baza):
         json.dump(baza, f, ensure_ascii=False, indent=2)
 
 
-def normalizuj_cenu(text):
+def parsiraj_broj(text):
+    """Iz string-a kao '34.990 €' ili '31.950 €' vrati int 34990."""
     if not text:
         return None
 
-    text = str(text)
+    cifre = re.sub(r"[^\d]", "", str(text))
 
-    patterns = [
-        r"([\d\.\s]{4,})\s*€",
-        r"([\d\.\s]{4,})\s*EUR",
-    ]
+    if not cifre:
+        return None
 
-    for pattern in patterns:
-        match = re.search(pattern, text, re.IGNORECASE)
+    cena = int(cifre)
 
-        if match:
-            cifre = re.sub(r"[^\d]", "", match.group(1))
-
-            if cifre:
-                cena = int(cifre)
-
-                if 1000 <= cena <= 500000:
-                    return cena
+    if 1000 <= cena <= 500000:
+        return cena
 
     return None
 
 
-def izvuci_cenu(soup, html):
-    selectors = [
-        {"class": "price"},
-        {"class": "priceBox"},
-        {"itemprop": "price"},
-    ]
+def izvuci_cenu(soup):
+    """
+    Polovniautomobili struktura:
+    - Bez popusta: <span class="priceClassified regularPriceColor">34.990 €</span>
+    - Sa popustom: <span class="priceClassified discountedPriceColor">31.950 €</span>
+                   plus <div class="discount regularPriceColor">34.950 €</div> (precrtana)
+    
+    Uvek uzimamo priceClassified jer je to AKTUELNA cena (akcijska kad postoji, redovna inače).
+    """
+    # Glavna ciljna klasa
+    el = soup.find("span", class_="priceClassified")
 
-    for sel in selectors:
-        el = soup.find(attrs=sel)
+    if el:
+        cena = parsiraj_broj(el.get_text(" ", strip=True))
+        if cena:
+            return cena
 
-        if el:
-            cena = normalizuj_cenu(
-                el.get("content") or el.get_text(" ", strip=True)
-            )
+    # Fallback 1: bilo koji element sa priceClassified u klasi
+    el = soup.find(class_=re.compile(r"priceClassified"))
 
-            if cena:
-                return cena
+    if el:
+        cena = parsiraj_broj(el.get_text(" ", strip=True))
+        if cena:
+            return cena
 
-    return normalizuj_cenu(html)
+    # Fallback 2: meta og:price ako postoji
+    meta = soup.find("meta", attrs={"property": "product:price:amount"})
+    if meta and meta.get("content"):
+        cena = parsiraj_broj(meta.get("content"))
+        if cena:
+            return cena
+
+    return None
 
 
 def izvuci_sliku(soup):
@@ -277,7 +283,7 @@ def proveri_oglas(url):
 
     soup = BeautifulSoup(response.text, "html.parser")
 
-    cena = izvuci_cenu(soup, response.text)
+    cena = izvuci_cenu(soup)
     slika = izvuci_sliku(soup)
     naziv = izvuci_naziv(soup)
 
@@ -320,7 +326,7 @@ def main():
 
             continue
 
-        # Ako scraping uspeo ali nije našao cenu, ne diraj baznu cenu
+        # Stranica učitana ali cena nije pronađena
         if cena is None:
             print("UPOZORENJE: Stranica učitana ali cena nije pronađena")
 
