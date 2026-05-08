@@ -70,9 +70,8 @@ def izvuci_cenu(soup):
     - Sa popustom: <span class="priceClassified discountedPriceColor">31.950 €</span>
                    plus <div class="discount regularPriceColor">34.950 €</div> (precrtana)
     
-    Uvek uzimamo priceClassified jer je to AKTUELNA cena (akcijska kad postoji, redovna inače).
+    Uvek uzimamo priceClassified jer je to AKTUELNA cena.
     """
-    # Glavna ciljna klasa
     el = soup.find("span", class_="priceClassified")
 
     if el:
@@ -80,7 +79,6 @@ def izvuci_cenu(soup):
         if cena:
             return cena
 
-    # Fallback 1: bilo koji element sa priceClassified u klasi
     el = soup.find(class_=re.compile(r"priceClassified"))
 
     if el:
@@ -88,7 +86,6 @@ def izvuci_cenu(soup):
         if cena:
             return cena
 
-    # Fallback 2: meta og:price ako postoji
     meta = soup.find("meta", attrs={"property": "product:price:amount"})
     if meta and meta.get("content"):
         cena = parsiraj_broj(meta.get("content"))
@@ -123,35 +120,41 @@ def izvuci_naziv(soup):
     return "Oglas"
 
 
-def extract_model(label):
-    if not label:
+def extract_model(url):
+    """
+    Izvlači model iz polovniautomobili URL-a.
+    
+    URL format: https://www.polovniautomobili.com/auto-oglasi/29005264/volvo-xc60-4x4-d4kupljovde1vl?...
+    
+    Logika:
+    1. Uzmi deo posle ID-a oglasa
+    2. Ukloni query string (?...)
+    3. Uzmi prve dve reči odvojene crticom (brand + model)
+    
+    Vraća: 'volvo-xc60', 'skoda-kodiaq', 'bmw-x5', itd.
+    """
+    if not url:
         return "unknown"
 
-    text = label.lower()
+    # Uzmi deo posle /auto-oglasi/<id>/
+    match = re.search(r"/auto-oglasi/\d+/([^/?#]+)", url)
 
-    modeli = [
-        "xc60",
-        "xc90",
-        "kodiaq",
-        "tiguan",
-        "x5",
-        "gle",
-        "q5",
-        "q7",
-        "glc",
-        "x3",
-    ]
+    if not match:
+        return "unknown"
 
-    for model in modeli:
-        if model in text:
-            return model
+    slug = match.group(1).lower()
 
-    words = text.split()
+    # Razdvoji po crticama
+    delovi = slug.split("-")
 
-    if len(words) >= 2:
-        return words[1]
+    if len(delovi) >= 2:
+        # Brand + model (npr. "volvo-xc60", "skoda-kodiaq", "bmw-x5")
+        return delovi[0] + "-" + delovi[1]
 
-    return words[0]
+    if len(delovi) == 1:
+        return delovi[0]
+
+    return "unknown"
 
 
 def market_average(model, baza):
@@ -312,10 +315,10 @@ def main():
             or "Oglas"
         )
 
-        model = extract_model(label)
+        # Model se sad izvlači iz URL-a, ne iz label-a
+        model = extract_model(url)
 
         if not aktivan:
-            # Scraping nije uspeo - zadrži stare podatke, samo označi problem
             baza[url] = {
                 **stara,
                 "label": label,
@@ -326,7 +329,6 @@ def main():
 
             continue
 
-        # Stranica učitana ali cena nije pronađena
         if cena is None:
             print("UPOZORENJE: Stranica učitana ali cena nije pronađena")
 
