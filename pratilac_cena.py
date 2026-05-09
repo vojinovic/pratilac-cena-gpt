@@ -13,7 +13,6 @@ OGLASI_FAJL = "oglasi.json"
 BAZA_FAJL = "cene_oglasa.json"
 PAUZA = 4
 
-# Email pragovi za sniženja
 PRAG_PROCENT = 1.0
 PRAG_APSOLUT = 200
 
@@ -64,6 +63,32 @@ def parsiraj_broj(text):
     return None
 
 
+def izvuci_data_layer(html):
+    """
+    Izvlači podatke iz dataLayer.push({...}) na pojedinačnoj stranici oglasa.
+    
+    Polovniautomobili u JS-u ima:
+        dataLayer.push({"fair_offer":"false","rubrika":"...","object_uid":"28482744",...})
+    
+    Vraća dict sa svim object_* poljima + ostalim korisnim.
+    """
+    # Pronadji prvi dataLayer.push sa "object_uid" u sebi
+    pattern = r'dataLayer\.push\((\{[^;]*?"object_uid"[^;]*?\})\);'
+    match = re.search(pattern, html)
+    
+    if not match:
+        return {}
+    
+    json_str = match.group(1)
+    
+    try:
+        data = json.loads(json_str)
+        return data
+    except json.JSONDecodeError as e:
+        print(f"  Ne mogu da parsiram dataLayer JSON: {e}")
+        return {}
+
+
 def izvuci_cenu(soup):
     el = soup.find("span", class_="priceClassified")
     if el:
@@ -105,67 +130,6 @@ def izvuci_naziv(soup):
         return text
 
     return "Oglas"
-
-
-def izvuci_specs(soup):
-    """
-    Parsira sve label/value parove iz "Opšte informacije" sekcije.
-    
-    Struktura na polovniautomobili je:
-    <div class="divider">
-        <div class="uk-grid">
-            <div class="uk-width-1-2">Godište</div>
-            <div class="uk-width-1-2 uk-text-bold">2022.</div>
-        </div>
-    </div>
-    
-    Vraća rečnik: {"godiste": 2022, "kilometraza": 158216, "karoserija": "Džip/SUV", ...}
-    """
-    specs = {}
-
-    # Sve uk-grid divove koji sadrže labele i vrednosti
-    grids = soup.find_all("div", class_="uk-grid")
-
-    for grid in grids:
-        cells = grid.find_all("div", class_="uk-width-1-2")
-
-        if len(cells) >= 2:
-            label = cells[0].get_text(" ", strip=True).lower()
-            value = cells[1].get_text(" ", strip=True)
-
-            if not label or not value:
-                continue
-
-            # Mapiranje labela na ključeve
-            if "godište" in label or "godiste" in label:
-                godina = re.sub(r"[^\d]", "", value)
-                if godina and len(godina) == 4:
-                    specs["godiste"] = int(godina)
-
-            elif "kilometraža" in label or "kilometraza" in label:
-                km = re.sub(r"[^\d]", "", value)
-                if km:
-                    specs["kilometraza"] = int(km)
-
-            elif "karoserija" in label:
-                specs["karoserija"] = value
-
-            elif "gorivo" in label:
-                specs["gorivo"] = value
-
-            elif "snaga" in label:
-                specs["snaga"] = value
-
-            elif "kubikaža" in label or "kubikaza" in label:
-                specs["kubikaza"] = value
-
-            elif "marka" in label and "modela" not in label:
-                specs["marka"] = value
-
-            elif label == "model":
-                specs["model_naziv"] = value
-
-    return specs
 
 
 def extract_model(url):
@@ -216,28 +180,36 @@ def market_average_godiste(model, baza):
     return sum(godine) / len(godine)
 
 
-def calculate_score(
-    label,
-    html,
-    cena,
-    market_avg_cena,
-    kilometraza,
-    market_avg_km,
-    godiste,
-    market_avg_godiste,
-    prva_cena,
-    najmanja_cena,
-    ukupno_snizenje,
-    promena_tip,
-):
-    text = ((label or "") + " " + (html or "")).lower()
+def days_since(date_str):
+    """Vraća broj dana od datog datuma do danas. Format: '2026-04-27 02:17:55'"""
+    if not date_str:
+        return None
+    try:
+        date = datetime.strptime(date_str, "%Y-%m-%d %H:%M:%S")
+        delta = datetime.now() - date
+        return delta.days
+    except (ValueError, TypeError):
+        return None
 
+
+def calculate_score(
+    cena, market_avg_cena,
+    kilometraza, market_avg_km,
+    godiste, market_avg_godiste,
+    structured_data,
+    last_renewed_date,
+    promena_tip,
+    ukupno_snizenje,
+):
+    """
+    Score na osnovu strukturisanih polja iz polovniautomobili dataLayer-a,
+    umesto keyword pretrage HTML-a.
+    """
     score = 50
 
     # 1. CENA vs MARKET (±20)
     if market_avg_cena and cena:
         diff_percent = ((market_avg_cena - cena) / market_avg_cena) * 100
-
         if diff_percent >= 15:
             score += 20
         elif diff_percent >= 10:
@@ -251,9 +223,7 @@ def calculate_score(
 
     # 2. KILOMETRAŽA vs MARKET (±15)
     if market_avg_km and kilometraza:
-        # Manje km = bolje
         ratio = kilometraza / market_avg_km
-
         if ratio <= 0.5:
             score += 15
         elif ratio <= 0.75:
@@ -268,7 +238,6 @@ def calculate_score(
     # 3. GODIŠTE vs MARKET (±10)
     if market_avg_godiste and godiste:
         diff = godiste - market_avg_godiste
-
         if diff >= 2:
             score += 10
         elif diff >= 1:
@@ -283,40 +252,58 @@ def calculate_score(
         market_avg_km and kilometraza and kilometraza < market_avg_km and
         market_avg_godiste and godiste and godiste >= market_avg_godiste):
         score += 10
-        print("BONUS DEAL: ispod proseka u sve tri kategorije!")
 
-    # 5. OPREMA
-    plus_keywords = {
-        "awd": 5, "4x4": 5, "r-design": 5, "inscription": 5,
-        "momentum": 3, "sport": 4, "pano": 5, "panorama": 5,
-        "kamera": 3, "hud": 4, "webasto": 4, "led": 3,
-        "matrix": 4, "harman": 3, "bowers": 4,
-    }
+    # 5. STRUKTURISANA POLJA (mnogo pouzdanije od keyword pretrage!)
+    if structured_data:
+        if structured_data.get("object_prvi_vlasnik") == "yes":
+            score += 10
+        if structured_data.get("object_servisna_knjizica") == "yes":
+            score += 8
+        if structured_data.get("object_garancija") == "yes":
+            score += 8
+        if structured_data.get("object_kupljen_nov_u_srbiji") == "yes":
+            score += 6
+        
+        # Damage status
+        damage = structured_data.get("object_damage", "")
+        if "udaren" in damage.lower():
+            score -= 25
+        elif "oštećen" in damage.lower() and "nije" not in damage.lower():
+            score -= 20
 
-    for keyword, points in plus_keywords.items():
-        if keyword in text:
-            score += points
+        # Negativni signali
+        if structured_data.get("object_taxi") == "yes":
+            score -= 15  # taxi vozilo = puno km, intenzivna eksploatacija
+        if structured_data.get("object_test_vozilo") == "yes":
+            score -= 5
 
-    # 6. STANJE
-    stanje_plus = {
-        "prvi vlasnik": 10, "1 vlasnik": 10, "servisna": 6,
-        "servisna knjiga": 8, "bez ulaganja": 8,
-        "kupljen u srbiji": 6, "garaziran": 5,
-    }
+        # Pozitivni signali (ali manji bonus)
+        if structured_data.get("object_old_timer") == "yes":
+            score += 3  # oldtajmer može biti vredan
+        
+        # Rating prodavca (0-5, gde je 0 = nema rating)
+        try:
+            rating = float(structured_data.get("object_owner_rating", 0))
+            if rating >= 4.5:
+                score += 5
+            elif rating >= 4.0:
+                score += 3
+            elif rating > 0 and rating < 3:
+                score -= 5
+        except (ValueError, TypeError):
+            pass
 
-    for keyword, points in stanje_plus.items():
-        if keyword in text:
-            score += points
-
-    stanje_minus = {
-        "udaren": -25, "ostecen": -20, "oštećen": -20,
-        "hitno": -5, "zamena": -5, "fiksno": -3,
-        "potrebna ulaganja": -15,
-    }
-
-    for keyword, points in stanje_minus.items():
-        if keyword in text:
-            score += points
+    # 6. VREMENSKI TREND (last_renewed_date)
+    days_renewed = days_since(last_renewed_date)
+    if days_renewed is not None:
+        if days_renewed <= 7:
+            score += 5  # svež oglas
+        elif days_renewed <= 30:
+            pass  # normalno
+        elif days_renewed <= 60:
+            score -= 3  # stoji
+        else:
+            score -= 8  # stari oglas
 
     # 7. TREND CENE
     if ukupno_snizenje >= 2000:
@@ -328,7 +315,6 @@ def calculate_score(
 
     if promena_tip == "snizenje":
         score += 5
-
     if promena_tip == "poskupljenje":
         score -= 8
 
@@ -346,7 +332,6 @@ def proveri_oglas(url):
         response = requests.get(url, headers=HEADERS, timeout=20)
         response.raise_for_status()
         response.encoding = "utf-8"
-
     except Exception as e:
         print("Greška:", e)
         return None, None, None, "", {}, False
@@ -356,9 +341,9 @@ def proveri_oglas(url):
     cena = izvuci_cenu(soup)
     slika = izvuci_sliku(soup)
     naziv = izvuci_naziv(soup)
-    specs = izvuci_specs(soup)
+    structured = izvuci_data_layer(response.text)
 
-    return cena, slika, naziv, response.text, specs, True
+    return cena, slika, naziv, response.text, structured, True
 
 
 def posalji_email(snizenja, nestali):
@@ -418,9 +403,7 @@ def posalji_email(snizenja, nestali):
 
     html += """
         <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;">
-        <p style="color: #999; font-size: 13px;">
-            Obaveštenje od Auto Drukara aplikacije.
-        </p>
+        <p style="color: #999; font-size: 13px;">Obaveštenje od Auto Drukara aplikacije.</p>
     </div>
     """
 
@@ -439,12 +422,10 @@ def posalji_email(snizenja, nestali):
             },
             timeout=10,
         )
-
         if resp.status_code == 200:
             print(f"EMAIL POSLAT: {subject}")
         else:
             print(f"EMAIL GREŠKA: {resp.status_code} - {resp.text[:200]}")
-
     except Exception as e:
         print(f"EMAIL EXCEPTION: {e}")
 
@@ -454,6 +435,7 @@ def main():
     baza = ucitaj_bazu()
 
     now = datetime.now().strftime("%d.%m.%Y %H:%M")
+    now_iso = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
     snizenja_za_email = []
     nestali_za_email = []
@@ -463,7 +445,7 @@ def main():
 
         print("\nPROVERA:", url)
 
-        cena, slika, naziv, html, specs, aktivan = proveri_oglas(url)
+        cena, slika, naziv, html, structured, aktivan = proveri_oglas(url)
 
         stara = baza.get(url, {})
 
@@ -500,7 +482,6 @@ def main():
 
         if cena is None:
             print("UPOZORENJE: Stranica učitana ali cena nije pronađena")
-
             baza[url] = {
                 **stara,
                 "label": label,
@@ -510,18 +491,39 @@ def main():
                 "aktivan": True,
                 "poslednja_provera": now,
             }
-
             time.sleep(PAUZA)
             continue
 
-        # Sad imamo cenu i specs
-        godiste = specs.get("godiste") or stara.get("godiste")
-        kilometraza = specs.get("kilometraza") or stara.get("kilometraza")
-        karoserija = specs.get("karoserija") or stara.get("karoserija")
-        gorivo = specs.get("gorivo") or stara.get("gorivo")
+        # Iz strukturisanih podataka
+        godiste = None
+        kilometraza = None
+        gorivo = None
+        karoserija = None
+        last_renewed_date = None
+        
+        if structured:
+            try:
+                godiste = int(structured.get("object_production_year")) if structured.get("object_production_year") else None
+            except (ValueError, TypeError):
+                pass
+            try:
+                kilometraza = int(structured.get("object_mileage")) if structured.get("object_mileage") else None
+            except (ValueError, TypeError):
+                pass
+            gorivo = structured.get("object_fuel")
+            karoserija = structured.get("object_chassis")
+            last_renewed_date = structured.get("object_last_renewed_date")
+
+        # Fallback na stare vrednosti ako structured fail-uje
+        godiste = godiste or stara.get("godiste")
+        kilometraza = kilometraza or stara.get("kilometraza")
+        gorivo = gorivo or stara.get("gorivo")
+        karoserija = karoserija or stara.get("karoserija")
+
+        # Prvi put videno - postavlja se samo prvi put
+        prvi_put_videno = stara.get("prvi_put_videno") or now_iso
 
         prethodna_cena = stara.get("cena")
-
         prva_cena = stara.get("prva_cena") or cena
         najmanja_cena = stara.get("najmanja_cena") or cena
 
@@ -553,14 +555,13 @@ def main():
                         })
                         print(f"SNIŽENJE ZA EMAIL: {label} -{razlika}€ ({procenat:.1f}%)")
                     else:
-                        print(f"sniženje ispod praga, preskačem email: {label} -{razlika}€ ({procenat:.1f}%)")
+                        print(f"sniženje ispod praga: {label} -{razlika}€ ({procenat:.1f}%)")
                 else:
                     promena_tip = "poskupljenje"
 
         najmanja_cena = min(cena, najmanja_cena)
 
-        # Privremeno upiši nove podatke u baza pre nego što izračunamo prosek
-        # (da bi prosek uključio i ovaj auto)
+        # Privremeno upiši pre score-a
         baza[url] = {
             **stara,
             "model": model,
@@ -574,24 +575,37 @@ def main():
         market_god = market_average_godiste(model, baza)
 
         score = calculate_score(
-            label=label,
-            html=html,
             cena=cena,
             market_avg_cena=market_cena,
             kilometraza=kilometraza,
             market_avg_km=market_km,
             godiste=godiste,
             market_avg_godiste=market_god,
-            prva_cena=prva_cena,
-            najmanja_cena=najmanja_cena,
-            ukupno_snizenje=ukupno_snizenje,
+            structured_data=structured,
+            last_renewed_date=last_renewed_date,
             promena_tip=promena_tip,
+            ukupno_snizenje=ukupno_snizenje,
         )
 
+        days_renewed = days_since(last_renewed_date)
+        days_tracked = days_since(prvi_put_videno)
+
         print(f"MODEL: {model}")
-        print(f"CENA: {cena}€ | MARKET AVG: {market_cena:.0f}€" if market_cena else f"CENA: {cena}€")
-        print(f"KM: {kilometraza} | MARKET AVG: {market_km:.0f}" if (kilometraza and market_km) else f"KM: {kilometraza}")
-        print(f"GODIŠTE: {godiste} | MARKET AVG: {market_god:.1f}" if (godiste and market_god) else f"GODIŠTE: {godiste}")
+        print(f"CENA: {cena}€" + (f" | MARKET AVG: {market_cena:.0f}€" if market_cena else ""))
+        print(f"KM: {kilometraza}" + (f" | AVG: {market_km:.0f}" if market_km else ""))
+        print(f"GODIŠTE: {godiste}" + (f" | AVG: {market_god:.1f}" if market_god else ""))
+        if days_renewed is not None:
+            print(f"OBNOVLJEN PRE: {days_renewed} dana")
+        if days_tracked is not None:
+            print(f"PRATIMO: {days_tracked} dana")
+        if structured:
+            indicators = []
+            if structured.get("object_prvi_vlasnik") == "yes": indicators.append("prvi vlasnik")
+            if structured.get("object_servisna_knjizica") == "yes": indicators.append("servisna")
+            if structured.get("object_garancija") == "yes": indicators.append("garancija")
+            if structured.get("object_kupljen_nov_u_srbiji") == "yes": indicators.append("kupljen u SRB")
+            if indicators:
+                print(f"INDIKATORI: {', '.join(indicators)}")
         print(f"SCORE: {score}")
         print(f"LABEL: {label}")
 
@@ -616,6 +630,17 @@ def main():
             "problem_cena": False,
             "poslednja_provera": now,
             "score": score,
+            
+            # NOVO
+            "prvi_put_videno": prvi_put_videno,
+            "last_renewed_date": last_renewed_date,
+            "prvi_vlasnik": structured.get("object_prvi_vlasnik") == "yes" if structured else False,
+            "servisna_knjizica": structured.get("object_servisna_knjizica") == "yes" if structured else False,
+            "garancija": structured.get("object_garancija") == "yes" if structured else False,
+            "kupljen_nov_u_srbiji": structured.get("object_kupljen_nov_u_srbiji") == "yes" if structured else False,
+            "damage": structured.get("object_damage") if structured else None,
+            "owner_rating": structured.get("object_owner_rating") if structured else None,
+            "owner_name": structured.get("companyName") if structured else None,
         }
 
         time.sleep(PAUZA)
