@@ -1,48 +1,52 @@
 name: Provera cena oglasa
-
 on:
   schedule:
     - cron: "0 * * * *"
-
   workflow_dispatch:
-
   repository_dispatch:
     types: [scrape]
-
 permissions:
   contents: write
-
 jobs:
   provera:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
       - name: Python setup
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-
       - name: Install dependencies
         run: |
           pip install requests beautifulsoup4 brotli
-
       - name: Pokreni skriptu
         env:
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
           EMAIL_PRIMALAC: ${{ secrets.EMAIL_PRIMALAC }}
         run: |
           python pratilac_cena.py
-
       - name: Commituj bazu cena
         run: |
           git config --global user.name "github-actions"
           git config --global user.email "github-actions@github.com"
-
           git add cene_oglasa.json
-
-          git diff --staged --quiet || git commit -m "Ažurirane cene"
-
-          git push
+          
+          if git diff --staged --quiet; then
+            echo "Nema promena za commit"
+            exit 0
+          fi
+          
+          git commit -m "Ažurirane cene"
+          
+          for i in 1 2 3; do
+            if git push; then
+              echo "Push uspešan"
+              exit 0
+            fi
+            echo "Push odbijen, pull --rebase i probaj ponovo (pokušaj $i)"
+            git pull --rebase origin main
+          done
+          
+          echo "Push neuspešan posle 3 pokušaja"
+          exit 1
