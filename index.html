@@ -4,9 +4,20 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Drukara - Praćenje cena polovnih automobila</title>
+<title>Auto Drukara — Mi nađemo. Ti uštediš.</title>
+<meta name="description" content="Praćenje cena polovnih automobila sa pametnom analizom tržišta. Saznaj koji oglas vredi i kad je vreme za pregovor.">
 
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<!-- Favicon -->
+<link rel="icon" type="image/png" href="images/favicon.png">
+<link rel="apple-touch-icon" href="images/favicon.png">
+
+<!-- Open Graph (social share) -->
+<meta property="og:type" content="website">
+<meta property="og:title" content="Auto Drukara — Mi nađemo. Ti uštediš.">
+<meta property="og:description" content="Praćenje cena polovnih automobila sa pametnom analizom tržišta.">
+<meta property="og:image" content="images/combined.png">
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -34,20 +45,14 @@ body {
 .logo {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 14px;
 }
 
-.logo-mark {
-    width: 36px;
-    height: 36px;
-    background: #18181b;
-    border-radius: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    font-weight: 700;
-    font-size: 18px;
+.logo-mark-img {
+    width: 52px;
+    height: 52px;
+    object-fit: contain;
+    flex-shrink: 0;
 }
 
 .logo-text {
@@ -56,15 +61,22 @@ body {
 }
 
 .logo-name {
-    font-size: 20px;
-    font-weight: 700;
+    font-size: 24px;
+    font-weight: 800;
     letter-spacing: -0.02em;
+    line-height: 1;
+    text-transform: uppercase;
+}
+
+.logo-name .name-red {
+    color: #dc2626;
 }
 
 .logo-sub {
     font-size: 13px;
     color: #71717a;
-    margin-top: -2px;
+    margin-top: 4px;
+    font-weight: 500;
 }
 
 .tabs {
@@ -364,7 +376,7 @@ input::placeholder {
 }
 
 .card.top-deal {
-    border-color: #18181b;
+    border-color: #dc2626;
     border-width: 2px;
 }
 
@@ -413,15 +425,16 @@ input::placeholder {
     position: absolute;
     top: 10px;
     left: 10px;
-    background: #18181b;
+    background: #dc2626;
     color: white;
     padding: 4px 10px;
     border-radius: 6px;
     font-size: 11px;
-    font-weight: 600;
+    font-weight: 700;
     letter-spacing: 0.05em;
     text-transform: uppercase;
     z-index: 2;
+    box-shadow: 0 2px 6px rgba(220, 38, 38, 0.3);
 }
 
 .card-body {
@@ -606,7 +619,7 @@ input::placeholder {
 }
 
 .search-card.score-fire {
-    border-color: #18181b;
+    border-color: #dc2626;
     border-width: 2px;
 }
 
@@ -767,6 +780,8 @@ input::placeholder {
     .tabs { width: 100%; }
     .tab { flex: 1; justify-content: center; }
     #list { grid-template-columns: 1fr; }
+    .logo-mark-img { width: 44px; height: 44px; }
+    .logo-name { font-size: 20px; }
 }
 </style>
 </head>
@@ -777,10 +792,10 @@ input::placeholder {
 
     <div class="header">
         <div class="logo">
-            <div class="logo-mark">D</div>
+            <img src="images/logo-mark.png" alt="Auto Drukara" class="logo-mark-img">
             <div class="logo-text">
-                <div class="logo-name">Drukara</div>
-                <div class="logo-sub">Praćenje cena polovnih automobila</div>
+                <div class="logo-name">Auto <span class="name-red">Drukara</span></div>
+                <div class="logo-sub">Mi nađemo. Ti uštediš.</div>
             </div>
         </div>
     </div>
@@ -1191,7 +1206,6 @@ function buildTrackedCard(o, c, showBestDealTag){
         body.appendChild(pb);
     }
 
-    // Damage warning
     if(c.damage && !c.damage.toLowerCase().includes("nije")){
         const dw = document.createElement("div");
         dw.className = "damage-badge";
@@ -1209,7 +1223,6 @@ function buildTrackedCard(o, c, showBestDealTag){
     price.textContent = formatPrice(c.cena);
     body.appendChild(price);
 
-    // Indikator tagovi (prvi vlasnik, servisna, garancija, kupljen u SRB)
     const indicators = [];
     if(c.prvi_vlasnik) indicators.push("👤 Prvi vlasnik");
     if(c.servisna_knjizica) indicators.push("📖 Servisna");
@@ -1228,7 +1241,6 @@ function buildTrackedCard(o, c, showBestDealTag){
         body.appendChild(indRow);
     }
 
-    // Specs
     const specs = [];
     if(c.godiste) specs.push({label: c.godiste + ".", year: true});
     if(c.kilometraza) specs.push({label: formatKm(c.kilometraza)});
@@ -1262,7 +1274,6 @@ function buildTrackedCard(o, c, showBestDealTag){
         metaHTML += `<div class="card-meta-row"><span>Promena</span><span style="color:${promenaColor};font-weight:600;">${promenaText}</span></div>`;
     }
 
-    // Vremenski podaci - obnovljen kad
     const daysRenewed = daysFromIsoDate(c.last_renewed_date);
     const daysTracked = daysFromIsoDate(c.prvi_put_videno);
 
@@ -1346,7 +1357,6 @@ function render(){
     container.style.display = "grid";
     emptyState.style.display = "none";
 
-    // Best deal tag samo na #1 sa najvecim score-om i samo ako je 80+
     const topUrl = (list[0] && (cene[list[0].url]?.score || 0) >= 80) ? list[0].url : null;
 
     list.forEach(o=>{
