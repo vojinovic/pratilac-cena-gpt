@@ -18,7 +18,7 @@
     "datum_promene": "07.05.2026 16:58",
     "aktivan": true,
     "problem_cena": false,
-    "poslednja_provera": "09.05.2026 10:23",
+    "poslednja_provera": "09.05.2026 10:33",
     "score": 69
   },
   "https://www.polovniautomobili.com/auto-oglasi/28877577/volvo-xc60-20-awd?attp=p9_pv0_pc0_pl11_plv0": {
@@ -40,7 +40,7 @@
     "datum_promene": "07.05.2026 16:58",
     "aktivan": true,
     "problem_cena": false,
-    "poslednja_provera": "09.05.2026 10:23",
+    "poslednja_provera": "09.05.2026 10:33",
     "score": 64
   },
   "https://www.polovniautomobili.com/auto-oglasi/29005264/volvo-xc60-4x4-d4kupljovde1vl?attp=p9_pv0_pc0_pl11_plv0": {
@@ -62,7 +62,7 @@
     "datum_promene": "08.05.2026 15:02",
     "aktivan": true,
     "problem_cena": false,
-    "poslednja_provera": "09.05.2026 10:23",
+    "poslednja_provera": "09.05.2026 10:33",
     "score": 100
   },
   "https://www.polovniautomobili.com/auto-oglasi/28451802/volvo-xc60-20b4mhev-momentum?attp=p9_pv0_pc0_pl11_plv0": {
@@ -84,7 +84,7 @@
     "datum_promene": "07.05.2026 16:58",
     "aktivan": true,
     "problem_cena": false,
-    "poslednja_provera": "09.05.2026 10:23",
+    "poslednja_provera": "09.05.2026 10:33",
     "score": 76
   },
   "https://www.polovniautomobili.com/auto-oglasi/28597036/volvo-xc60-b4-awd-inscription?attp=p9_pv0_pc0_pl11_plv0": {
@@ -106,7 +106,7 @@
     "datum_promene": "07.05.2026 16:58",
     "aktivan": true,
     "problem_cena": false,
-    "poslednja_provera": "09.05.2026 10:23",
+    "poslednja_provera": "09.05.2026 10:33",
     "score": 65
   },
   "https://www.polovniautomobili.com/auto-oglasi/29012594/volvo-xc60?attp=p9_pv0_pc0_pl11_plv0": {
@@ -128,7 +128,7 @@
     "datum_promene": "07.05.2026 16:58",
     "aktivan": true,
     "problem_cena": false,
-    "poslednja_provera": "09.05.2026 10:23",
+    "poslednja_provera": "09.05.2026 10:33",
     "score": 77
   },
   "https://www.polovniautomobili.com/auto-oglasi/28720117/skoda-kodiaq-20tdisport4x4pano?attp=p9_pv0_pc0_pl11_plv0": {
@@ -150,7 +150,7 @@
     "datum_promene": "07.05.2026 16:58",
     "aktivan": true,
     "problem_cena": false,
-    "poslednja_provera": "09.05.2026 10:23",
+    "poslednja_provera": "09.05.2026 10:33",
     "score": 77
   },
   "http://www.polovniautomobili.com/auto-oglasi/29216093/volvo-xc60-b4-d-awd-inscription": {
@@ -172,7 +172,7 @@
     "datum_promene": null,
     "aktivan": true,
     "problem_cena": false,
-    "poslednja_provera": "09.05.2026 10:23",
+    "poslednja_provera": "09.05.2026 10:33",
     "score": 84
   },
   "http://www.polovniautomobili.com/auto-oglasi/29091836/skoda-kodiaq-style-20": {
@@ -194,7 +194,7 @@
     "datum_promene": null,
     "aktivan": true,
     "problem_cena": false,
-    "poslednja_provera": "09.05.2026 10:23",
+    "poslednja_provera": "09.05.2026 10:33",
     "score": 65
   },
   "https://www.polovniautomobili.com/auto-oglasi/28666773/skoda-kodiaq-20tdi-4x4-dsg-style?attp=p9_pv0_pc0_pl11_plv0": {
@@ -216,7 +216,7 @@
     "datum_promene": null,
     "aktivan": true,
     "problem_cena": false,
-    "poslednja_provera": "09.05.2026 10:23",
+    "poslednja_provera": "09.05.2026 10:33",
     "score": 65
   },
   "https://www.polovniautomobili.com/auto-oglasi/27979812/volvo-xc60-20-d4-virtmatrix?attp=p1_pv0_pc1_pl1_plv0": {
@@ -238,7 +238,7 @@
     "datum_promene": null,
     "aktivan": true,
     "problem_cena": false,
-    "poslednja_provera": "09.05.2026 10:23",
+    "poslednja_provera": "09.05.2026 10:33",
     "score": 55
   },
   "https://www.polovniautomobili.com/auto-oglasi/29216093/volvo-xc60-b4-d-awd-inscription?attp=p3_pv0_pc1_pl1_plv0": {
@@ -254,13 +254,101 @@
     "broj_promena": 0,
     "ukupno_snizenje": 0,
     "slika": "https://gcdn.polovniautomobili.com/user-images/thumbs/2921/29216093/d955a3414c8d-1920x1080.jpg",
+    "prethodna_cena": 28690,
+    "promena": 0,
+    "promena_tip": "bez_promene",
+    "datum_promene": null,
+    "aktivan": true,
+    "problem_cena": false,
+    "poslednja_provera": "09.05.2026 10:33",
+    "score": 84
+  },
+  "https://www.polovniautomobili.com/auto-oglasi/28733983/volvo-xc60-inscription-m-hev?attp=p1_pv0_pc1_pl1_plv0": {
+    "label": "Volvo XC60 Inscription M-hev",
+    "model": "volvo-xc60",
+    "cena": 28990,
+    "godiste": 2021,
+    "kilometraza": 163537,
+    "karoserija": "Džip/SUV",
+    "gorivo": "Hibridni pogon (Dizel)",
+    "prva_cena": 28990,
+    "najmanja_cena": 28990,
+    "broj_promena": 0,
+    "ukupno_snizenje": 0,
+    "slika": "https://gcdn.polovniautomobili.com/user-images/thumbs/2873/28733983/1e8c999132d3-1920x1080.jpg",
     "prethodna_cena": null,
     "promena": 0,
     "promena_tip": "bez_promene",
     "datum_promene": null,
     "aktivan": true,
     "problem_cena": false,
-    "poslednja_provera": "09.05.2026 10:23",
-    "score": 84
+    "poslednja_provera": "09.05.2026 10:33",
+    "score": 70
+  },
+  "https://www.polovniautomobili.com/auto-oglasi/28215893/volvo-xc60-b4-d-awd-r-design?attp=p3_pv0_pc1_pl1_plv0": {
+    "label": "Volvo XC60 B4 D Awd R-design",
+    "model": "volvo-xc60",
+    "cena": 31900,
+    "godiste": 2021,
+    "kilometraza": 117564,
+    "karoserija": "Džip/SUV",
+    "gorivo": "Hibridni pogon (Dizel)",
+    "prva_cena": 31900,
+    "najmanja_cena": 31900,
+    "broj_promena": 0,
+    "ukupno_snizenje": 0,
+    "slika": "https://gcdn.polovniautomobili.com/user-images/thumbs/2821/28215893/fdd598bcea99-1920x1080.jpg",
+    "prethodna_cena": null,
+    "promena": 0,
+    "promena_tip": "bez_promene",
+    "datum_promene": null,
+    "aktivan": true,
+    "problem_cena": false,
+    "poslednja_provera": "09.05.2026 10:33",
+    "score": 81
+  },
+  "https://www.polovniautomobili.com/auto-oglasi/28824615/volvo-xc60-b4-d-restajling?attp=p3_pv0_pc1_pl1_plv0": {
+    "label": "Volvo XC60 B4 D RESTAJLING",
+    "model": "volvo-xc60",
+    "cena": 23900,
+    "godiste": 2021,
+    "kilometraza": 212906,
+    "karoserija": "Džip/SUV",
+    "gorivo": "Hibridni pogon (Dizel)",
+    "prva_cena": 23900,
+    "najmanja_cena": 23900,
+    "broj_promena": 0,
+    "ukupno_snizenje": 0,
+    "slika": "https://gcdn.polovniautomobili.com/user-images/thumbs/2882/28824615/0cdaacc3bfb9-1920x1080.jpg",
+    "prethodna_cena": null,
+    "promena": 0,
+    "promena_tip": "bez_promene",
+    "datum_promene": null,
+    "aktivan": true,
+    "problem_cena": false,
+    "poslednja_provera": "09.05.2026 10:33",
+    "score": 70
+  },
+  "https://www.polovniautomobili.com/auto-oglasi/28808020/volvo-xc60-b4-d-awd-restajling?attp=p1_pv0_pc1_pl1_plv0": {
+    "label": "Volvo XC60 B4 D Awd RESTAJLING",
+    "model": "volvo-xc60",
+    "cena": 23900,
+    "godiste": 2021,
+    "kilometraza": 202975,
+    "karoserija": "Džip/SUV",
+    "gorivo": "Hibridni pogon (Dizel)",
+    "prva_cena": 23900,
+    "najmanja_cena": 23900,
+    "broj_promena": 0,
+    "ukupno_snizenje": 0,
+    "slika": "https://gcdn.polovniautomobili.com/user-images/thumbs/2880/28808020/444a8f8e1423-1920x1080.jpg",
+    "prethodna_cena": null,
+    "promena": 0,
+    "promena_tip": "bez_promene",
+    "datum_promene": null,
+    "aktivan": true,
+    "problem_cena": false,
+    "poslednja_provera": "09.05.2026 10:33",
+    "score": 90
   }
 }
