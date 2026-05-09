@@ -18,7 +18,7 @@
     "datum_promene": "07.05.2026 16:58",
     "aktivan": true,
     "problem_cena": false,
-    "poslednja_provera": "09.05.2026 09:15",
+    "poslednja_provera": "09.05.2026 10:23",
     "score": 69
   },
   "https://www.polovniautomobili.com/auto-oglasi/28877577/volvo-xc60-20-awd?attp=p9_pv0_pc0_pl11_plv0": {
@@ -40,7 +40,7 @@
     "datum_promene": "07.05.2026 16:58",
     "aktivan": true,
     "problem_cena": false,
-    "poslednja_provera": "09.05.2026 09:15",
+    "poslednja_provera": "09.05.2026 10:23",
     "score": 64
   },
   "https://www.polovniautomobili.com/auto-oglasi/29005264/volvo-xc60-4x4-d4kupljovde1vl?attp=p9_pv0_pc0_pl11_plv0": {
@@ -62,7 +62,7 @@
     "datum_promene": "08.05.2026 15:02",
     "aktivan": true,
     "problem_cena": false,
-    "poslednja_provera": "09.05.2026 09:15",
+    "poslednja_provera": "09.05.2026 10:23",
     "score": 100
   },
   "https://www.polovniautomobili.com/auto-oglasi/28451802/volvo-xc60-20b4mhev-momentum?attp=p9_pv0_pc0_pl11_plv0": {
@@ -84,7 +84,7 @@
     "datum_promene": "07.05.2026 16:58",
     "aktivan": true,
     "problem_cena": false,
-    "poslednja_provera": "09.05.2026 09:15",
+    "poslednja_provera": "09.05.2026 10:23",
     "score": 76
   },
   "https://www.polovniautomobili.com/auto-oglasi/28597036/volvo-xc60-b4-awd-inscription?attp=p9_pv0_pc0_pl11_plv0": {
@@ -106,7 +106,7 @@
     "datum_promene": "07.05.2026 16:58",
     "aktivan": true,
     "problem_cena": false,
-    "poslednja_provera": "09.05.2026 09:15",
+    "poslednja_provera": "09.05.2026 10:23",
     "score": 65
   },
   "https://www.polovniautomobili.com/auto-oglasi/29012594/volvo-xc60?attp=p9_pv0_pc0_pl11_plv0": {
@@ -128,7 +128,7 @@
     "datum_promene": "07.05.2026 16:58",
     "aktivan": true,
     "problem_cena": false,
-    "poslednja_provera": "09.05.2026 09:15",
+    "poslednja_provera": "09.05.2026 10:23",
     "score": 77
   },
   "https://www.polovniautomobili.com/auto-oglasi/28720117/skoda-kodiaq-20tdisport4x4pano?attp=p9_pv0_pc0_pl11_plv0": {
@@ -150,7 +150,7 @@
     "datum_promene": "07.05.2026 16:58",
     "aktivan": true,
     "problem_cena": false,
-    "poslednja_provera": "09.05.2026 09:15",
+    "poslednja_provera": "09.05.2026 10:23",
     "score": 77
   },
   "http://www.polovniautomobili.com/auto-oglasi/29216093/volvo-xc60-b4-d-awd-inscription": {
@@ -172,7 +172,7 @@
     "datum_promene": null,
     "aktivan": true,
     "problem_cena": false,
-    "poslednja_provera": "09.05.2026 09:15",
+    "poslednja_provera": "09.05.2026 10:23",
     "score": 84
   },
   "http://www.polovniautomobili.com/auto-oglasi/29091836/skoda-kodiaq-style-20": {
@@ -194,7 +194,7 @@
     "datum_promene": null,
     "aktivan": true,
     "problem_cena": false,
-    "poslednja_provera": "09.05.2026 09:15",
+    "poslednja_provera": "09.05.2026 10:23",
     "score": 65
   },
   "https://www.polovniautomobili.com/auto-oglasi/28666773/skoda-kodiaq-20tdi-4x4-dsg-style?attp=p9_pv0_pc0_pl11_plv0": {
@@ -216,7 +216,7 @@
     "datum_promene": null,
     "aktivan": true,
     "problem_cena": false,
-    "poslednja_provera": "09.05.2026 09:15",
+    "poslednja_provera": "09.05.2026 10:23",
     "score": 65
   },
   "https://www.polovniautomobili.com/auto-oglasi/27979812/volvo-xc60-20-d4-virtmatrix?attp=p1_pv0_pc1_pl1_plv0": {
@@ -238,7 +238,29 @@
     "datum_promene": null,
     "aktivan": true,
     "problem_cena": false,
-    "poslednja_provera": "09.05.2026 09:15",
+    "poslednja_provera": "09.05.2026 10:23",
     "score": 55
+  },
+  "https://www.polovniautomobili.com/auto-oglasi/29216093/volvo-xc60-b4-d-awd-inscription?attp=p3_pv0_pc1_pl1_plv0": {
+    "label": "Volvo XC60 B4 D AWD INSCRIPTION",
+    "model": "volvo-xc60",
+    "cena": 28690,
+    "godiste": 2021,
+    "kilometraza": 152098,
+    "karoserija": "Džip/SUV",
+    "gorivo": "Dizel",
+    "prva_cena": 28690,
+    "najmanja_cena": 28690,
+    "broj_promena": 0,
+    "ukupno_snizenje": 0,
+    "slika": "https://gcdn.polovniautomobili.com/user-images/thumbs/2921/29216093/d955a3414c8d-1920x1080.jpg",
+    "prethodna_cena": null,
+    "promena": 0,
+    "promena_tip": "bez_promene",
+    "datum_promene": null,
+    "aktivan": true,
+    "problem_cena": false,
+    "poslednja_provera": "09.05.2026 10:23",
+    "score": 84
   }
 }
