@@ -381,13 +381,14 @@ input::placeholder {
     position: absolute;
     top: 10px;
     right: 10px;
-    background: white;
-    color: #18181b;
-    padding: 4px 10px;
+    background: rgba(24, 24, 27, 0.9);
+    color: white;
+    padding: 5px 11px;
     border-radius: 6px;
     font-size: 12px;
     font-weight: 600;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
     z-index: 2;
 }
 
@@ -1147,15 +1148,24 @@ function buildTrackedCard(o, c, top){
 
     // Meta
     const meta = document.createElement("div");
-    meta.className = "card-meta";
-    meta.innerHTML = `
-        <div class="card-meta-row"><span>Prva cena</span><span>${formatPrice(c.prva_cena)}</span></div>
-        <div class="card-meta-row"><span>Najniža</span><span>${formatPrice(c.najmanja_cena)}</span></div>
-        <div class="card-meta-row"><span>Promena</span><span>${formatPrice(c.promena || 0)}</span></div>
-        <div class="card-date">Provereno ${c.poslednja_provera || "—"}</div>
-    `;
-    body.appendChild(meta);
+meta.className = "card-meta";
 
+let metaHTML = `<div class="card-meta-row"><span>Prva cena</span><span>${formatPrice(c.prva_cena)}</span></div>`;
+
+if(c.najmanja_cena && c.najmanja_cena !== c.prva_cena){
+    metaHTML += `<div class="card-meta-row"><span>Najniža</span><span>${formatPrice(c.najmanja_cena)}</span></div>`;
+}
+
+if(c.promena && c.promena !== 0){
+    const promenaColor = c.promena < 0 ? "#16a34a" : "#dc2626";
+    const promenaText = (c.promena > 0 ? "+" : "") + formatPrice(c.promena);
+    metaHTML += `<div class="card-meta-row"><span>Promena</span><span style="color:${promenaColor};font-weight:600;">${promenaText}</span></div>`;
+}
+
+metaHTML += `<div class="card-date">Provereno ${c.poslednja_provera || "—"}</div>`;
+
+meta.innerHTML = metaHTML;
+body.appendChild(meta);
     // Actions
     const actions = document.createElement("div");
     actions.className = "card-actions";
@@ -1200,15 +1210,20 @@ function render(){
     const topTitle = document.getElementById("topDealsTitle");
     top.innerHTML = "";
 
-    if(FILTER === "all" && list.length > 0){
-        topTitle.style.display = "block";
-        list.slice(0,3).forEach(o=>{
-            const c = cene[o.url] || {};
-            top.appendChild(buildTrackedCard(o, c, true));
-        });
-    }else{
-        topTitle.style.display = "none";
-    }
+// Top deals: max 3 sa score >= 80
+const topDeals = list.filter(o => (cene[o.url]?.score || 0) >= 80).slice(0, 3);
+
+if(FILTER === "all" && topDeals.length > 0){
+    topTitle.style.display = "block";
+    topDeals.forEach((o, idx) => {
+        const c = cene[o.url] || {};
+        // Only the #1 (highest score) gets the visual "Best deal" tag
+        const isTopOne = idx === 0;
+        top.appendChild(buildTrackedCard(o, c, isTopOne));
+    });
+}else{
+    topTitle.style.display = "none";
+}
 
     const container = document.getElementById("list");
     container.innerHTML = "";
