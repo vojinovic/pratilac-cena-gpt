@@ -297,6 +297,9 @@ input::placeholder {
     cursor: pointer;
     font-family: inherit;
     transition: all 0.15s;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
 }
 
 .filter-btn:hover {
@@ -310,16 +313,30 @@ input::placeholder {
     border-color: #18181b;
 }
 
-.section-title {
-    margin: 24px 0 14px;
-    font-size: 12px;
+.filter-count {
+    background: rgba(255,255,255,0.2);
+    color: inherit;
+    padding: 1px 6px;
+    border-radius: 10px;
+    font-size: 11px;
     font-weight: 600;
-    color: #71717a;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
 }
 
-#topDeals,
+.filter-btn:not(.active) .filter-count {
+    background: #f4f4f5;
+    color: #71717a;
+}
+
+.empty-state {
+    background: white;
+    border: 1px dashed #e4e4e7;
+    border-radius: 12px;
+    padding: 40px 20px;
+    text-align: center;
+    color: #71717a;
+    font-size: 14px;
+}
+
 #list {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
@@ -722,7 +739,7 @@ input::placeholder {
     .container { padding: 20px 16px; }
     .tabs { width: 100%; }
     .tab { flex: 1; justify-content: center; }
-    #topDeals, #list { grid-template-columns: 1fr; }
+    #list { grid-template-columns: 1fr; }
 }
 </style>
 </head>
@@ -754,19 +771,17 @@ input::placeholder {
             <button class="add-btn" onclick="addOglas()">Dodaj oglas</button>
         </div>
 
-        <div class="filters">
-            <button class="filter-btn active" onclick="setFilter('all', event)">Svi</button>
-            <button class="filter-btn" onclick="setFilter('active', event)">Aktivni</button>
-            <button class="filter-btn" onclick="setFilter('changes', event)">Sa promenom</button>
-            <button class="filter-btn" onclick="setFilter('inactive', event)">Nestali</button>
-            <button class="filter-btn" onclick="setFilter('problem', event)">Problem</button>
+        <div class="filters" id="filtersContainer">
+            <button class="filter-btn active" onclick="setFilter('all', event)">Svi <span class="filter-count" id="count-all">0</span></button>
+            <button class="filter-btn" onclick="setFilter('top', event)">🔥 Top ponude <span class="filter-count" id="count-top">0</span></button>
+            <button class="filter-btn" onclick="setFilter('active', event)">Aktivni <span class="filter-count" id="count-active">0</span></button>
+            <button class="filter-btn" onclick="setFilter('changes', event)">Sa promenom <span class="filter-count" id="count-changes">0</span></button>
+            <button class="filter-btn" onclick="setFilter('inactive', event)">Nestali <span class="filter-count" id="count-inactive">0</span></button>
+            <button class="filter-btn" onclick="setFilter('problem', event)">Problem <span class="filter-count" id="count-problem">0</span></button>
         </div>
 
-        <div id="topDealsTitle" class="section-title" style="display:none;">Top ponude</div>
-        <div id="topDeals"></div>
-
-        <div class="section-title">Svi oglasi</div>
         <div id="list"></div>
+        <div id="emptyState" class="empty-state" style="display:none;">Nema oglasa za prikaz u ovom filteru.</div>
     </div>
 
     <div id="section-search" class="section">
@@ -1053,9 +1068,35 @@ async function deleteOglas(url){
     }
 }
 
-function buildTrackedCard(o, c, top){
+function passesFilter(c, filterName){
+    if(filterName === "all") return true;
+    if(filterName === "top") return (c.score || 0) >= 80;
+    if(filterName === "active") return c.aktivan !== false;
+    if(filterName === "inactive") return c.aktivan === false;
+    if(filterName === "changes") return c.broj_promena && c.broj_promena > 0;
+    if(filterName === "problem") return c.problem_cena === true;
+    return true;
+}
+
+function updateFilterCounts(){
+    const oglasi = DATA?.oglasi || [];
+    const cene = DATA?.cene || {};
+
+    const filters = ["all", "top", "active", "inactive", "changes", "problem"];
+
+    filters.forEach(f => {
+        const count = oglasi.filter(o => {
+            const c = cene[o.url] || {};
+            return passesFilter(c, f);
+        }).length;
+        const el = document.getElementById("count-" + f);
+        if(el) el.textContent = count;
+    });
+}
+
+function buildTrackedCard(o, c, showBestDealTag){
     const card = document.createElement("div");
-    card.className = "card" + (top ? " top-deal" : "");
+    card.className = "card" + (showBestDealTag ? " top-deal" : "");
 
     const score = c.score || 0;
     let badge = "🔴";
@@ -1063,7 +1104,6 @@ function buildTrackedCard(o, c, top){
     else if(score >= 60) badge = "🟢";
     else if(score >= 40) badge = "🟡";
 
-    // Image wrap with badges
     const imgWrap = document.createElement("div");
     imgWrap.className = "card-img-wrap";
 
@@ -1072,8 +1112,7 @@ function buildTrackedCard(o, c, top){
         img.src = c.slika;
         img.onerror = () => {
             imgWrap.innerHTML = '<div class="no-image">Bez slike</div>';
-            // Re-append badges after innerHTML reset
-            if(top){
+            if(showBestDealTag){
                 const t = document.createElement("div");
                 t.className = "best-deal-tag";
                 t.textContent = "Best deal";
@@ -1092,7 +1131,7 @@ function buildTrackedCard(o, c, top){
         imgWrap.appendChild(noImg);
     }
 
-    if(top){
+    if(showBestDealTag){
         const bestTag = document.createElement("div");
         bestTag.className = "best-deal-tag";
         bestTag.textContent = "Best deal";
@@ -1106,7 +1145,6 @@ function buildTrackedCard(o, c, top){
 
     card.appendChild(imgWrap);
 
-    // Body
     const body = document.createElement("div");
     body.className = "card-body";
 
@@ -1127,7 +1165,6 @@ function buildTrackedCard(o, c, top){
     price.textContent = formatPrice(c.cena);
     body.appendChild(price);
 
-    // Specs
     const specs = [];
     if(c.godiste) specs.push({label: c.godiste + ".", year: true});
     if(c.kilometraza) specs.push({label: formatKm(c.kilometraza)});
@@ -1146,27 +1183,26 @@ function buildTrackedCard(o, c, top){
         body.appendChild(specsRow);
     }
 
-    // Meta
     const meta = document.createElement("div");
-meta.className = "card-meta";
+    meta.className = "card-meta";
 
-let metaHTML = `<div class="card-meta-row"><span>Prva cena</span><span>${formatPrice(c.prva_cena)}</span></div>`;
+    let metaHTML = `<div class="card-meta-row"><span>Prva cena</span><span>${formatPrice(c.prva_cena)}</span></div>`;
 
-if(c.najmanja_cena && c.najmanja_cena !== c.prva_cena){
-    metaHTML += `<div class="card-meta-row"><span>Najniža</span><span>${formatPrice(c.najmanja_cena)}</span></div>`;
-}
+    if(c.najmanja_cena && c.najmanja_cena !== c.prva_cena){
+        metaHTML += `<div class="card-meta-row"><span>Najniža</span><span>${formatPrice(c.najmanja_cena)}</span></div>`;
+    }
 
-if(c.promena && c.promena !== 0){
-    const promenaColor = c.promena < 0 ? "#16a34a" : "#dc2626";
-    const promenaText = (c.promena > 0 ? "+" : "") + formatPrice(c.promena);
-    metaHTML += `<div class="card-meta-row"><span>Promena</span><span style="color:${promenaColor};font-weight:600;">${promenaText}</span></div>`;
-}
+    if(c.promena && c.promena !== 0){
+        const promenaColor = c.promena < 0 ? "#16a34a" : "#dc2626";
+        const promenaText = (c.promena > 0 ? "+" : "") + formatPrice(c.promena);
+        metaHTML += `<div class="card-meta-row"><span>Promena</span><span style="color:${promenaColor};font-weight:600;">${promenaText}</span></div>`;
+    }
 
-metaHTML += `<div class="card-date">Provereno ${c.poslednja_provera || "—"}</div>`;
+    metaHTML += `<div class="card-date">Provereno ${c.poslednja_provera || "—"}</div>`;
 
-meta.innerHTML = metaHTML;
-body.appendChild(meta);
-    // Actions
+    meta.innerHTML = metaHTML;
+    body.appendChild(meta);
+
     const actions = document.createElement("div");
     actions.className = "card-actions";
 
@@ -1193,44 +1229,38 @@ function render(){
     const oglasi = DATA?.oglasi || [];
     const cene = DATA?.cene || {};
 
-    let list = oglasi.filter(o=>{
+    updateFilterCounts();
+
+    let list = oglasi.filter(o => {
         const c = cene[o.url] || {};
-        if(FILTER === "active") return c.aktivan !== false;
-        if(FILTER === "inactive") return c.aktivan === false;
-        if(FILTER === "changes") return c.prethodna_cena;
-        if(FILTER === "problem") return c.problem_cena === true;
-        return true;
+        return passesFilter(c, FILTER);
     });
 
     list.sort((a,b)=>{
         return (cene[b.url]?.score || 0) - (cene[a.url]?.score || 0);
     });
 
-    const top = document.getElementById("topDeals");
-    const topTitle = document.getElementById("topDealsTitle");
-    top.innerHTML = "";
-
-// Top deals: max 3 sa score >= 80
-const topDeals = list.filter(o => (cene[o.url]?.score || 0) >= 80).slice(0, 3);
-
-if(FILTER === "all" && topDeals.length > 0){
-    topTitle.style.display = "block";
-    topDeals.forEach((o, idx) => {
-        const c = cene[o.url] || {};
-        // Only the #1 (highest score) gets the visual "Best deal" tag
-        const isTopOne = idx === 0;
-        top.appendChild(buildTrackedCard(o, c, isTopOne));
-    });
-}else{
-    topTitle.style.display = "none";
-}
-
     const container = document.getElementById("list");
+    const emptyState = document.getElementById("emptyState");
+
     container.innerHTML = "";
+
+    if(list.length === 0){
+        container.style.display = "none";
+        emptyState.style.display = "block";
+        return;
+    }
+
+    container.style.display = "grid";
+    emptyState.style.display = "none";
+
+    // Best deal tag samo na #1 sa najvecim score-om i samo ako je 80+
+    const topUrl = (list[0] && (cene[list[0].url]?.score || 0) >= 80) ? list[0].url : null;
 
     list.forEach(o=>{
         const c = cene[o.url] || {};
-        container.appendChild(buildTrackedCard(o, c, false));
+        const isBestDeal = o.url === topUrl;
+        container.appendChild(buildTrackedCard(o, c, isBestDeal));
     });
 }
 
@@ -1476,7 +1506,6 @@ function buildSearchCard(r){
     const card = document.createElement("div");
     card.className = "search-card" + (tracked ? " tracked" : "") + (score >= 80 ? " score-fire" : "");
 
-    // Thumb with score
     const thumb = document.createElement("div");
     thumb.className = "thumb";
 
@@ -1505,11 +1534,9 @@ function buildSearchCard(r){
 
     card.appendChild(thumb);
 
-    // Body
     const body = document.createElement("div");
     body.className = "search-card-body";
 
-    // Tags row
     const tagsRow = document.createElement("div");
     tagsRow.className = "search-tags-row";
 
