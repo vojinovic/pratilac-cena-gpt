@@ -25,7 +25,6 @@ body {
     padding: 32px 24px;
 }
 
-/* HEADER */
 .header {
     border-bottom: 1px solid #e4e4e7;
     padding-bottom: 24px;
@@ -68,7 +67,6 @@ body {
     margin-top: -2px;
 }
 
-/* TABS */
 .tabs {
     display: flex;
     gap: 4px;
@@ -89,9 +87,6 @@ body {
     color: #71717a;
     cursor: pointer;
     font-family: inherit;
-    display: flex;
-    align-items: center;
-    gap: 6px;
     transition: all 0.15s;
 }
 
@@ -105,7 +100,6 @@ body {
     box-shadow: 0 1px 2px rgba(0,0,0,0.06);
 }
 
-/* SECTIONS */
 .section {
     display: none;
 }
@@ -114,7 +108,6 @@ body {
     display: block;
 }
 
-/* SEARCH BOX */
 .search-box {
     background: white;
     border: 1px solid #e4e4e7;
@@ -174,7 +167,6 @@ input::placeholder {
     cursor: wait;
 }
 
-/* AUTOCOMPLETE */
 .autocomplete {
     position: relative;
 }
@@ -211,7 +203,6 @@ input::placeholder {
 
 .autocomplete-item:hover {
     background: #fafafa;
-    color: #18181b;
 }
 
 .autocomplete-empty {
@@ -221,12 +212,11 @@ input::placeholder {
     font-style: italic;
 }
 
-/* SEARCH INFO + SORT */
 .search-info-row {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin: 16px 0 16px;
+    margin: 16px 0;
     flex-wrap: wrap;
     gap: 12px;
 }
@@ -260,7 +250,6 @@ input::placeholder {
     font-size: 13px;
 }
 
-/* ADD BOX */
 .add-box {
     background: white;
     border: 1px solid #e4e4e7;
@@ -290,7 +279,6 @@ input::placeholder {
     background: #27272a;
 }
 
-/* FILTERS */
 .filters {
     display: flex;
     gap: 6px;
@@ -322,17 +310,15 @@ input::placeholder {
     border-color: #18181b;
 }
 
-/* SECTION TITLE */
 .section-title {
     margin: 24px 0 14px;
-    font-size: 14px;
+    font-size: 12px;
     font-weight: 600;
     color: #71717a;
     text-transform: uppercase;
-    letter-spacing: 0.05em;
+    letter-spacing: 0.08em;
 }
 
-/* GRID */
 #topDeals,
 #list {
     display: grid;
@@ -346,13 +332,12 @@ input::placeholder {
     gap: 14px;
 }
 
-/* TRACKED CARD */
 .card {
     background: white;
     border: 1px solid #e4e4e7;
     border-radius: 12px;
     overflow: hidden;
-    transition: border-color 0.15s, transform 0.15s;
+    transition: border-color 0.15s;
     display: flex;
     flex-direction: column;
 }
@@ -371,15 +356,17 @@ input::placeholder {
     aspect-ratio: 16/10;
     background: #f4f4f5;
     position: relative;
+    overflow: hidden;
 }
 
 .card-img-wrap img {
     width: 100%;
     height: 100%;
     object-fit: cover;
+    display: block;
 }
 
-.card-img-wrap .no-image {
+.no-image {
     width: 100%;
     height: 100%;
     display: flex;
@@ -387,9 +374,9 @@ input::placeholder {
     justify-content: center;
     color: #a1a1aa;
     font-size: 13px;
+    background: #f4f4f5;
 }
 
-/* SCORE BADGE */
 .score-badge {
     position: absolute;
     top: 10px;
@@ -400,10 +387,10 @@ input::placeholder {
     border-radius: 6px;
     font-size: 12px;
     font-weight: 600;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+    z-index: 2;
 }
 
-/* BEST DEAL TAG */
 .best-deal-tag {
     position: absolute;
     top: 10px;
@@ -416,9 +403,9 @@ input::placeholder {
     font-weight: 600;
     letter-spacing: 0.05em;
     text-transform: uppercase;
+    z-index: 2;
 }
 
-/* CARD BODY */
 .card-body {
     padding: 14px 16px 16px;
     display: flex;
@@ -492,7 +479,6 @@ input::placeholder {
     font-size: 11px;
 }
 
-/* CARD ACTIONS */
 .card-actions {
     display: flex;
     gap: 6px;
@@ -533,7 +519,17 @@ input::placeholder {
     border-color: #f87171;
 }
 
-/* PROBLEM BADGE */
+.btn-primary {
+    background: #18181b;
+    color: white;
+    border-color: #18181b;
+}
+
+.btn-primary:hover {
+    background: #27272a;
+    border-color: #27272a;
+}
+
 .problem-badge {
     background: #fffbeb;
     color: #854d0e;
@@ -545,7 +541,6 @@ input::placeholder {
     margin-bottom: 10px;
 }
 
-/* ============== SEARCH SPECIFIC ============== */
 .search-card {
     background: white;
     border: 1px solid #e4e4e7;
@@ -575,22 +570,14 @@ input::placeholder {
     aspect-ratio: 16/10;
     background: #f4f4f5;
     position: relative;
+    overflow: hidden;
 }
 
 .search-card .thumb img {
     width: 100%;
     height: 100%;
     object-fit: cover;
-}
-
-.search-card .thumb .no-image {
-    width: 100%;
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #a1a1aa;
-    font-size: 12px;
+    display: block;
 }
 
 .search-card-body {
@@ -700,7 +687,6 @@ input::placeholder {
     font-weight: 600;
 }
 
-/* PAGINATION */
 .pagination {
     display: flex;
     gap: 8px;
@@ -731,14 +717,12 @@ input::placeholder {
     padding: 0 8px;
 }
 
-/* RESPONSIVE */
 @media (max-width: 600px) {
     .container { padding: 20px 16px; }
     .tabs { width: 100%; }
     .tab { flex: 1; justify-content: center; }
     #topDeals, #list { grid-template-columns: 1fr; }
 }
-
 </style>
 </head>
 
@@ -761,7 +745,6 @@ input::placeholder {
         <button class="tab" onclick="showSection('search', event)">Pretraga</button>
     </div>
 
-    <!-- ================= PRACENI OGLASI SEKCIJA ================= -->
     <div id="section-tracked" class="section active">
 
         <div class="add-box">
@@ -785,7 +768,6 @@ input::placeholder {
         <div id="list"></div>
     </div>
 
-    <!-- ================= SEARCH SEKCIJA ================= -->
     <div id="section-search" class="section">
 
         <div class="search-box">
@@ -834,8 +816,6 @@ let DATA = {};
 let FILTER = "all";
 
 let SEARCH_DATA = null;
-let SEARCH_PARAMS = null;
-let SEARCH_PAGE = 1;
 let SEARCH_RESULTS_WITH_SCORE = [];
 
 let BRANDS = [];
@@ -992,17 +972,6 @@ function formatKm(value){
     return Number(value).toLocaleString("sr-RS") + " km";
 }
 
-function imageBlock(src){
-    if(!src){
-        return `<div class="card-img-wrap"><div class="no-image">Bez slike</div></div>`;
-    }
-    return `
-        <div class="card-img-wrap">
-            <img src="${src}" onerror="this.parentElement.innerHTML='<div class=\\'no-image\\'>Bez slike</div>'">
-        </div>
-    `;
-}
-
 function setFilter(f, event){
     FILTER = f;
     document.querySelectorAll(".filter-btn").forEach(b => b.classList.remove("active"));
@@ -1083,58 +1052,131 @@ async function deleteOglas(url){
     }
 }
 
-function renderTrackedCard(o, c, top=false){
-    const score = c.score || 0;
+function buildTrackedCard(o, c, top){
+    const card = document.createElement("div");
+    card.className = "card" + (top ? " top-deal" : "");
 
+    const score = c.score || 0;
     let badge = "🔴";
     if(score >= 80) badge = "🔥";
     else if(score >= 60) badge = "🟢";
     else if(score >= 40) badge = "🟡";
 
-    const problemBadge = c.problem_cena
-        ? `<div class="problem-badge">⚠️ Cena nije ažurirana u poslednjoj proveri</div>`
-        : "";
+    // Image wrap with badges
+    const imgWrap = document.createElement("div");
+    imgWrap.className = "card-img-wrap";
 
+    if(c.slika){
+        const img = document.createElement("img");
+        img.src = c.slika;
+        img.onerror = () => {
+            imgWrap.innerHTML = '<div class="no-image">Bez slike</div>';
+            // Re-append badges after innerHTML reset
+            if(top){
+                const t = document.createElement("div");
+                t.className = "best-deal-tag";
+                t.textContent = "Best deal";
+                imgWrap.appendChild(t);
+            }
+            const sb = document.createElement("div");
+            sb.className = "score-badge";
+            sb.textContent = `${badge} ${score}`;
+            imgWrap.appendChild(sb);
+        };
+        imgWrap.appendChild(img);
+    }else{
+        const noImg = document.createElement("div");
+        noImg.className = "no-image";
+        noImg.textContent = "Bez slike";
+        imgWrap.appendChild(noImg);
+    }
+
+    if(top){
+        const bestTag = document.createElement("div");
+        bestTag.className = "best-deal-tag";
+        bestTag.textContent = "Best deal";
+        imgWrap.appendChild(bestTag);
+    }
+
+    const scoreBadge = document.createElement("div");
+    scoreBadge.className = "score-badge";
+    scoreBadge.textContent = `${badge} ${score}`;
+    imgWrap.appendChild(scoreBadge);
+
+    card.appendChild(imgWrap);
+
+    // Body
+    const body = document.createElement("div");
+    body.className = "card-body";
+
+    if(c.problem_cena){
+        const pb = document.createElement("div");
+        pb.className = "problem-badge";
+        pb.textContent = "⚠️ Cena nije ažurirana u poslednjoj proveri";
+        body.appendChild(pb);
+    }
+
+    const title = document.createElement("div");
+    title.className = "card-title";
+    title.textContent = getName(o, c);
+    body.appendChild(title);
+
+    const price = document.createElement("div");
+    price.className = "card-price";
+    price.textContent = formatPrice(c.cena);
+    body.appendChild(price);
+
+    // Specs
     const specs = [];
-    if(c.godiste) specs.push(`<span class="spec year">${c.godiste}.</span>`);
-    if(c.kilometraza) specs.push(`<span class="spec">${formatKm(c.kilometraza)}</span>`);
-    if(c.gorivo) specs.push(`<span class="spec">${c.gorivo}</span>`);
-    if(c.karoserija) specs.push(`<span class="spec">${c.karoserija}</span>`);
+    if(c.godiste) specs.push({label: c.godiste + ".", year: true});
+    if(c.kilometraza) specs.push({label: formatKm(c.kilometraza)});
+    if(c.gorivo) specs.push({label: c.gorivo});
+    if(c.karoserija) specs.push({label: c.karoserija});
 
-    const specsRow = specs.length > 0
-        ? `<div class="card-specs">${specs.join("")}</div>`
-        : "";
+    if(specs.length > 0){
+        const specsRow = document.createElement("div");
+        specsRow.className = "card-specs";
+        specs.forEach(s => {
+            const span = document.createElement("span");
+            span.className = "spec" + (s.year ? " year" : "");
+            span.textContent = s.label;
+            specsRow.appendChild(span);
+        });
+        body.appendChild(specsRow);
+    }
 
-    const scoreBadge = `<div class="score-badge">${badge} ${score}</div>`;
-    const bestDealTag = top ? `<div class="best-deal-tag">Best deal</div>` : "";
-
-    const imgInner = c.slika
-        ? `<img src="${c.slika}" onerror="this.parentElement.innerHTML='<div class=\\'no-image\\'>Bez slike</div>${bestDealTag}${scoreBadge}'">`
-        : `<div class="no-image">Bez slike</div>`;
-
-    return `
-        <div class="card-img-wrap">
-            ${imgInner}
-            ${bestDealTag}
-            ${scoreBadge}
-        </div>
-        <div class="card-body">
-            ${problemBadge}
-            <div class="card-title">${getName(o, c)}</div>
-            <div class="card-price">${formatPrice(c.cena)}</div>
-            ${specsRow}
-            <div class="card-meta">
-                <div class="card-meta-row"><span>Prva cena</span><span>${formatPrice(c.prva_cena)}</span></div>
-                <div class="card-meta-row"><span>Najniža</span><span>${formatPrice(c.najmanja_cena)}</span></div>
-                <div class="card-meta-row"><span>Promena</span><span>${formatPrice(c.promena || 0)}</span></div>
-                <div class="card-date">Provereno ${c.poslednja_provera || "—"}</div>
-            </div>
-            <div class="card-actions">
-                <a href="${o.url}" target="_blank" class="btn">Otvori</a>
-                <button class="btn btn-danger" onclick="deleteOglas('${o.url.replace(/'/g, "\\'")}')">Obriši</button>
-            </div>
-        </div>
+    // Meta
+    const meta = document.createElement("div");
+    meta.className = "card-meta";
+    meta.innerHTML = `
+        <div class="card-meta-row"><span>Prva cena</span><span>${formatPrice(c.prva_cena)}</span></div>
+        <div class="card-meta-row"><span>Najniža</span><span>${formatPrice(c.najmanja_cena)}</span></div>
+        <div class="card-meta-row"><span>Promena</span><span>${formatPrice(c.promena || 0)}</span></div>
+        <div class="card-date">Provereno ${c.poslednja_provera || "—"}</div>
     `;
+    body.appendChild(meta);
+
+    // Actions
+    const actions = document.createElement("div");
+    actions.className = "card-actions";
+
+    const openBtn = document.createElement("a");
+    openBtn.className = "btn";
+    openBtn.href = o.url;
+    openBtn.target = "_blank";
+    openBtn.textContent = "Otvori";
+    actions.appendChild(openBtn);
+
+    const delBtn = document.createElement("button");
+    delBtn.className = "btn btn-danger";
+    delBtn.textContent = "Obriši";
+    delBtn.onclick = () => deleteOglas(o.url);
+    actions.appendChild(delBtn);
+
+    body.appendChild(actions);
+    card.appendChild(body);
+
+    return card;
 }
 
 function render(){
@@ -1143,12 +1185,10 @@ function render(){
 
     let list = oglasi.filter(o=>{
         const c = cene[o.url] || {};
-
         if(FILTER === "active") return c.aktivan !== false;
         if(FILTER === "inactive") return c.aktivan === false;
         if(FILTER === "changes") return c.prethodna_cena;
         if(FILTER === "problem") return c.problem_cena === true;
-
         return true;
     });
 
@@ -1164,10 +1204,7 @@ function render(){
         topTitle.style.display = "block";
         list.slice(0,3).forEach(o=>{
             const c = cene[o.url] || {};
-            const div = document.createElement("div");
-            div.className = "card top-deal";
-            div.innerHTML = renderTrackedCard(o, c, true);
-            top.appendChild(div);
+            top.appendChild(buildTrackedCard(o, c, true));
         });
     }else{
         topTitle.style.display = "none";
@@ -1178,10 +1215,7 @@ function render(){
 
     list.forEach(o=>{
         const c = cene[o.url] || {};
-        const div = document.createElement("div");
-        div.className = "card";
-        div.innerHTML = renderTrackedCard(o, c, false);
-        container.appendChild(div);
+        container.appendChild(buildTrackedCard(o, c, false));
     });
 }
 
@@ -1190,8 +1224,6 @@ function isAlreadyTracked(url){
     const cleanUrl = url.split("?")[0];
     return DATA.oglasi.some(o => o.url.split("?")[0] === cleanUrl);
 }
-
-// ================= SCORE LOGIKA ZA SEARCH =================
 
 function daysSinceRenew(renewdate){
     if(!renewdate) return null;
@@ -1236,7 +1268,6 @@ function buildHybridStats(searchResults, brandValue, modelValue){
 
 function calculateSearchScore(result, stats){
     const text = (result.naslov || "").toLowerCase();
-
     let score = 50;
 
     if(stats.avgCena && result.cena){
@@ -1324,8 +1355,6 @@ function calculateSearchScore(result, stats){
     };
 }
 
-// ================= SEARCH =================
-
 async function doSearch(page = 1){
     if(!SELECTED_BRAND){
         alert("Izaberi brend iz liste.");
@@ -1335,15 +1364,6 @@ async function doSearch(page = 1){
     const yearFrom = document.getElementById("yearFromInput").value.trim();
     const yearTo = document.getElementById("yearToInput").value.trim();
     const priceTo = document.getElementById("priceToInput").value.trim();
-
-    SEARCH_PARAMS = {
-        brand: SELECTED_BRAND.value,
-        model: SELECTED_MODEL ? SELECTED_MODEL.value : "",
-        year_from: yearFrom,
-        year_to: yearTo,
-        price_to: priceTo,
-    };
-    SEARCH_PAGE = page;
 
     const params = new URLSearchParams();
     params.set("brand", SELECTED_BRAND.value);
@@ -1429,6 +1449,131 @@ function getSortedResults(){
     return arr;
 }
 
+function buildSearchCard(r){
+    const tracked = isAlreadyTracked(r.url);
+    const score = r.score || 0;
+
+    let scoreEmoji = "🔴";
+    if(score >= 80) scoreEmoji = "🔥";
+    else if(score >= 60) scoreEmoji = "🟢";
+    else if(score >= 40) scoreEmoji = "🟡";
+
+    const card = document.createElement("div");
+    card.className = "search-card" + (tracked ? " tracked" : "") + (score >= 80 ? " score-fire" : "");
+
+    // Thumb with score
+    const thumb = document.createElement("div");
+    thumb.className = "thumb";
+
+    if(r.slika){
+        const img = document.createElement("img");
+        img.src = r.slika;
+        img.onerror = () => {
+            thumb.innerHTML = '<div class="no-image">Bez slike</div>';
+            const sb = document.createElement("div");
+            sb.className = "score-badge";
+            sb.textContent = `${scoreEmoji} ${score}`;
+            thumb.appendChild(sb);
+        };
+        thumb.appendChild(img);
+    }else{
+        const noImg = document.createElement("div");
+        noImg.className = "no-image";
+        noImg.textContent = "Bez slike";
+        thumb.appendChild(noImg);
+    }
+
+    const sb = document.createElement("div");
+    sb.className = "score-badge";
+    sb.textContent = `${scoreEmoji} ${score}`;
+    thumb.appendChild(sb);
+
+    card.appendChild(thumb);
+
+    // Body
+    const body = document.createElement("div");
+    body.className = "search-card-body";
+
+    // Tags row
+    const tagsRow = document.createElement("div");
+    tagsRow.className = "search-tags-row";
+
+    if(r.featured){
+        const ft = document.createElement("span");
+        ft.className = "featured-tag";
+        ft.textContent = "Premium";
+        tagsRow.appendChild(ft);
+    }
+
+    if(r.ageStatus){
+        const ageTagText = {
+            "fresh": `Svež · ${r.ageDays}d`,
+            "normal": `${r.ageDays}d`,
+            "stale": `${r.ageDays}d star`,
+            "old": `${r.ageDays}d star`
+        };
+        const at = document.createElement("span");
+        at.className = "age-tag " + r.ageStatus;
+        at.textContent = ageTagText[r.ageStatus];
+        tagsRow.appendChild(at);
+    }
+
+    if(tagsRow.children.length > 0){
+        body.appendChild(tagsRow);
+    }
+
+    if(r.outlier){
+        const ow = document.createElement("div");
+        ow.className = "outlier-warning";
+        ow.textContent = "⚠️ Sumnjivo dobra cena, proveri";
+        body.appendChild(ow);
+    }
+
+    const name = document.createElement("div");
+    name.className = "name";
+    name.textContent = r.naslov;
+    body.appendChild(name);
+
+    const priceRow = document.createElement("div");
+    priceRow.className = "price-row";
+    priceRow.textContent = formatPrice(r.cena);
+    body.appendChild(priceRow);
+
+    const meta = document.createElement("div");
+    meta.className = "meta";
+    const km = r.kilometraza ? formatKm(r.kilometraza) : "—";
+    meta.innerHTML = `${r.godina ? r.godina + ". · " : ""}${r.gorivo || ""}<br>${km}${r.lokacija ? " · " + r.lokacija : ""}`;
+    body.appendChild(meta);
+
+    const actions = document.createElement("div");
+    actions.className = "actions";
+
+    const openBtn = document.createElement("a");
+    openBtn.className = "btn";
+    openBtn.href = r.url;
+    openBtn.target = "_blank";
+    openBtn.textContent = "Otvori";
+    actions.appendChild(openBtn);
+
+    if(tracked){
+        const td = document.createElement("div");
+        td.className = "tracked-tag";
+        td.textContent = "✓ Pratiš";
+        actions.appendChild(td);
+    }else{
+        const tb = document.createElement("button");
+        tb.className = "btn btn-primary";
+        tb.textContent = "+ Prati";
+        tb.onclick = () => trackFromSearch(r.url, r.naslov);
+        actions.appendChild(tb);
+    }
+
+    body.appendChild(actions);
+    card.appendChild(body);
+
+    return card;
+}
+
 function renderSearch(){
     if(!SEARCH_DATA) return;
 
@@ -1459,67 +1604,7 @@ function renderSearch(){
     const sorted = getSortedResults();
 
     sorted.forEach(r => {
-        const tracked = isAlreadyTracked(r.url);
-        const score = r.score || 0;
-
-        let scoreEmoji = "🔴";
-        if(score >= 80) scoreEmoji = "🔥";
-        else if(score >= 60) scoreEmoji = "🟢";
-        else if(score >= 40) scoreEmoji = "🟡";
-
-        const div = document.createElement("div");
-        div.className = "search-card" + (tracked ? " tracked" : "") + (score >= 80 ? " score-fire" : "");
-
-        const featuredTag = r.featured ? `<span class="featured-tag">Premium</span>` : "";
-
-        const ageTagText = {
-            "fresh": `Svež · ${r.ageDays}d`,
-            "normal": `${r.ageDays}d`,
-            "stale": `${r.ageDays}d star`,
-            "old": `${r.ageDays}d star`
-        };
-
-        const ageTag = r.ageStatus
-            ? `<span class="age-tag ${r.ageStatus}">${ageTagText[r.ageStatus]}</span>`
-            : "";
-
-        const tagsRow = (featuredTag || ageTag)
-            ? `<div class="search-tags-row">${featuredTag}${ageTag}</div>`
-            : "";
-
-        const outlierTag = r.outlier
-            ? `<div class="outlier-warning">⚠️ Sumnjivo dobra cena, proveri</div>`
-            : "";
-
-        const thumb = r.slika
-            ? `<div class="thumb"><img src="${r.slika}" onerror="this.parentElement.innerHTML='<div class=\\'no-image\\'>Bez slike</div>'"><div class="score-badge">${scoreEmoji} ${score}</div></div>`
-            : `<div class="thumb"><div class="no-image">Bez slike</div><div class="score-badge">${scoreEmoji} ${score}</div></div>`;
-
-        const trackButton = tracked
-            ? `<div class="tracked-tag">✓ Pratiš</div>`
-            : `<button class="btn track-btn" style="background:#18181b;color:white;border-color:#18181b;" onclick="trackFromSearch('${r.url.replace(/'/g, "\\'")}', '${r.naslov.replace(/'/g, "\\'")}')">+ Prati</button>`;
-
-        const km = r.kilometraza ? formatKm(r.kilometraza) : "—";
-
-        div.innerHTML = `
-            ${thumb}
-            <div class="search-card-body">
-                ${tagsRow}
-                ${outlierTag}
-                <div class="name">${r.naslov}</div>
-                <div class="price-row">${formatPrice(r.cena)}</div>
-                <div class="meta">
-                    ${r.godina ? r.godina + ". · " : ""}${r.gorivo || ""}<br>
-                    ${km}${r.lokacija ? " · " + r.lokacija : ""}
-                </div>
-                <div class="actions">
-                    <a href="${r.url}" target="_blank" class="btn">Otvori</a>
-                    ${trackButton}
-                </div>
-            </div>
-        `;
-
-        container.appendChild(div);
+        container.appendChild(buildSearchCard(r));
     });
 
     pagination.innerHTML = "";
