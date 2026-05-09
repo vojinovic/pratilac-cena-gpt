@@ -4,580 +4,826 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Auto Drukara</title>
+<title>Drukara - Praćenje cena polovnih automobila</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
 <style>
-body{
-    font-family: Arial, sans-serif;
-    background:#f5f5f5;
-    margin:0;
-    padding:30px;
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: #fafaf9;
+    color: #18181b;
+    -webkit-font-smoothing: antialiased;
+    line-height: 1.5;
 }
 
-h1{
-    margin-bottom:10px;
+.container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 32px 24px;
 }
 
-.subtitle{
-    color:#666;
-    margin-bottom:25px;
+/* HEADER */
+.header {
+    border-bottom: 1px solid #e4e4e7;
+    padding-bottom: 24px;
+    margin-bottom: 28px;
 }
 
-.section-title{
-    margin:35px 0 15px;
-    font-size:22px;
-    font-weight:bold;
+.logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
 }
 
-input, select{
-    width:100%;
-    padding:10px;
-    border:1px solid #ddd;
-    border-radius:8px;
-    font-size:14px;
-    box-sizing:border-box;
-    background:white;
+.logo-mark {
+    width: 36px;
+    height: 36px;
+    background: #18181b;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 700;
+    font-size: 18px;
 }
 
-button{
-    padding:10px 16px;
-    border:none;
-    border-radius:8px;
-    cursor:pointer;
-    background:#eee;
-    font-weight:bold;
+.logo-text {
+    display: flex;
+    flex-direction: column;
 }
 
-button.active{
-    background:black;
-    color:white;
+.logo-name {
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
 }
 
-.search-box{
-    background:white;
-    padding:20px;
-    border-radius:14px;
-    box-shadow:0 2px 10px rgba(0,0,0,0.06);
-    margin-bottom:20px;
+.logo-sub {
+    font-size: 13px;
+    color: #71717a;
+    margin-top: -2px;
 }
 
-.search-grid{
-    display:grid;
-    grid-template-columns:repeat(auto-fit, minmax(140px, 1fr));
-    gap:12px;
-    margin-bottom:14px;
+/* TABS */
+.tabs {
+    display: flex;
+    gap: 4px;
+    background: #f4f4f5;
+    padding: 4px;
+    border-radius: 10px;
+    width: fit-content;
+    margin-bottom: 28px;
 }
 
-.search-btn{
-    background:#5b4ce6;
-    color:white;
-    width:100%;
-    padding:12px;
-    font-size:15px;
+.tab {
+    background: transparent;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    color: #71717a;
+    cursor: pointer;
+    font-family: inherit;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.15s;
 }
 
-.search-btn:disabled{
-    background:#aaa;
-    cursor:wait;
+.tab:hover {
+    color: #18181b;
 }
 
-.search-info-row{
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    margin:15px 0 10px;
-    flex-wrap:wrap;
-    gap:10px;
+.tab.active {
+    background: white;
+    color: #18181b;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.06);
 }
 
-.search-info{
-    color:#666;
-    font-size:14px;
+/* SECTIONS */
+.section {
+    display: none;
 }
 
-.sort-control{
-    display:flex;
-    align-items:center;
-    gap:8px;
+.section.active {
+    display: block;
 }
 
-.sort-control label{
-    font-size:14px;
-    color:#666;
-    white-space:nowrap;
+/* SEARCH BOX */
+.search-box {
+    background: white;
+    border: 1px solid #e4e4e7;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 20px;
 }
 
-.sort-control select{
-    width:auto;
-    min-width:180px;
-    padding:8px 10px;
-    font-size:14px;
+.search-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 10px;
+    margin-bottom: 12px;
 }
 
-.autocomplete{
-    position:relative;
+input, select {
+    width: 100%;
+    padding: 9px 12px;
+    border: 1px solid #e4e4e7;
+    border-radius: 8px;
+    font-size: 14px;
+    font-family: inherit;
+    background: white;
+    color: #18181b;
+    transition: border-color 0.15s;
 }
 
-.autocomplete-list{
-    position:absolute;
-    top:100%;
-    left:0;
-    right:0;
-    background:white;
-    border:1px solid #ddd;
-    border-radius:8px;
-    max-height:240px;
-    overflow-y:auto;
-    z-index:1000;
-    box-shadow:0 4px 12px rgba(0,0,0,0.1);
-    margin-top:2px;
-    display:none;
+input:focus, select:focus {
+    outline: none;
+    border-color: #18181b;
 }
 
-.autocomplete-list.open{
-    display:block;
+input::placeholder {
+    color: #a1a1aa;
 }
 
-.autocomplete-item{
-    padding:10px 14px;
-    cursor:pointer;
-    font-size:14px;
-    border-bottom:1px solid #f0f0f0;
+.search-btn {
+    width: 100%;
+    background: #18181b;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 11px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    font-family: inherit;
+    transition: background 0.15s;
 }
 
-.autocomplete-item:last-child{
-    border-bottom:none;
+.search-btn:hover {
+    background: #27272a;
 }
 
-.autocomplete-item:hover,
-.autocomplete-item.highlight{
-    background:#f5f3ff;
-    color:#5b4ce6;
+.search-btn:disabled {
+    background: #a1a1aa;
+    cursor: wait;
 }
 
-.autocomplete-empty{
-    padding:10px 14px;
-    color:#999;
-    font-size:14px;
-    font-style:italic;
+/* AUTOCOMPLETE */
+.autocomplete {
+    position: relative;
 }
 
-#searchResults{
-    display:grid;
-    grid-template-columns:repeat(auto-fill, minmax(240px, 1fr));
-    gap:14px;
+.autocomplete-list {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    background: white;
+    border: 1px solid #e4e4e7;
+    border-radius: 8px;
+    max-height: 240px;
+    overflow-y: auto;
+    z-index: 1000;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    display: none;
 }
 
-.search-card{
-    background:white;
-    border-radius:10px;
-    overflow:hidden;
-    box-shadow:0 2px 6px rgba(0,0,0,0.08);
-    padding:10px;
-    display:flex;
-    flex-direction:column;
-    position:relative;
+.autocomplete-list.open {
+    display: block;
 }
 
-.search-card.tracked{
-    border:2px solid #28a745;
-    background:#f8fff8;
+.autocomplete-item {
+    padding: 9px 12px;
+    cursor: pointer;
+    font-size: 14px;
+    border-bottom: 1px solid #f4f4f5;
 }
 
-.search-card.score-fire{
-    border:2px solid #ff6b35;
-    background:#fff8f0;
+.autocomplete-item:last-child {
+    border-bottom: none;
 }
 
-.search-card .thumb{
-    width:100%;
-    height:130px;
-    background:#eee;
-    border-radius:6px;
-    overflow:hidden;
-    margin-bottom:8px;
-    position:relative;
+.autocomplete-item:hover {
+    background: #fafafa;
+    color: #18181b;
 }
 
-.search-card .thumb img{
-    width:100%;
-    height:100%;
-    object-fit:cover;
+.autocomplete-empty {
+    padding: 9px 12px;
+    color: #a1a1aa;
+    font-size: 14px;
+    font-style: italic;
 }
 
-.score-badge{
-    position:absolute;
-    top:8px;
-    right:8px;
-    background:rgba(0,0,0,0.7);
-    color:white;
-    padding:4px 8px;
-    border-radius:6px;
-    font-size:13px;
-    font-weight:bold;
+/* SEARCH INFO + SORT */
+.search-info-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 16px 0 16px;
+    flex-wrap: wrap;
+    gap: 12px;
 }
 
-.search-card .name{
-    font-weight:bold;
-    font-size:14px;
-    margin-bottom:4px;
-    line-height:1.3;
-    min-height:36px;
+.search-info {
+    color: #52525b;
+    font-size: 13px;
 }
 
-.search-card .price-row{
-    font-size:18px;
-    font-weight:bold;
-    color:#222;
-    margin-bottom:6px;
+.search-info strong {
+    color: #18181b;
+    font-weight: 600;
 }
 
-.search-card .meta{
-    font-size:12px;
-    color:#666;
-    line-height:1.5;
-    margin-bottom:8px;
+.sort-control {
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
 
-.search-card .featured-tag{
-    background:#fff3cd;
-    color:#856404;
-    font-size:11px;
-    padding:2px 6px;
-    border-radius:4px;
-    display:inline-block;
-    margin-bottom:6px;
-    margin-right:4px;
+.sort-control label {
+    font-size: 13px;
+    color: #71717a;
+    white-space: nowrap;
 }
 
-.search-card .age-tag{
-    font-size:11px;
-    padding:2px 6px;
-    border-radius:4px;
-    display:inline-block;
-    margin-bottom:6px;
-    margin-right:4px;
+.sort-control select {
+    width: auto;
+    min-width: 160px;
+    padding: 6px 10px;
+    font-size: 13px;
 }
 
-.age-tag.fresh{
-    background:#d4edda;
-    color:#155724;
+/* ADD BOX */
+.add-box {
+    background: white;
+    border: 1px solid #e4e4e7;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 24px;
+    max-width: 720px;
 }
 
-.age-tag.normal{
-    background:#e2e3e5;
-    color:#495057;
+.add-box input {
+    margin-bottom: 8px;
 }
 
-.age-tag.stale{
-    background:#fff3cd;
-    color:#856404;
+.add-btn {
+    background: #18181b;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 9px 18px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    font-family: inherit;
 }
 
-.age-tag.old{
-    background:#f8d7da;
-    color:#721c24;
+.add-btn:hover {
+    background: #27272a;
 }
 
-.outlier-warning{
-    background:#fff3cd;
-    color:#856404;
-    font-size:11px;
-    padding:3px 6px;
-    border-radius:4px;
-    display:inline-block;
-    margin-bottom:6px;
+/* FILTERS */
+.filters {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
 }
 
-.search-card .actions{
-    margin-top:auto;
-    display:flex;
-    gap:6px;
-    flex-wrap:wrap;
+.filter-btn {
+    background: white;
+    border: 1px solid #e4e4e7;
+    padding: 6px 14px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 500;
+    color: #52525b;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.15s;
 }
 
-.search-card .actions button,
-.search-card .actions a{
-    flex:1;
-    padding:8px;
-    font-size:13px;
-    border-radius:6px;
-    text-align:center;
-    text-decoration:none;
-    display:inline-block;
+.filter-btn:hover {
+    border-color: #18181b;
+    color: #18181b;
 }
 
-.search-card .open-btn{
-    background:#eee;
-    color:#333;
-    border:none;
-    cursor:pointer;
+.filter-btn.active {
+    background: #18181b;
+    color: white;
+    border-color: #18181b;
 }
 
-.search-card .track-btn{
-    background:#5b4ce6;
-    color:white;
-    border:none;
-    cursor:pointer;
+/* SECTION TITLE */
+.section-title {
+    margin: 24px 0 14px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #71717a;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
 }
 
-.search-card .tracked-tag{
-    background:#28a745;
-    color:white;
-    text-align:center;
-    padding:8px;
-    border-radius:6px;
-    font-size:13px;
-    flex:1;
-}
-
-.pagination{
-    display:flex;
-    gap:10px;
-    justify-content:center;
-    margin-top:20px;
-}
-
-.add-box{
-    background:white;
-    padding:18px;
-    border-radius:14px;
-    box-shadow:0 2px 10px rgba(0,0,0,0.06);
-    margin-bottom:25px;
-    max-width:720px;
-}
-
-.add-box input{
-    margin-bottom:10px;
-}
-
-.add-btn{
-    background:#5b4ce6;
-    color:white;
-}
-
-.delete-btn{
-    background:#ffe0e0;
-    color:#d10000;
-    margin-top:10px;
-}
-
-.filters{
-    display:flex;
-    gap:10px;
-    margin-bottom:25px;
-    flex-wrap:wrap;
-}
-
+/* GRID */
 #topDeals,
-#list{
-    display:grid;
-    grid-template-columns:repeat(auto-fill, minmax(340px, 1fr));
-    gap:20px;
+#list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 16px;
 }
 
-.card,
-.top-card{
-    background:white;
-    border-radius:14px;
-    overflow:hidden;
-    box-shadow:0 2px 10px rgba(0,0,0,0.08);
-    padding:14px;
+#searchResults {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 14px;
 }
 
-.top-card{
-    border:2px solid orange;
-    background:#fffdf6;
+/* TRACKED CARD */
+.card {
+    background: white;
+    border: 1px solid #e4e4e7;
+    border-radius: 12px;
+    overflow: hidden;
+    transition: border-color 0.15s, transform 0.15s;
+    display: flex;
+    flex-direction: column;
 }
 
-.img-wrap{
-    width:100%;
-    height:220px;
-    background:#eee;
-    border-radius:10px;
-    overflow:hidden;
-    display:flex;
-    align-items:center;
-    justify-content:center;
+.card:hover {
+    border-color: #d4d4d8;
 }
 
-.img-wrap img{
-    width:100%;
-    height:100%;
-    object-fit:cover;
+.card.top-deal {
+    border-color: #18181b;
+    border-width: 2px;
 }
 
-.title{
-    font-size:22px;
-    font-weight:bold;
-    margin-top:14px;
+.card-img-wrap {
+    width: 100%;
+    aspect-ratio: 16/10;
+    background: #f4f4f5;
+    position: relative;
 }
 
-.price{
-    font-size:28px;
-    font-weight:bold;
-    margin-top:8px;
+.card-img-wrap img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
 }
 
-.meta{
-    margin-top:10px;
-    color:#666;
-    line-height:1.5;
+.card-img-wrap .no-image {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #a1a1aa;
+    font-size: 13px;
 }
 
-.specs-row{
-    display:flex;
-    gap:8px;
-    margin-top:10px;
-    flex-wrap:wrap;
+/* SCORE BADGE */
+.score-badge {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: white;
+    color: #18181b;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
 }
 
-.spec-tag{
-    background:#f0f0f0;
-    color:#444;
-    padding:4px 10px;
-    border-radius:6px;
-    font-size:13px;
-    font-weight:500;
+/* BEST DEAL TAG */
+.best-deal-tag {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    background: #18181b;
+    color: white;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
 }
 
-.spec-tag.highlight{
-    background:#e8f4ff;
-    color:#0066cc;
+/* CARD BODY */
+.card-body {
+    padding: 14px 16px 16px;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
 }
 
-.date{
-    margin-top:10px;
-    color:#999;
-    font-size:14px;
+.card-title {
+    font-size: 15px;
+    font-weight: 600;
+    margin-bottom: 6px;
+    line-height: 1.3;
+    color: #18181b;
 }
 
-.badge{
-    color:red;
-    font-weight:bold;
-    margin-bottom:10px;
+.card-price {
+    font-size: 22px;
+    font-weight: 700;
+    margin-bottom: 12px;
+    letter-spacing: -0.02em;
+    color: #18181b;
 }
 
-.problem-badge{
-    background:#fff3cd;
-    color:#856404;
-    border:1px solid #ffeaa7;
-    padding:6px 10px;
-    border-radius:8px;
-    font-size:13px;
-    font-weight:bold;
-    margin-bottom:10px;
-    display:inline-block;
+.card-specs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    margin-bottom: 12px;
 }
 
-.card a, .top-card a{
-    display:inline-block;
-    margin-top:8px;
+.spec {
+    background: #f4f4f5;
+    color: #52525b;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 500;
 }
 
-.tabs{
-    display:flex;
-    gap:8px;
-    margin-bottom:20px;
-    border-bottom:2px solid #ddd;
+.spec.year {
+    background: #18181b;
+    color: white;
 }
 
-.tab{
-    padding:12px 20px;
-    background:none;
-    border:none;
-    cursor:pointer;
-    font-size:16px;
-    font-weight:bold;
-    color:#888;
-    border-bottom:3px solid transparent;
-    margin-bottom:-2px;
+.card-meta {
+    font-size: 12px;
+    color: #71717a;
+    line-height: 1.6;
+    padding-top: 12px;
+    border-top: 1px solid #f4f4f5;
 }
 
-.tab.active{
-    color:#5b4ce6;
-    border-bottom-color:#5b4ce6;
+.card-meta-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 2px;
 }
 
-.section{
-    display:none;
+.card-meta-row span:first-child {
+    color: #71717a;
 }
 
-.section.active{
-    display:block;
+.card-meta-row span:last-child {
+    color: #27272a;
+    font-weight: 500;
 }
+
+.card-date {
+    margin-top: 8px;
+    color: #a1a1aa;
+    font-size: 11px;
+}
+
+/* CARD ACTIONS */
+.card-actions {
+    display: flex;
+    gap: 6px;
+    margin-top: 12px;
+}
+
+.btn {
+    flex: 1;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 500;
+    border: 1px solid #e4e4e7;
+    background: white;
+    color: #18181b;
+    cursor: pointer;
+    font-family: inherit;
+    text-align: center;
+    text-decoration: none;
+    transition: all 0.15s;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn:hover {
+    background: #fafafa;
+    border-color: #18181b;
+}
+
+.btn-danger {
+    color: #dc2626;
+    border-color: #fecaca;
+}
+
+.btn-danger:hover {
+    background: #fef2f2;
+    border-color: #f87171;
+}
+
+/* PROBLEM BADGE */
+.problem-badge {
+    background: #fffbeb;
+    color: #854d0e;
+    border: 1px solid #fde68a;
+    padding: 6px 10px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 500;
+    margin-bottom: 10px;
+}
+
+/* ============== SEARCH SPECIFIC ============== */
+.search-card {
+    background: white;
+    border: 1px solid #e4e4e7;
+    border-radius: 10px;
+    overflow: hidden;
+    transition: all 0.15s;
+    display: flex;
+    flex-direction: column;
+}
+
+.search-card:hover {
+    border-color: #d4d4d8;
+}
+
+.search-card.tracked {
+    border-color: #16a34a;
+    background: #f0fdf4;
+}
+
+.search-card.score-fire {
+    border-color: #18181b;
+    border-width: 2px;
+}
+
+.search-card .thumb {
+    width: 100%;
+    aspect-ratio: 16/10;
+    background: #f4f4f5;
+    position: relative;
+}
+
+.search-card .thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.search-card .thumb .no-image {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #a1a1aa;
+    font-size: 12px;
+}
+
+.search-card-body {
+    padding: 12px 14px 14px;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+}
+
+.search-tags-row {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 8px;
+    flex-wrap: wrap;
+}
+
+.featured-tag {
+    background: #fef3c7;
+    color: #854d0e;
+    padding: 2px 7px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.age-tag {
+    padding: 2px 7px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 500;
+}
+
+.age-tag.fresh {
+    background: #dcfce7;
+    color: #14532d;
+}
+
+.age-tag.normal {
+    background: #f4f4f5;
+    color: #52525b;
+}
+
+.age-tag.stale {
+    background: #fef3c7;
+    color: #854d0e;
+}
+
+.age-tag.old {
+    background: #fee2e2;
+    color: #7f1d1d;
+}
+
+.outlier-warning {
+    background: #fffbeb;
+    color: #854d0e;
+    border: 1px solid #fde68a;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 500;
+    margin-bottom: 8px;
+}
+
+.search-card .name {
+    font-weight: 600;
+    font-size: 13px;
+    margin-bottom: 4px;
+    line-height: 1.3;
+    min-height: 34px;
+    color: #18181b;
+}
+
+.search-card .price-row {
+    font-size: 18px;
+    font-weight: 700;
+    color: #18181b;
+    margin-bottom: 8px;
+    letter-spacing: -0.02em;
+}
+
+.search-card .meta {
+    font-size: 11px;
+    color: #71717a;
+    line-height: 1.6;
+    margin-bottom: 10px;
+}
+
+.search-card .actions {
+    margin-top: auto;
+    display: flex;
+    gap: 6px;
+}
+
+.search-card .actions .btn {
+    padding: 7px 8px;
+    font-size: 12px;
+}
+
+.tracked-tag {
+    flex: 1;
+    background: #16a34a;
+    color: white;
+    text-align: center;
+    padding: 7px 8px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+/* PAGINATION */
+.pagination {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    margin-top: 24px;
+    align-items: center;
+}
+
+.pagination button {
+    padding: 8px 14px;
+    border-radius: 6px;
+    border: 1px solid #e4e4e7;
+    background: white;
+    color: #18181b;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.pagination button:hover {
+    border-color: #18181b;
+}
+
+.pagination span {
+    color: #71717a;
+    font-size: 13px;
+    padding: 0 8px;
+}
+
+/* RESPONSIVE */
+@media (max-width: 600px) {
+    .container { padding: 20px 16px; }
+    .tabs { width: 100%; }
+    .tab { flex: 1; justify-content: center; }
+    #topDeals, #list { grid-template-columns: 1fr; }
+}
+
 </style>
 </head>
 
 <body>
 
-<h1>🚗 Auto Drukara</h1>
-<div class="subtitle">Pretraži polovniautomobili.com i prati cene najboljih ponuda.</div>
+<div class="container">
 
-<div class="tabs">
-    <button class="tab" onclick="showSection('search', event)">🔍 Pretraga</button>
-    <button class="tab active" onclick="showSection('tracked', event)">📊 Praćeni oglasi</button>
-</div>
-
-<div id="section-search" class="section">
-
-    <div class="search-box">
-        <div class="search-grid">
-            <div class="autocomplete">
-                <input id="brandInput" placeholder="Brend" autocomplete="off">
-                <div class="autocomplete-list" id="brandList"></div>
+    <div class="header">
+        <div class="logo">
+            <div class="logo-mark">D</div>
+            <div class="logo-text">
+                <div class="logo-name">Drukara</div>
+                <div class="logo-sub">Praćenje cena polovnih automobila</div>
             </div>
-            <div class="autocomplete">
-                <input id="modelInput" placeholder="Model" autocomplete="off" disabled>
-                <div class="autocomplete-list" id="modelList"></div>
-            </div>
-            <input id="yearFromInput" type="number" placeholder="Godište od">
-            <input id="yearToInput" type="number" placeholder="Godište do">
-            <input id="priceToInput" type="number" placeholder="Max cena (€)">
-        </div>
-        <button class="search-btn" id="searchBtn" onclick="doSearch()">Pretraži</button>
-    </div>
-
-    <div class="search-info-row">
-        <div id="searchInfo" class="search-info"></div>
-        <div class="sort-control" id="sortControl" style="display:none;">
-            <label>Sortiraj:</label>
-            <select id="sortSelect" onchange="renderSearch()">
-                <option value="newest">Najnoviji</option>
-                <option value="score">Najveći score</option>
-                <option value="price">Najjeftiniji</option>
-                <option value="km">Najmanje km</option>
-                <option value="year">Najmlađi godište</option>
-            </select>
         </div>
     </div>
 
-    <div id="searchResults"></div>
-
-    <div id="searchPagination" class="pagination"></div>
-</div>
-
-<div id="section-tracked" class="section active">
-
-    <div class="add-box">
-        <input id="urlInput" placeholder="URL oglasa sa PolovniAutomobili">
-        <input id="labelInput" placeholder="Naziv oglasa, opciono">
-        <button class="add-btn" onclick="addOglas()">Dodaj oglas</button>
+    <div class="tabs">
+        <button class="tab active" onclick="showSection('tracked', event)">Praćeni oglasi</button>
+        <button class="tab" onclick="showSection('search', event)">Pretraga</button>
     </div>
 
-    <div class="filters">
-        <button class="filter-btn active" onclick="setFilter('all', event)">Svi</button>
-        <button class="filter-btn" onclick="setFilter('active', event)">Aktivni</button>
-        <button class="filter-btn" onclick="setFilter('inactive', event)">Nestali</button>
-        <button class="filter-btn" onclick="setFilter('changes', event)">Sa promenom</button>
-        <button class="filter-btn" onclick="setFilter('problem', event)">Problem</button>
+    <!-- ================= PRACENI OGLASI SEKCIJA ================= -->
+    <div id="section-tracked" class="section active">
+
+        <div class="add-box">
+            <input id="urlInput" placeholder="URL oglasa sa polovniautomobili.com">
+            <input id="labelInput" placeholder="Naziv (opciono)">
+            <button class="add-btn" onclick="addOglas()">Dodaj oglas</button>
+        </div>
+
+        <div class="filters">
+            <button class="filter-btn active" onclick="setFilter('all', event)">Svi</button>
+            <button class="filter-btn" onclick="setFilter('active', event)">Aktivni</button>
+            <button class="filter-btn" onclick="setFilter('changes', event)">Sa promenom</button>
+            <button class="filter-btn" onclick="setFilter('inactive', event)">Nestali</button>
+            <button class="filter-btn" onclick="setFilter('problem', event)">Problem</button>
+        </div>
+
+        <div id="topDealsTitle" class="section-title" style="display:none;">Top ponude</div>
+        <div id="topDeals"></div>
+
+        <div class="section-title">Svi oglasi</div>
+        <div id="list"></div>
     </div>
 
-    <div id="topDeals"></div>
+    <!-- ================= SEARCH SEKCIJA ================= -->
+    <div id="section-search" class="section">
 
-    <div class="section-title">📊 Svi oglasi</div>
+        <div class="search-box">
+            <div class="search-grid">
+                <div class="autocomplete">
+                    <input id="brandInput" placeholder="Brend" autocomplete="off">
+                    <div class="autocomplete-list" id="brandList"></div>
+                </div>
+                <div class="autocomplete">
+                    <input id="modelInput" placeholder="Model" autocomplete="off" disabled>
+                    <div class="autocomplete-list" id="modelList"></div>
+                </div>
+                <input id="yearFromInput" type="number" placeholder="Godište od">
+                <input id="yearToInput" type="number" placeholder="Godište do">
+                <input id="priceToInput" type="number" placeholder="Max cena (€)">
+            </div>
+            <button class="search-btn" id="searchBtn" onclick="doSearch()">Pretraži</button>
+        </div>
 
-    <div id="list"></div>
+        <div class="search-info-row">
+            <div id="searchInfo" class="search-info"></div>
+            <div class="sort-control" id="sortControl" style="display:none;">
+                <label>Sortiraj:</label>
+                <select id="sortSelect" onchange="renderSearch()">
+                    <option value="newest">Najnoviji</option>
+                    <option value="score">Najveći score</option>
+                    <option value="price">Najjeftiniji</option>
+                    <option value="km">Najmanje km</option>
+                    <option value="year">Najmlađi godište</option>
+                </select>
+            </div>
+        </div>
+
+        <div id="searchResults"></div>
+
+        <div id="searchPagination" class="pagination"></div>
+    </div>
+
 </div>
 
 
@@ -614,7 +860,7 @@ async function loadBrands(){
         const data = await r.json();
         BRANDS = data.brands || [];
     }catch(e){
-        console.error("Greška pri učitavanju brendova:", e);
+        console.error(e);
     }
 }
 
@@ -624,7 +870,7 @@ async function loadModels(brandValue){
         const data = await r.json();
         MODELS = data.models || [];
     }catch(e){
-        console.error("Greška pri učitavanju modela:", e);
+        console.error(e);
         MODELS = [];
     }
 }
@@ -707,7 +953,7 @@ function selectBrand(item){
     modelInput.placeholder = "Učitavam modele...";
 
     loadModels(item.value).then(() => {
-        modelInput.placeholder = "Model (opciono)";
+        modelInput.placeholder = "Model";
     });
 }
 
@@ -737,7 +983,7 @@ function getName(o, c){
 }
 
 function formatPrice(value){
-    if(value === null || value === undefined || value === "") return "N/A";
+    if(value === null || value === undefined || value === "") return "—";
     return Number(value).toLocaleString("sr-RS") + " €";
 }
 
@@ -748,11 +994,11 @@ function formatKm(value){
 
 function imageBlock(src){
     if(!src){
-        return `<div class="img-wrap">No image</div>`;
+        return `<div class="card-img-wrap"><div class="no-image">Bez slike</div></div>`;
     }
     return `
-        <div class="img-wrap">
-            <img src="${src}" onerror="this.parentElement.innerHTML='No image'">
+        <div class="card-img-wrap">
+            <img src="${src}" onerror="this.parentElement.innerHTML='<div class=\\'no-image\\'>Bez slike</div>'">
         </div>
     `;
 }
@@ -837,7 +1083,7 @@ async function deleteOglas(url){
     }
 }
 
-function renderCard(o, c, top=false){
+function renderTrackedCard(o, c, top=false){
     const score = c.score || 0;
 
     let badge = "🔴";
@@ -850,47 +1096,44 @@ function renderCard(o, c, top=false){
         : "";
 
     const specs = [];
-    if(c.godiste) specs.push(`<span class="spec-tag highlight">${c.godiste}.</span>`);
-    if(c.kilometraza) specs.push(`<span class="spec-tag">${formatKm(c.kilometraza)}</span>`);
-    if(c.gorivo) specs.push(`<span class="spec-tag">${c.gorivo}</span>`);
-    if(c.karoserija) specs.push(`<span class="spec-tag">${c.karoserija}</span>`);
+    if(c.godiste) specs.push(`<span class="spec year">${c.godiste}.</span>`);
+    if(c.kilometraza) specs.push(`<span class="spec">${formatKm(c.kilometraza)}</span>`);
+    if(c.gorivo) specs.push(`<span class="spec">${c.gorivo}</span>`);
+    if(c.karoserija) specs.push(`<span class="spec">${c.karoserija}</span>`);
 
     const specsRow = specs.length > 0
-        ? `<div class="specs-row">${specs.join("")}</div>`
+        ? `<div class="card-specs">${specs.join("")}</div>`
         : "";
 
+    const scoreBadge = `<div class="score-badge">${badge} ${score}</div>`;
+    const bestDealTag = top ? `<div class="best-deal-tag">Best deal</div>` : "";
+
+    const imgInner = c.slika
+        ? `<img src="${c.slika}" onerror="this.parentElement.innerHTML='<div class=\\'no-image\\'>Bez slike</div>${bestDealTag}${scoreBadge}'">`
+        : `<div class="no-image">Bez slike</div>`;
+
     return `
-        ${top ? `<div class="badge">🔥 BEST DEAL</div>` : ""}
-        ${problemBadge}
-
-        ${imageBlock(c.slika)}
-
-        <div class="title">
-            ${getName(o, c)} ${!top ? badge : ""}
+        <div class="card-img-wrap">
+            ${imgInner}
+            ${bestDealTag}
+            ${scoreBadge}
         </div>
-
-        <div class="price">
-            ${formatPrice(c.cena)}
+        <div class="card-body">
+            ${problemBadge}
+            <div class="card-title">${getName(o, c)}</div>
+            <div class="card-price">${formatPrice(c.cena)}</div>
+            ${specsRow}
+            <div class="card-meta">
+                <div class="card-meta-row"><span>Prva cena</span><span>${formatPrice(c.prva_cena)}</span></div>
+                <div class="card-meta-row"><span>Najniža</span><span>${formatPrice(c.najmanja_cena)}</span></div>
+                <div class="card-meta-row"><span>Promena</span><span>${formatPrice(c.promena || 0)}</span></div>
+                <div class="card-date">Provereno ${c.poslednja_provera || "—"}</div>
+            </div>
+            <div class="card-actions">
+                <a href="${o.url}" target="_blank" class="btn">Otvori</a>
+                <button class="btn btn-danger" onclick="deleteOglas('${o.url.replace(/'/g, "\\'")}')">Obriši</button>
+            </div>
         </div>
-
-        ${specsRow}
-
-        <div class="meta">
-            Prva: ${formatPrice(c.prva_cena)}<br>
-            Najniža: ${formatPrice(c.najmanja_cena)}<br>
-            Promena: ${formatPrice(c.promena || 0)}<br>
-            Score: ${score}/100
-        </div>
-
-        <div class="date">
-            Poslednja provera: ${c.poslednja_provera || "-"}
-        </div>
-
-        <a href="${o.url}" target="_blank">Otvori</a><br>
-
-        <button class="delete-btn" onclick="deleteOglas('${o.url.replace(/'/g, "\\'")}')">
-            Obriši
-        </button>
     `;
 }
 
@@ -914,16 +1157,20 @@ function render(){
     });
 
     const top = document.getElementById("topDeals");
+    const topTitle = document.getElementById("topDealsTitle");
     top.innerHTML = "";
 
-    if(FILTER === "all"){
+    if(FILTER === "all" && list.length > 0){
+        topTitle.style.display = "block";
         list.slice(0,3).forEach(o=>{
             const c = cene[o.url] || {};
             const div = document.createElement("div");
-            div.className = "top-card";
-            div.innerHTML = renderCard(o, c, true);
+            div.className = "card top-deal";
+            div.innerHTML = renderTrackedCard(o, c, true);
             top.appendChild(div);
         });
+    }else{
+        topTitle.style.display = "none";
     }
 
     const container = document.getElementById("list");
@@ -933,7 +1180,7 @@ function render(){
         const c = cene[o.url] || {};
         const div = document.createElement("div");
         div.className = "card";
-        div.innerHTML = renderCard(o, c, false);
+        div.innerHTML = renderTrackedCard(o, c, false);
         container.appendChild(div);
     });
 }
@@ -946,16 +1193,6 @@ function isAlreadyTracked(url){
 
 // ================= SCORE LOGIKA ZA SEARCH =================
 
-function extractModelFromUrl(url){
-    if(!url) return "unknown";
-    const match = url.match(/\/auto-oglasi\/\d+\/([^/?#]+)/);
-    if(!match) return "unknown";
-    const slug = match[1].toLowerCase();
-    const parts = slug.split("-");
-    if(parts.length >= 2) return parts[0] + "-" + parts[1];
-    return parts[0] || "unknown";
-}
-
 function daysSinceRenew(renewdate){
     if(!renewdate) return null;
     const date = new Date(renewdate.replace(" ", "T"));
@@ -966,19 +1203,16 @@ function daysSinceRenew(renewdate){
 }
 
 function buildHybridStats(searchResults, brandValue, modelValue){
-    // Computes market avg from search results PLUS tracked oglasi of same model
     const cene = [];
     const kms = [];
     const godine = [];
 
-    // Search rezultati
     searchResults.forEach(r => {
         if(r.cena) cene.push(r.cena);
         if(r.kilometraza) kms.push(r.kilometraza);
         if(r.godina) godine.push(r.godina);
     });
 
-    // Tvoji praćeni oglasi istog brand-modela
     if(brandValue && modelValue && DATA?.cene){
         const targetModel = brandValue + "-" + modelValue;
         Object.values(DATA.cene).forEach(c => {
@@ -1004,69 +1238,33 @@ function calculateSearchScore(result, stats){
     const text = (result.naslov || "").toLowerCase();
 
     let score = 50;
-    let reasons = [];
 
-    // 1. CENA vs HYBRID MARKET (±20)
     if(stats.avgCena && result.cena){
         const diffPercent = ((stats.avgCena - result.cena) / stats.avgCena) * 100;
-
-        if(diffPercent >= 15){
-            score += 20;
-            reasons.push(`Cena ${diffPercent.toFixed(0)}% ispod proseka (+20)`);
-        }else if(diffPercent >= 10){
-            score += 15;
-            reasons.push(`Cena ${diffPercent.toFixed(0)}% ispod proseka (+15)`);
-        }else if(diffPercent >= 5){
-            score += 8;
-            reasons.push(`Cena ${diffPercent.toFixed(0)}% ispod proseka (+8)`);
-        }else if(diffPercent <= -15){
-            score -= 20;
-            reasons.push(`Cena ${Math.abs(diffPercent).toFixed(0)}% iznad proseka (-20)`);
-        }else if(diffPercent <= -10){
-            score -= 10;
-            reasons.push(`Cena ${Math.abs(diffPercent).toFixed(0)}% iznad proseka (-10)`);
-        }
+        if(diffPercent >= 15) score += 20;
+        else if(diffPercent >= 10) score += 15;
+        else if(diffPercent >= 5) score += 8;
+        else if(diffPercent <= -15) score -= 20;
+        else if(diffPercent <= -10) score -= 10;
     }
 
-    // 2. KM vs MARKET (±15)
     if(stats.avgKm && result.kilometraza){
         const ratio = result.kilometraza / stats.avgKm;
-
-        if(ratio <= 0.5){
-            score += 15;
-            reasons.push("Mnogo manje km od proseka (+15)");
-        }else if(ratio <= 0.75){
-            score += 8;
-            reasons.push("Manje km (+8)");
-        }else if(ratio <= 0.9){
-            score += 3;
-        }else if(ratio >= 1.5){
-            score -= 10;
-            reasons.push("Mnogo više km (-10)");
-        }else if(ratio >= 1.25){
-            score -= 5;
-            reasons.push("Više km (-5)");
-        }
+        if(ratio <= 0.5) score += 15;
+        else if(ratio <= 0.75) score += 8;
+        else if(ratio <= 0.9) score += 3;
+        else if(ratio >= 1.5) score -= 10;
+        else if(ratio >= 1.25) score -= 5;
     }
 
-    // 3. GODIŠTE vs MARKET (±10)
     if(stats.avgGod && result.godina){
         const diff = result.godina - stats.avgGod;
-
-        if(diff >= 2){
-            score += 10;
-            reasons.push("2+ godine novije (+10)");
-        }else if(diff >= 1){
-            score += 5;
-        }else if(diff <= -2){
-            score -= 8;
-            reasons.push("2+ godine starije (-8)");
-        }else if(diff <= -1){
-            score -= 3;
-        }
+        if(diff >= 2) score += 10;
+        else if(diff >= 1) score += 5;
+        else if(diff <= -2) score -= 8;
+        else if(diff <= -1) score -= 3;
     }
 
-    // 4. OPREMA iz naslova
     const plusKeywords = {
         "awd": 5, "4x4": 5, "r-design": 5, "inscription": 5,
         "momentum": 3, "sport": 4, "pano": 5, "panorama": 5,
@@ -1074,25 +1272,18 @@ function calculateSearchScore(result, stats){
     };
 
     for(const [kw, pts] of Object.entries(plusKeywords)){
-        if(text.includes(kw)){
-            score += pts;
-        }
+        if(text.includes(kw)) score += pts;
     }
 
-    // 5. STANJE - negativni signali iz naslova
     const minusKeywords = {
         "udaren": -25, "ostecen": -20, "oštećen": -20,
         "hitno": -5, "zamena": -5,
     };
 
     for(const [kw, pts] of Object.entries(minusKeywords)){
-        if(text.includes(kw)){
-            score += pts;
-            reasons.push(`Naslov sadrži "${kw}" (${pts})`);
-        }
+        if(text.includes(kw)) score += pts;
     }
 
-    // 6. VREMENSKI TREND
     const days = daysSinceRenew(result.renewdate);
     let ageStatus = null;
 
@@ -1100,50 +1291,33 @@ function calculateSearchScore(result, stats){
         if(days <= 7){
             score += 5;
             ageStatus = "fresh";
-            reasons.push("Svež oglas (+5)");
         }else if(days <= 30){
             ageStatus = "normal";
         }else if(days <= 60){
             score -= 3;
             ageStatus = "stale";
-            reasons.push("Stoji preko mesec dana (-3)");
         }else{
             score -= 8;
             ageStatus = "old";
-            reasons.push("Stoji preko 2 meseca (-8)");
         }
     }
 
-    // 7. OUTLIER DETECTION
-    // Ako je cena dramatično ispod proseka uz velike km ili negativne signale, sumnjivo
     let outlier = false;
     if(stats.avgCena && result.cena){
         const diffPercent = ((stats.avgCena - result.cena) / stats.avgCena) * 100;
-
         if(diffPercent >= 25){
-            // Cena je 25%+ ispod proseka
             const hasNegative = Object.keys(minusKeywords).some(kw => text.includes(kw));
             const highKm = stats.avgKm && result.kilometraza && (result.kilometraza / stats.avgKm) > 1.4;
-
-            if(hasNegative || highKm){
-                outlier = true;
-                reasons.push("⚠️ Outlier: previše dobro da bude istina");
-            }
+            if(hasNegative || highKm) outlier = true;
         }
     }
 
-    // LIMIT
     if(score > 100) score = 100;
     if(score < 0) score = 0;
-
-    // Outlier kapira score na 65
-    if(outlier && score > 65){
-        score = 65;
-    }
+    if(outlier && score > 65) score = 65;
 
     return {
         score: Math.round(score),
-        reasons,
         ageStatus,
         ageDays: days,
         outlier
@@ -1199,7 +1373,6 @@ async function doSearch(page = 1){
 
         SEARCH_DATA = data;
 
-        // Compute scores za sve rezultate jednom
         const stats = buildHybridStats(
             data.results,
             SELECTED_BRAND ? SELECTED_BRAND.value : "",
@@ -1267,22 +1440,20 @@ function renderSearch(){
 
     const stats = SEARCH_RESULTS_WITH_SCORE[0]?._stats;
 
-    let infoHtml = `Ukupno <strong>${data.total || data.count}</strong> oglasa, prikazano ${data.count} (stranica ${data.page}).`;
+    let infoHtml = `Ukupno <strong>${data.total || data.count}</strong> oglasa, prikazano ${data.count} (str. ${data.page}).`;
 
     if(stats && stats.avgCena){
-        infoHtml += ` Prosek u pretrazi: <strong>${Math.round(stats.avgCena).toLocaleString("sr-RS")} €</strong>`;
+        infoHtml += ` Prosek: <strong>${Math.round(stats.avgCena).toLocaleString("sr-RS")} €</strong>`;
         if(stats.avgKm){
-            infoHtml += `, <strong>${Math.round(stats.avgKm).toLocaleString("sr-RS")} km</strong>`;
+            infoHtml += ` · <strong>${Math.round(stats.avgKm).toLocaleString("sr-RS")} km</strong>`;
         }
         if(stats.avgGod){
-            infoHtml += `, <strong>${stats.avgGod.toFixed(1)}.</strong> godište`;
+            infoHtml += ` · <strong>${stats.avgGod.toFixed(1)}.</strong> godište`;
         }
     }
 
     info.innerHTML = infoHtml;
-
     sortControl.style.display = "flex";
-
     container.innerHTML = "";
 
     const sorted = getSortedResults();
@@ -1299,17 +1470,21 @@ function renderSearch(){
         const div = document.createElement("div");
         div.className = "search-card" + (tracked ? " tracked" : "") + (score >= 80 ? " score-fire" : "");
 
-        const featuredTag = r.featured ? `<span class="featured-tag">⭐ Premium</span>` : "";
+        const featuredTag = r.featured ? `<span class="featured-tag">Premium</span>` : "";
 
         const ageTagText = {
-            "fresh": `🟢 Svež (${r.ageDays}d)`,
-            "normal": `${r.ageDays}d star`,
-            "stale": `🟡 ${r.ageDays}d star`,
-            "old": `🔴 ${r.ageDays}d star`
+            "fresh": `Svež · ${r.ageDays}d`,
+            "normal": `${r.ageDays}d`,
+            "stale": `${r.ageDays}d star`,
+            "old": `${r.ageDays}d star`
         };
 
         const ageTag = r.ageStatus
             ? `<span class="age-tag ${r.ageStatus}">${ageTagText[r.ageStatus]}</span>`
+            : "";
+
+        const tagsRow = (featuredTag || ageTag)
+            ? `<div class="search-tags-row">${featuredTag}${ageTag}</div>`
             : "";
 
         const outlierTag = r.outlier
@@ -1317,29 +1492,30 @@ function renderSearch(){
             : "";
 
         const thumb = r.slika
-            ? `<div class="thumb"><img src="${r.slika}" onerror="this.parentElement.innerHTML='No image'"><div class="score-badge">${scoreEmoji} ${score}</div></div>`
-            : `<div class="thumb">No image<div class="score-badge">${scoreEmoji} ${score}</div></div>`;
+            ? `<div class="thumb"><img src="${r.slika}" onerror="this.parentElement.innerHTML='<div class=\\'no-image\\'>Bez slike</div>'"><div class="score-badge">${scoreEmoji} ${score}</div></div>`
+            : `<div class="thumb"><div class="no-image">Bez slike</div><div class="score-badge">${scoreEmoji} ${score}</div></div>`;
 
         const trackButton = tracked
-            ? `<div class="tracked-tag">✅ Već pratiš</div>`
-            : `<button class="track-btn" onclick="trackFromSearch('${r.url.replace(/'/g, "\\'")}', '${r.naslov.replace(/'/g, "\\'")}')">➕ Prati</button>`;
+            ? `<div class="tracked-tag">✓ Pratiš</div>`
+            : `<button class="btn track-btn" style="background:#18181b;color:white;border-color:#18181b;" onclick="trackFromSearch('${r.url.replace(/'/g, "\\'")}', '${r.naslov.replace(/'/g, "\\'")}')">+ Prati</button>`;
 
-        const km = r.kilometraza ? formatKm(r.kilometraza) : "N/A";
+        const km = r.kilometraza ? formatKm(r.kilometraza) : "—";
 
         div.innerHTML = `
             ${thumb}
-            ${featuredTag}${ageTag}
-            ${outlierTag}
-            <div class="name">${r.naslov}</div>
-            <div class="price-row">${formatPrice(r.cena)}</div>
-            <div class="meta">
-                ${r.godina ? r.godina + ". " : ""}${r.gorivo || ""}<br>
-                ${km}<br>
-                ${r.lokacija || ""}
-            </div>
-            <div class="actions">
-                <a href="${r.url}" target="_blank" class="open-btn">Otvori</a>
-                ${trackButton}
+            <div class="search-card-body">
+                ${tagsRow}
+                ${outlierTag}
+                <div class="name">${r.naslov}</div>
+                <div class="price-row">${formatPrice(r.cena)}</div>
+                <div class="meta">
+                    ${r.godina ? r.godina + ". · " : ""}${r.gorivo || ""}<br>
+                    ${km}${r.lokacija ? " · " + r.lokacija : ""}
+                </div>
+                <div class="actions">
+                    <a href="${r.url}" target="_blank" class="btn">Otvori</a>
+                    ${trackButton}
+                </div>
             </div>
         `;
 
@@ -1360,7 +1536,6 @@ function renderSearch(){
         }
 
         const pageInfo = document.createElement("span");
-        pageInfo.style.padding = "10px 16px";
         pageInfo.textContent = `Stranica ${currentPage} od ${totalPages}`;
         pagination.appendChild(pageInfo);
 
