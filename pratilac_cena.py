@@ -12,7 +12,7 @@ from bs4 import BeautifulSoup
 OGLASI_FAJL = "oglasi.json"
 BAZA_FAJL = "cene_oglasa.json"
 PAUZA = 4
-MAX_ISTORIJA = 30  # Maksimalno tačaka u istoriji cena
+MAX_ISTORIJA = 30
 
 PRAG_PROCENT = 1.0
 PRAG_APSOLUT = 200
@@ -183,6 +183,39 @@ def days_since(date_str):
         return None
 
 
+def is_outlier(cena, market_avg_cena, kilometraza, market_avg_km, structured_data):
+    """
+    Outlier = oglas koji je 25%+ ispod proseka I ima negativne signale:
+    - damage (havarisan/oštećen)
+    - taxi vozilo
+    - 40%+ više km od proseka
+    
+    Vraća True ako je oglas suspicious "too good to be true".
+    """
+    if not market_avg_cena or not cena:
+        return False
+    
+    diff_percent = ((market_avg_cena - cena) / market_avg_cena) * 100
+    if diff_percent < 25:
+        return False
+    
+    has_damage = False
+    is_taxi = False
+    if structured_data:
+        damage = structured_data.get("object_damage", "").lower()
+        if "udaren" in damage or ("oštećen" in damage and "nije" not in damage):
+            has_damage = True
+        if structured_data.get("object_taxi") == "yes":
+            is_taxi = True
+    
+    high_km = (
+        market_avg_km and kilometraza
+        and (kilometraza / market_avg_km) > 1.4
+    )
+    
+    return has_damage or is_taxi or high_km
+
+
 def calculate_score(
     cena, market_avg_cena,
     kilometraza, market_avg_km,
@@ -294,12 +327,17 @@ def calculate_score(
     if promena_tip == "poskupljenje":
         score -= 8
 
+    # OUTLIER CAP - sumnjivo dobra cena cap-ovana na 50 (žuti, vizuelno upozorenje)
+    outlier = is_outlier(cena, market_avg_cena, kilometraza, market_avg_km, structured_data)
+    if outlier and score > 50:
+        score = 50
+
     if score > 100:
         score = 100
     if score < 0:
         score = 0
 
-    return round(score)
+    return round(score), outlier
 
 
 def proveri_oglas(url):
@@ -406,10 +444,6 @@ def posalji_email(snizenja, nestali):
 
 
 def migriraj_istoriju(url, stara, cena_sad, now_iso):
-    """
-    Migracija: ako oglas nema istoriju, kreiramo je iz prva_cena/cena.
-    Samo prvi put.
-    """
     if "istorija_cena" in stara and isinstance(stara["istorija_cena"], list):
         return stara["istorija_cena"]
 
@@ -420,7 +454,6 @@ def migriraj_istoriju(url, stara, cena_sad, now_iso):
     if prva_cena:
         istorija.append({"datum": prvi_put_videno, "cena": prva_cena})
 
-    # Ako je trenutna cena različita od prve, dodaj i nju
     if cena_sad and cena_sad != prva_cena:
         istorija.append({"datum": now_iso, "cena": cena_sad})
 
@@ -428,20 +461,14 @@ def migriraj_istoriju(url, stara, cena_sad, now_iso):
 
 
 def dodaj_u_istoriju(istorija, cena, datum_iso):
-    """
-    Dodaje novu tačku u istoriju ako se cena promenila u odnosu na poslednju tačku.
-    Limit na MAX_ISTORIJA tačaka (FIFO).
-    """
     if not istorija:
         istorija = []
 
-    # Da li je nova cena različita od poslednje?
     if istorija and istorija[-1].get("cena") == cena:
         return istorija
 
     istorija.append({"datum": datum_iso, "cena": cena})
 
-    # FIFO - drop najstarije ako prelazi limit
     if len(istorija) > MAX_ISTORIJA:
         istorija = istorija[-MAX_ISTORIJA:]
 
@@ -512,7 +539,6 @@ def main():
             time.sleep(PAUZA)
             continue
 
-        # Strukturisani podaci
         godiste = None
         kilometraza = None
         gorivo = None
@@ -577,7 +603,6 @@ def main():
 
         najmanja_cena = min(cena, najmanja_cena)
 
-        # ISTORIJA CENA
         istorija = migriraj_istoriju(url, stara, cena, now_iso)
         istorija = dodaj_u_istoriju(istorija, cena, now_iso)
 
@@ -593,7 +618,7 @@ def main():
         market_km = market_average_km(model, baza)
         market_god = market_average_godiste(model, baza)
 
-        score = calculate_score(
+        score, outlier = calculate_score(
             cena=cena,
             market_avg_cena=market_cena,
             kilometraza=kilometraza,
@@ -626,7 +651,7 @@ def main():
             if structured.get("object_kupljen_nov_u_srbiji") == "yes": indicators.append("kupljen u SRB")
             if indicators:
                 print(f"INDIKATORI: {', '.join(indicators)}")
-        print(f"SCORE: {score}")
+        print(f"SCORE: {score}" + (" ⚠️ OUTLIER" if outlier else ""))
         print(f"LABEL: {label}")
 
         baza[url] = {
@@ -650,6 +675,7 @@ def main():
             "problem_cena": False,
             "poslednja_provera": now,
             "score": score,
+            "outlier": outlier,
             "prvi_put_videno": prvi_put_videno,
             "last_renewed_date": last_renewed_date,
             "prvi_vlasnik": structured.get("object_prvi_vlasnik") == "yes" if structured else False,
