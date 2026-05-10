@@ -47,7 +47,7 @@ body {
     font-feature-settings: "ss01", "cv11";
 }
 
-/* ============== HEADER (dark, premium automotive) ============== */
+/* ============== HEADER ============== */
 
 .header-wrap {
     background: #0f0f10;
@@ -101,13 +101,8 @@ body {
     line-height: 1;
 }
 
-.logo-name .name-black {
-    color: #fff;
-}
-
-.logo-name .name-red {
-    color: var(--color-red);
-}
+.logo-name .name-black { color: #fff; }
+.logo-name .name-red { color: var(--color-red); }
 
 .logo-sub {
     font-size: 14px;
@@ -117,7 +112,7 @@ body {
     letter-spacing: 0.01em;
 }
 
-/* ============== MAIN CONTENT ============== */
+/* ============== MAIN ============== */
 
 .container {
     max-width: 1400px;
@@ -125,7 +120,7 @@ body {
     padding: 32px 24px;
 }
 
-/* ============== TABS (underline style) ============== */
+/* ============== TABS ============== */
 
 .tabs {
     display: flex;
@@ -151,9 +146,7 @@ body {
     position: relative;
 }
 
-.tab:hover {
-    color: var(--color-text);
-}
+.tab:hover { color: var(--color-text); }
 
 .tab.active {
     color: var(--color-text);
@@ -161,15 +154,8 @@ body {
     font-weight: 600;
 }
 
-/* ============== SECTIONS ============== */
-
-.section {
-    display: none;
-}
-
-.section.active {
-    display: block;
-}
+.section { display: none; }
+.section.active { display: block; }
 
 /* ============== INPUTS ============== */
 
@@ -190,9 +176,7 @@ input:focus, select:focus {
     border-color: var(--color-text);
 }
 
-input::placeholder {
-    color: var(--color-text-subtle);
-}
+input::placeholder { color: var(--color-text-subtle); }
 
 /* ============== SEARCH BOX ============== */
 
@@ -225,20 +209,12 @@ input::placeholder {
     transition: background 0.15s;
 }
 
-.search-btn:hover {
-    background: #27272a;
-}
-
-.search-btn:disabled {
-    background: var(--color-text-subtle);
-    cursor: wait;
-}
+.search-btn:hover { background: #27272a; }
+.search-btn:disabled { background: var(--color-text-subtle); cursor: wait; }
 
 /* ============== AUTOCOMPLETE ============== */
 
-.autocomplete {
-    position: relative;
-}
+.autocomplete { position: relative; }
 
 .autocomplete-list {
     position: absolute;
@@ -255,9 +231,7 @@ input::placeholder {
     display: none;
 }
 
-.autocomplete-list.open {
-    display: block;
-}
+.autocomplete-list.open { display: block; }
 
 .autocomplete-item {
     padding: 10px 12px;
@@ -266,13 +240,8 @@ input::placeholder {
     border-bottom: 1px solid var(--color-border-soft);
 }
 
-.autocomplete-item:last-child {
-    border-bottom: none;
-}
-
-.autocomplete-item:hover {
-    background: #fafafa;
-}
+.autocomplete-item:last-child { border-bottom: none; }
+.autocomplete-item:hover { background: #fafafa; }
 
 .autocomplete-empty {
     padding: 10px 12px;
@@ -292,21 +261,10 @@ input::placeholder {
     gap: 12px;
 }
 
-.search-info {
-    color: var(--color-text-muted);
-    font-size: 13px;
-}
+.search-info { color: var(--color-text-muted); font-size: 13px; }
+.search-info strong { color: var(--color-text); font-weight: 600; }
 
-.search-info strong {
-    color: var(--color-text);
-    font-weight: 600;
-}
-
-.sort-control {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
+.sort-control { display: flex; align-items: center; gap: 8px; }
 
 .sort-control label {
     font-size: 13px;
@@ -332,9 +290,7 @@ input::placeholder {
     max-width: 720px;
 }
 
-.add-box input {
-    margin-bottom: 10px;
-}
+.add-box input { margin-bottom: 10px; }
 
 .add-btn {
     background: var(--color-text);
@@ -349,9 +305,7 @@ input::placeholder {
     transition: background 0.15s;
 }
 
-.add-btn:hover {
-    background: #27272a;
-}
+.add-btn:hover { background: #27272a; }
 
 /* ============== FILTERS ============== */
 
@@ -419,6 +373,7 @@ input::placeholder {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(330px, 1fr));
     gap: 20px;
+    align-items: start;
 }
 
 #searchResults {
@@ -505,25 +460,10 @@ input::placeholder {
     letter-spacing: 0.02em;
 }
 
-.status-badge.fresh {
-    background: rgba(22, 163, 74, 0.9);
-    color: white;
-}
-
-.status-badge.normal {
-    background: rgba(255, 255, 255, 0.9);
-    color: #27272a;
-}
-
-.status-badge.stale {
-    background: rgba(202, 138, 4, 0.9);
-    color: white;
-}
-
-.status-badge.old {
-    background: rgba(229, 57, 53, 0.9);
-    color: white;
-}
+.status-badge.fresh { background: rgba(22, 163, 74, 0.9); color: white; }
+.status-badge.normal { background: rgba(255, 255, 255, 0.9); color: #27272a; }
+.status-badge.stale { background: rgba(202, 138, 4, 0.9); color: white; }
+.status-badge.old { background: rgba(229, 57, 53, 0.9); color: white; }
 
 .best-deal-tag {
     position: absolute;
@@ -591,38 +531,20 @@ input::placeholder {
     stroke-linecap: round;
 }
 
-.sparkline-line.down {
-    stroke: var(--color-green);
-}
+.sparkline-line.down { stroke: var(--color-green); }
+.sparkline-line.up { stroke: var(--color-red); }
+.sparkline-line.flat { stroke: #a1a1aa; }
 
-.sparkline-line.up {
-    stroke: var(--color-red);
-}
-
-.sparkline-line.flat {
-    stroke: #a1a1aa;
-}
-
-.sparkline-fill.down {
-    fill: rgba(22, 163, 74, 0.08);
-}
-
-.sparkline-fill.up {
-    fill: rgba(229, 57, 53, 0.08);
-}
-
-.sparkline-fill.flat {
-    fill: rgba(161, 161, 170, 0.08);
-}
+.sparkline-fill.down { fill: rgba(22, 163, 74, 0.08); }
+.sparkline-fill.up { fill: rgba(229, 57, 53, 0.08); }
+.sparkline-fill.flat { fill: rgba(161, 161, 170, 0.08); }
 
 .sparkline-dot {
     cursor: pointer;
     transition: r 0.15s;
 }
 
-.sparkline-dot:hover {
-    r: 4;
-}
+.sparkline-dot:hover { r: 4; }
 
 .sparkline-tooltip {
     position: absolute;
@@ -686,10 +608,7 @@ input::placeholder {
     font-weight: 500;
 }
 
-.spec.year {
-    background: var(--color-text);
-    color: white;
-}
+.spec.year { background: var(--color-text); color: white; }
 
 .card-meta {
     font-size: 12px;
@@ -705,19 +624,203 @@ input::placeholder {
     margin-bottom: 3px;
 }
 
-.card-meta-row span:first-child {
-    color: var(--color-text-muted);
-}
-
-.card-meta-row span:last-child {
-    color: #27272a;
-    font-weight: 500;
-}
+.card-meta-row span:first-child { color: var(--color-text-muted); }
+.card-meta-row span:last-child { color: #27272a; font-weight: 500; }
 
 .card-date {
     margin-top: 10px;
     color: var(--color-text-subtle);
     font-size: 11px;
+}
+
+/* ============== EU CROSS-MARKET SECTION ============== */
+
+.eu-section {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid var(--color-border-soft);
+}
+
+.eu-toggle-btn {
+    width: 100%;
+    background: #fafafa;
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--color-text);
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.eu-toggle-btn:hover {
+    background: #f4f4f5;
+    border-color: var(--color-text);
+}
+
+.eu-toggle-btn .eu-flag { font-size: 16px; }
+
+.eu-toggle-btn .eu-arrow {
+    transition: transform 0.2s;
+    font-size: 12px;
+    color: var(--color-text-muted);
+}
+
+.eu-toggle-btn.expanded .eu-arrow { transform: rotate(180deg); }
+
+.eu-content {
+    margin-top: 12px;
+    display: none;
+}
+
+.eu-content.expanded { display: block; }
+
+.eu-loading {
+    text-align: center;
+    padding: 24px 12px;
+    color: var(--color-text-muted);
+    font-size: 13px;
+}
+
+.eu-error {
+    background: #fffbeb;
+    color: #854d0e;
+    border: 1px solid #fde68a;
+    padding: 10px;
+    border-radius: 6px;
+    font-size: 12px;
+}
+
+.eu-stats {
+    background: #f4f4f5;
+    border-radius: 8px;
+    padding: 10px 12px;
+    margin-bottom: 10px;
+    font-size: 12px;
+    color: var(--color-text-muted);
+    line-height: 1.5;
+}
+
+.eu-stats strong {
+    color: var(--color-text);
+    font-weight: 600;
+}
+
+.eu-comparison {
+    background: #fef9e7;
+    border: 1px solid #fde68a;
+    border-radius: 8px;
+    padding: 10px 12px;
+    margin-bottom: 10px;
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+.eu-comparison.savings {
+    background: #f0fdf4;
+    border-color: #bbf7d0;
+}
+
+.eu-comparison strong { font-weight: 700; }
+.eu-comparison.savings strong { color: #16a34a; }
+
+.eu-results {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.eu-result-card {
+    display: flex;
+    gap: 10px;
+    padding: 8px;
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    text-decoration: none;
+    color: inherit;
+    transition: all 0.15s;
+    background: white;
+}
+
+.eu-result-card:hover {
+    border-color: var(--color-text);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+}
+
+.eu-result-img {
+    width: 80px;
+    height: 60px;
+    flex-shrink: 0;
+    border-radius: 6px;
+    overflow: hidden;
+    background: #f4f4f5;
+}
+
+.eu-result-img img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.eu-result-body {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.eu-result-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 8px;
+    margin-bottom: 4px;
+}
+
+.eu-result-title {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--color-text);
+    line-height: 1.3;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
+}
+
+.eu-result-price {
+    font-size: 14px;
+    font-weight: 800;
+    color: var(--color-text);
+    white-space: nowrap;
+    letter-spacing: -0.02em;
+}
+
+.eu-result-meta {
+    font-size: 11px;
+    color: var(--color-text-muted);
+    line-height: 1.4;
+}
+
+.eu-result-country {
+    display: inline-block;
+    background: #f4f4f5;
+    color: #52525b;
+    padding: 1px 6px;
+    border-radius: 3px;
+    font-size: 10px;
+    font-weight: 600;
+    margin-right: 4px;
 }
 
 .card-actions {
@@ -870,25 +973,10 @@ input::placeholder {
     font-weight: 500;
 }
 
-.age-tag.fresh {
-    background: var(--color-green-light);
-    color: #14532d;
-}
-
-.age-tag.normal {
-    background: #f4f4f5;
-    color: #52525b;
-}
-
-.age-tag.stale {
-    background: var(--color-yellow-light);
-    color: #854d0e;
-}
-
-.age-tag.old {
-    background: var(--color-red-light);
-    color: #7f1d1d;
-}
+.age-tag.fresh { background: var(--color-green-light); color: #14532d; }
+.age-tag.normal { background: #f4f4f5; color: #52525b; }
+.age-tag.stale { background: var(--color-yellow-light); color: #854d0e; }
+.age-tag.old { background: var(--color-red-light); color: #7f1d1d; }
 
 .outlier-warning {
     background: #fffbeb;
@@ -975,9 +1063,7 @@ input::placeholder {
     transition: border-color 0.15s;
 }
 
-.pagination button:hover {
-    border-color: var(--color-text);
-}
+.pagination button:hover { border-color: var(--color-text); }
 
 .pagination span {
     color: var(--color-text-muted);
@@ -988,62 +1074,21 @@ input::placeholder {
 /* ============== RESPONSIVE ============== */
 
 @media (max-width: 768px) {
-    .header-inner {
-        padding: 24px 16px 22px;
-    }
-
-    .logo {
-        gap: 14px;
-    }
-
-    .logo-mark-img {
-        width: 56px;
-        height: 56px;
-    }
-
-    .logo-name {
-        font-size: 30px;
-        letter-spacing: -0.8px;
-    }
-
-    .logo-sub {
-        font-size: 13px;
-        margin-top: 6px;
-    }
+    .header-inner { padding: 24px 16px 22px; }
+    .logo { gap: 14px; }
+    .logo-mark-img { width: 56px; height: 56px; }
+    .logo-name { font-size: 30px; letter-spacing: -0.8px; }
+    .logo-sub { font-size: 13px; margin-top: 6px; }
 }
 
 @media (max-width: 600px) {
-    .container {
-        padding: 24px 16px;
-    }
-
-    .logo {
-        gap: 12px;
-    }
-
-    .logo-mark-img {
-        width: 48px;
-        height: 48px;
-    }
-
-    .logo-name {
-        font-size: 24px;
-        letter-spacing: -0.5px;
-    }
-
-    .logo-sub {
-        font-size: 12px;
-        margin-top: 4px;
-    }
-
-    .tab {
-        margin-right: 20px;
-        font-size: 14px;
-    }
-
-    #list {
-        grid-template-columns: 1fr;
-    }
+    .container { padding: 24px 16px; }
+    .logo { gap: 12px; }
+    .logo-mark-img { width: 48px; height: 48px; }
+    .logo-name { font-size: 24px; letter-spacing: -0.5px; }
+    .logo-sub { font-size: 12px; margin-top: 4px; }
+    .tab { margin-right: 20px; font-size: 14px; }
+    #list { grid-template-columns: 1fr; }
 }
 </style>
 </head>
@@ -1305,7 +1350,6 @@ function daysFromIsoDate(isoDate){
 
 function buildSparkline(istorija){
     if(!istorija || istorija.length < 2){
-        // Placeholder - prazan div sa istom visinom da kartice budu poravnate
         const wrap = document.createElement("div");
         wrap.className = "sparkline-wrap";
         wrap.style.opacity = "0";
@@ -1322,26 +1366,22 @@ function buildSparkline(istorija){
     const padX = 4;
     const padY = 6;
 
-    // Trend
     const prva = cene[0];
     const poslednja = cene[cene.length - 1];
     let trend = "flat";
     if(poslednja < prva) trend = "down";
     else if(poslednja > prva) trend = "up";
 
-    // Tačke u SVG koordinatama
     const points = istorija.map((p, i) => {
         const x = padX + (i / (istorija.length - 1)) * (W - 2 * padX);
         const y = padY + (1 - (p.cena - minCena) / range) * (H - 2 * padY);
         return { x, y, cena: p.cena, datum: p.datum };
     });
 
-    // Path za liniju
     const linePath = points.map((p, i) =>
         (i === 0 ? "M" : "L") + p.x.toFixed(1) + " " + p.y.toFixed(1)
     ).join(" ");
 
-    // Path za fill (linija + spuštanje na dno + zatvaranje)
     const fillPath = linePath +
         ` L${points[points.length-1].x.toFixed(1)} ${H}` +
         ` L${points[0].x.toFixed(1)} ${H} Z`;
@@ -1354,24 +1394,20 @@ function buildSparkline(istorija){
     svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
     svg.setAttribute("preserveAspectRatio", "none");
 
-    // Fill area
     const fill = document.createElementNS("http://www.w3.org/2000/svg", "path");
     fill.setAttribute("d", fillPath);
     fill.setAttribute("class", "sparkline-fill " + trend);
     svg.appendChild(fill);
 
-    // Linija
     const line = document.createElementNS("http://www.w3.org/2000/svg", "path");
     line.setAttribute("d", linePath);
     line.setAttribute("class", "sparkline-line " + trend);
     svg.appendChild(line);
 
-    // Tooltip element
     const tooltip = document.createElement("div");
     tooltip.className = "sparkline-tooltip";
     wrap.appendChild(tooltip);
 
-    // Tačke (interaktivne)
     points.forEach(p => {
         const dot = document.createElementNS("http://www.w3.org/2000/svg", "circle");
         dot.setAttribute("cx", p.x);
@@ -1380,7 +1416,6 @@ function buildSparkline(istorija){
         dot.setAttribute("class", "sparkline-dot");
         dot.setAttribute("fill", trend === "down" ? "#16a34a" : (trend === "up" ? "#e53935" : "#a1a1aa"));
 
-        // Hover handlers
         dot.addEventListener("mouseenter", (e) => {
             const date = new Date(p.datum.replace(" ", "T"));
             const dateStr = date.toLocaleDateString("sr-RS", {
@@ -1390,7 +1425,6 @@ function buildSparkline(istorija){
             });
             tooltip.textContent = `${dateStr}: ${p.cena.toLocaleString("sr-RS")} €`;
             tooltip.style.display = "block";
-            // Pozicija tooltip-a iznad tačke
             const xPercent = (p.x / W) * 100;
             tooltip.style.left = xPercent + "%";
         });
@@ -1404,6 +1438,152 @@ function buildSparkline(istorija){
 
     wrap.appendChild(svg);
     return wrap;
+}
+
+function countryFlag(code){
+    const map = {
+        "DE": "🇩🇪 DE",
+        "AT": "🇦🇹 AT",
+        "BE": "🇧🇪 BE",
+        "NL": "🇳🇱 NL"
+    };
+    return map[code] || code;
+}
+
+async function loadEuComparison(container, c){
+    container.innerHTML = '<div class="eu-loading">Pretražujem EU oglase...</div>';
+
+    const modelParts = (c.model || "").split("-");
+    if(modelParts.length < 2){
+        container.innerHTML = '<div class="eu-error">⚠️ Ne mogu da odredim brand/model iz oglasa.</div>';
+        return;
+    }
+    const make = modelParts[0];
+    const model = modelParts.slice(1).join("-");
+
+    const year = c.godiste;
+    const yearFrom = year ? year - 1 : "";
+    const yearTo = year ? year + 1 : "";
+
+    const km = c.kilometraza;
+    let kmMin = "";
+    let kmMax = "";
+    if(km){
+        kmMin = Math.max(0, Math.floor(km * 0.7));
+        kmMax = Math.ceil(km * 1.3);
+    }
+
+    const params = new URLSearchParams({ make, model });
+    if(yearFrom) params.set("year_from", yearFrom);
+    if(yearTo) params.set("year_to", yearTo);
+    if(kmMin) params.set("km_min", kmMin);
+    if(kmMax) params.set("km_max", kmMax);
+
+    try{
+        const r = await fetch(API + "/eu-search?" + params.toString());
+        const data = await r.json();
+
+        if(data.error || !data.results){
+            container.innerHTML = `<div class="eu-error">⚠️ ${data.error || "Greška pri pretrazi"}</div>`;
+            return;
+        }
+
+        renderEuResults(container, data, c);
+    }catch(e){
+        container.innerHTML = `<div class="eu-error">⚠️ Greška: ${e.message}</div>`;
+    }
+}
+
+function renderEuResults(container, data, sourceCar){
+    container.innerHTML = "";
+
+    if(!data.results || data.results.length === 0){
+        container.innerHTML = '<div class="eu-error">Nema podudaranja u DE/AT/BE/NL za ove parametre.</div>';
+        return;
+    }
+
+    const cene = data.results.map(r => r.price).filter(p => p);
+    const avg = cene.length > 0 ? Math.round(cene.reduce((a,b)=>a+b,0) / cene.length) : null;
+    const min = cene.length > 0 ? Math.min(...cene) : null;
+
+    const stats = document.createElement("div");
+    stats.className = "eu-stats";
+    let statsHtml = `Pronađeno <strong>${data.total || data.count}</strong> oglasa u DE/AT/BE/NL.`;
+    if(avg){
+        statsHtml += ` Prosek: <strong>€${avg.toLocaleString("en-US")}</strong>`;
+    }
+    if(min){
+        statsHtml += ` · Najniži: <strong>€${min.toLocaleString("en-US")}</strong>`;
+    }
+    stats.innerHTML = statsHtml;
+    container.appendChild(stats);
+
+    if(min && sourceCar.cena){
+        const comp = document.createElement("div");
+        const diff = sourceCar.cena - min;
+
+        if(diff > 0){
+            comp.className = "eu-comparison savings";
+            comp.innerHTML = `💡 Tvoj oglas <strong>${sourceCar.cena.toLocaleString("sr-RS")} €</strong> vs EU najjeftiniji <strong>€${min.toLocaleString("en-US")}</strong> → razlika <strong>${diff.toLocaleString("sr-RS")} €</strong> (sirovo, bez import troškova)`;
+        }else{
+            comp.className = "eu-comparison";
+            comp.innerHTML = `Tvoj oglas <strong>${sourceCar.cena.toLocaleString("sr-RS")} €</strong> je već konkurentan u odnosu na EU (najniži <strong>€${min.toLocaleString("en-US")}</strong>).`;
+        }
+        container.appendChild(comp);
+    }
+
+    const list = document.createElement("div");
+    list.className = "eu-results";
+
+    data.results.forEach(r => {
+        const card = document.createElement("a");
+        card.className = "eu-result-card";
+        card.href = r.url;
+        card.target = "_blank";
+
+        const imgWrap = document.createElement("div");
+        imgWrap.className = "eu-result-img";
+        if(r.image){
+            const img = document.createElement("img");
+            img.src = r.image;
+            img.onerror = () => { imgWrap.innerHTML = ""; };
+            imgWrap.appendChild(img);
+        }
+
+        const body = document.createElement("div");
+        body.className = "eu-result-body";
+
+        const top = document.createElement("div");
+        top.className = "eu-result-top";
+
+        const title = document.createElement("div");
+        title.className = "eu-result-title";
+        title.textContent = `${r.make} ${r.model} ${r.variant}`.trim();
+
+        const price = document.createElement("div");
+        price.className = "eu-result-price";
+        price.textContent = r.priceFormatted || ("€" + (r.price || 0).toLocaleString("en-US"));
+
+        top.appendChild(title);
+        top.appendChild(price);
+        body.appendChild(top);
+
+        const meta = document.createElement("div");
+        meta.className = "eu-result-meta";
+        const parts = [];
+        parts.push(`<span class="eu-result-country">${countryFlag(r.country)}</span>`);
+        if(r.year) parts.push(r.year + ".");
+        if(r.km) parts.push(r.km.toLocaleString("en-US") + " km");
+        if(r.fuel) parts.push(r.fuel);
+        meta.innerHTML = parts.join(" · ");
+        body.appendChild(meta);
+
+        card.appendChild(imgWrap);
+        card.appendChild(body);
+        list.appendChild(card);
+    });
+
+    container.appendChild(list);
 }
 
 function setFilter(f, event){
@@ -1564,7 +1744,6 @@ function buildTrackedCard(o, c, showBestDealTag){
     scoreBadge.textContent = `${badge} ${score}`;
     imgWrap.appendChild(scoreBadge);
 
-    // Status badge na slici (donje desno)
     if(daysRenewed !== null){
         const statusBadge = document.createElement("div");
         statusBadge.className = "status-badge";
@@ -1572,23 +1751,17 @@ function buildTrackedCard(o, c, showBestDealTag){
         let statusClass = "";
 
         if(daysRenewed === 0){
-            statusText = "Danas";
-            statusClass = "fresh";
+            statusText = "Danas"; statusClass = "fresh";
         }else if(daysRenewed === 1){
-            statusText = "Juče";
-            statusClass = "fresh";
+            statusText = "Juče"; statusClass = "fresh";
         }else if(daysRenewed <= 7){
-            statusText = `Pre ${daysRenewed}d`;
-            statusClass = "fresh";
+            statusText = `Pre ${daysRenewed}d`; statusClass = "fresh";
         }else if(daysRenewed <= 30){
-            statusText = `Pre ${daysRenewed}d`;
-            statusClass = "normal";
+            statusText = `Pre ${daysRenewed}d`; statusClass = "normal";
         }else if(daysRenewed <= 60){
-            statusText = `Stoji ${daysRenewed}d`;
-            statusClass = "stale";
+            statusText = `Stoji ${daysRenewed}d`; statusClass = "stale";
         }else{
-            statusText = `Star ${daysRenewed}d`;
-            statusClass = "old";
+            statusText = `Star ${daysRenewed}d`; statusClass = "old";
         }
 
         statusBadge.classList.add(statusClass);
@@ -1615,14 +1788,13 @@ function buildTrackedCard(o, c, showBestDealTag){
         body.appendChild(dw);
     }
 
-        // Outlier upozorenje - sumnjivo dobra cena
     if(c.outlier){
         const ow = document.createElement("div");
         ow.className = "outlier-warning";
         ow.textContent = "⚠️ Sumnjivo dobra cena, proveri detalje";
         body.appendChild(ow);
     }
-    
+
     const title = document.createElement("div");
     title.className = "card-title";
     title.textContent = getName(o, c);
@@ -1633,10 +1805,9 @@ function buildTrackedCard(o, c, showBestDealTag){
     price.textContent = formatPrice(c.cena);
     body.appendChild(price);
 
-    // Sparkline istorije cena
     const sparkline = buildSparkline(c.istorija_cena);
     body.appendChild(sparkline);
-    
+
     const indicators = [];
     if(c.prvi_vlasnik) indicators.push("👤 Prvi vlasnik");
     if(c.servisna_knjizica) indicators.push("📖 Servisna");
@@ -1696,6 +1867,37 @@ function buildTrackedCard(o, c, showBestDealTag){
 
     meta.innerHTML = metaHTML;
     body.appendChild(meta);
+
+    // EU Cross-market section
+    const euSection = document.createElement("div");
+    euSection.className = "eu-section";
+
+    const euToggle = document.createElement("button");
+    euToggle.className = "eu-toggle-btn";
+    euToggle.innerHTML = '<span><span class="eu-flag">🇪🇺</span> Uporedi sa EU (DE/AT/BE/NL)</span><span class="eu-arrow">▼</span>';
+
+    const euContent = document.createElement("div");
+    euContent.className = "eu-content";
+
+    let euLoaded = false;
+    euToggle.onclick = () => {
+        const isExpanded = euContent.classList.contains("expanded");
+        if(isExpanded){
+            euContent.classList.remove("expanded");
+            euToggle.classList.remove("expanded");
+        }else{
+            euContent.classList.add("expanded");
+            euToggle.classList.add("expanded");
+            if(!euLoaded){
+                euLoaded = true;
+                loadEuComparison(euContent, c);
+            }
+        }
+    };
+
+    euSection.appendChild(euToggle);
+    euSection.appendChild(euContent);
+    body.appendChild(euSection);
 
     const actions = document.createElement("div");
     actions.className = "card-actions";
@@ -1857,18 +2059,10 @@ function calculateSearchScore(result, stats){
     let ageStatus = null;
 
     if(days !== null){
-        if(days <= 7){
-            score += 5;
-            ageStatus = "fresh";
-        }else if(days <= 30){
-            ageStatus = "normal";
-        }else if(days <= 60){
-            score -= 3;
-            ageStatus = "stale";
-        }else{
-            score -= 8;
-            ageStatus = "old";
-        }
+        if(days <= 7){ score += 5; ageStatus = "fresh"; }
+        else if(days <= 30){ ageStatus = "normal"; }
+        else if(days <= 60){ score -= 3; ageStatus = "stale"; }
+        else{ score -= 8; ageStatus = "old"; }
     }
 
     let outlier = false;
@@ -1885,12 +2079,7 @@ function calculateSearchScore(result, stats){
     if(score < 0) score = 0;
     if(outlier && score > 50) score = 50;
 
-    return {
-        score: Math.round(score),
-        ageStatus,
-        ageDays: days,
-        outlier
-    };
+    return { score: Math.round(score), ageStatus, ageDays: days, outlier };
 }
 
 async function doSearch(page = 1){
@@ -1939,11 +2128,7 @@ async function doSearch(page = 1){
 
         SEARCH_RESULTS_WITH_SCORE = data.results.map(r => {
             const scoreInfo = calculateSearchScore(r, stats);
-            return {
-                ...r,
-                ...scoreInfo,
-                _stats: stats
-            };
+            return { ...r, ...scoreInfo, _stats: stats };
         });
 
         renderSearch();
