@@ -19,4 +19,4 @@ jobs:
         run: pip install requests
       
       - name: Pokreni AutoScout test
-        run: python autoscout_test.py
+        run: python autoscout_test2.py
