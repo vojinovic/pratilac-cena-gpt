@@ -1615,6 +1615,14 @@ function buildTrackedCard(o, c, showBestDealTag){
         body.appendChild(dw);
     }
 
+        // Outlier upozorenje - sumnjivo dobra cena
+    if(c.outlier){
+        const ow = document.createElement("div");
+        ow.className = "outlier-warning";
+        ow.textContent = "⚠️ Sumnjivo dobra cena, proveri detalje";
+        body.appendChild(ow);
+    }
+    
     const title = document.createElement("div");
     title.className = "card-title";
     title.textContent = getName(o, c);
@@ -1875,7 +1883,7 @@ function calculateSearchScore(result, stats){
 
     if(score > 100) score = 100;
     if(score < 0) score = 0;
-    if(outlier && score > 65) score = 65;
+    if(outlier && score > 50) score = 50;
 
     return {
         score: Math.round(score),
