@@ -571,6 +571,88 @@ input::placeholder {
     line-height: 1;
 }
 
+.sparkline-wrap {
+    margin-bottom: 14px;
+    position: relative;
+}
+
+.sparkline-svg {
+    display: block;
+    width: 100%;
+    height: 36px;
+    overflow: visible;
+}
+
+.sparkline-line {
+    fill: none;
+    stroke-width: 2;
+    stroke-linejoin: round;
+    stroke-linecap: round;
+}
+
+.sparkline-line.down {
+    stroke: var(--color-green);
+}
+
+.sparkline-line.up {
+    stroke: var(--color-red);
+}
+
+.sparkline-line.flat {
+    stroke: #a1a1aa;
+}
+
+.sparkline-fill.down {
+    fill: rgba(22, 163, 74, 0.08);
+}
+
+.sparkline-fill.up {
+    fill: rgba(229, 57, 53, 0.08);
+}
+
+.sparkline-fill.flat {
+    fill: rgba(161, 161, 170, 0.08);
+}
+
+.sparkline-dot {
+    cursor: pointer;
+    transition: r 0.15s;
+}
+
+.sparkline-dot:hover {
+    r: 4;
+}
+
+.sparkline-tooltip {
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(17, 17, 17, 0.95);
+    color: white;
+    padding: 6px 10px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 500;
+    white-space: nowrap;
+    pointer-events: none;
+    margin-bottom: 8px;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    z-index: 10;
+    display: none;
+}
+
+.sparkline-tooltip::after {
+    content: "";
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 5px solid transparent;
+    border-top-color: rgba(17, 17, 17, 0.95);
+}
+
 .card-indicators {
     display: flex;
     flex-wrap: wrap;
@@ -1220,6 +1302,105 @@ function daysFromIsoDate(isoDate){
     return Math.floor(diffMs / (1000 * 60 * 60 * 24));
 }
 
+function buildSparkline(istorija){
+    if(!istorija || istorija.length < 2){
+        return null;
+    }
+
+    const cene = istorija.map(p => p.cena);
+    const minCena = Math.min(...cene);
+    const maxCena = Math.max(...cene);
+    const range = maxCena - minCena || 1;
+
+    const W = 280;
+    const H = 36;
+    const padX = 4;
+    const padY = 6;
+
+    // Trend
+    const prva = cene[0];
+    const poslednja = cene[cene.length - 1];
+    let trend = "flat";
+    if(poslednja < prva) trend = "down";
+    else if(poslednja > prva) trend = "up";
+
+    // Tačke u SVG koordinatama
+    const points = istorija.map((p, i) => {
+        const x = padX + (i / (istorija.length - 1)) * (W - 2 * padX);
+        const y = padY + (1 - (p.cena - minCena) / range) * (H - 2 * padY);
+        return { x, y, cena: p.cena, datum: p.datum };
+    });
+
+    // Path za liniju
+    const linePath = points.map((p, i) =>
+        (i === 0 ? "M" : "L") + p.x.toFixed(1) + " " + p.y.toFixed(1)
+    ).join(" ");
+
+    // Path za fill (linija + spuštanje na dno + zatvaranje)
+    const fillPath = linePath +
+        ` L${points[points.length-1].x.toFixed(1)} ${H}` +
+        ` L${points[0].x.toFixed(1)} ${H} Z`;
+
+    const wrap = document.createElement("div");
+    wrap.className = "sparkline-wrap";
+
+    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    svg.setAttribute("class", "sparkline-svg");
+    svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
+    svg.setAttribute("preserveAspectRatio", "none");
+
+    // Fill area
+    const fill = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    fill.setAttribute("d", fillPath);
+    fill.setAttribute("class", "sparkline-fill " + trend);
+    svg.appendChild(fill);
+
+    // Linija
+    const line = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    line.setAttribute("d", linePath);
+    line.setAttribute("class", "sparkline-line " + trend);
+    svg.appendChild(line);
+
+    // Tooltip element
+    const tooltip = document.createElement("div");
+    tooltip.className = "sparkline-tooltip";
+    wrap.appendChild(tooltip);
+
+    // Tačke (interaktivne)
+    points.forEach(p => {
+        const dot = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+        dot.setAttribute("cx", p.x);
+        dot.setAttribute("cy", p.y);
+        dot.setAttribute("r", 2.5);
+        dot.setAttribute("class", "sparkline-dot");
+        dot.setAttribute("fill", trend === "down" ? "#16a34a" : (trend === "up" ? "#e53935" : "#a1a1aa"));
+
+        // Hover handlers
+        dot.addEventListener("mouseenter", (e) => {
+            const date = new Date(p.datum.replace(" ", "T"));
+            const dateStr = date.toLocaleDateString("sr-RS", {
+                day: "numeric",
+                month: "numeric",
+                year: "numeric"
+            });
+            tooltip.textContent = `${dateStr}: ${p.cena.toLocaleString("sr-RS")} €`;
+            tooltip.style.display = "block";
+            // Pozicija tooltip-a iznad tačke
+            const xPercent = (p.x / W) * 100;
+            tooltip.style.left = xPercent + "%";
+        });
+
+        dot.addEventListener("mouseleave", () => {
+            tooltip.style.display = "none";
+        });
+
+        svg.appendChild(dot);
+    });
+
+    wrap.appendChild(svg);
+    return wrap;
+}
+
 function setFilter(f, event){
     FILTER = f;
     document.querySelectorAll(".filter-btn").forEach(b => b.classList.remove("active"));
@@ -1439,6 +1620,12 @@ function buildTrackedCard(o, c, showBestDealTag){
     price.textContent = formatPrice(c.cena);
     body.appendChild(price);
 
+    // Sparkline istorije cena
+    const sparkline = buildSparkline(c.istorija_cena);
+    if(sparkline){
+        body.appendChild(sparkline);
+    }
+    
     const indicators = [];
     if(c.prvi_vlasnik) indicators.push("👤 Prvi vlasnik");
     if(c.servisna_knjizica) indicators.push("📖 Servisna");
