@@ -18,5 +18,5 @@ jobs:
       - name: Install dependencies
         run: pip install requests
       
-      - name: Pokreni dijagnostiku
-        run: python dijagnostika.py
+      - name: Pokreni mobile.de test
+        run: python mobile_de_test.py
