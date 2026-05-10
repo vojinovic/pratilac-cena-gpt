@@ -86,7 +86,6 @@ body {
     height: 72px;
     object-fit: contain;
     flex-shrink: 0;
-    /* Logo mark je crn na crnoj pozadini - invertujemo crnu u belu, crvena ostaje */
     filter: invert(1) hue-rotate(0deg);
 }
 
@@ -435,14 +434,15 @@ input::placeholder {
     border: 1px solid var(--color-border);
     border-radius: 14px;
     overflow: hidden;
-    transition: border-color 0.15s, transform 0.15s, box-shadow 0.15s;
+    transition: all 0.2s ease;
     display: flex;
     flex-direction: column;
 }
 
 .card:hover {
     border-color: #d4d4d8;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.04);
+    box-shadow: 0 12px 28px rgba(0,0,0,0.08);
+    transform: translateY(-3px);
 }
 
 .card.top-deal {
@@ -491,6 +491,40 @@ input::placeholder {
     z-index: 2;
 }
 
+.status-badge {
+    position: absolute;
+    bottom: 12px;
+    right: 12px;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 600;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    z-index: 2;
+    letter-spacing: 0.02em;
+}
+
+.status-badge.fresh {
+    background: rgba(22, 163, 74, 0.9);
+    color: white;
+}
+
+.status-badge.normal {
+    background: rgba(255, 255, 255, 0.9);
+    color: #27272a;
+}
+
+.status-badge.stale {
+    background: rgba(202, 138, 4, 0.9);
+    color: white;
+}
+
+.status-badge.old {
+    background: rgba(229, 57, 53, 0.9);
+    color: white;
+}
+
 .best-deal-tag {
     position: absolute;
     top: 12px;
@@ -521,6 +555,11 @@ input::placeholder {
     line-height: 1.3;
     color: var(--color-text);
     letter-spacing: -0.01em;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    min-height: 42px;
 }
 
 .card-price {
@@ -682,14 +721,15 @@ input::placeholder {
     border: 1px solid var(--color-border);
     border-radius: 12px;
     overflow: hidden;
-    transition: all 0.15s;
+    transition: all 0.2s ease;
     display: flex;
     flex-direction: column;
 }
 
 .search-card:hover {
     border-color: #d4d4d8;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.04);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.06);
+    transform: translateY(-2px);
 }
 
 .search-card.tracked {
@@ -786,6 +826,10 @@ input::placeholder {
     min-height: 34px;
     color: var(--color-text);
     letter-spacing: -0.01em;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
 }
 
 .search-card .price-row {
@@ -1292,6 +1336,9 @@ function buildTrackedCard(o, c, showBestDealTag){
     else if(score >= 60) badge = "🟢";
     else if(score >= 40) badge = "🟡";
 
+    const daysRenewed = daysFromIsoDate(c.last_renewed_date);
+    const daysTracked = daysFromIsoDate(c.prvi_put_videno);
+
     const imgWrap = document.createElement("div");
     imgWrap.className = "card-img-wrap";
 
@@ -1330,6 +1377,38 @@ function buildTrackedCard(o, c, showBestDealTag){
     scoreBadge.className = "score-badge";
     scoreBadge.textContent = `${badge} ${score}`;
     imgWrap.appendChild(scoreBadge);
+
+    // Status badge na slici (donje desno)
+    if(daysRenewed !== null){
+        const statusBadge = document.createElement("div");
+        statusBadge.className = "status-badge";
+        let statusText = "";
+        let statusClass = "";
+
+        if(daysRenewed === 0){
+            statusText = "Danas";
+            statusClass = "fresh";
+        }else if(daysRenewed === 1){
+            statusText = "Juče";
+            statusClass = "fresh";
+        }else if(daysRenewed <= 7){
+            statusText = `Pre ${daysRenewed}d`;
+            statusClass = "fresh";
+        }else if(daysRenewed <= 30){
+            statusText = `Pre ${daysRenewed}d`;
+            statusClass = "normal";
+        }else if(daysRenewed <= 60){
+            statusText = `Stoji ${daysRenewed}d`;
+            statusClass = "stale";
+        }else{
+            statusText = `Star ${daysRenewed}d`;
+            statusClass = "old";
+        }
+
+        statusBadge.classList.add(statusClass);
+        statusBadge.textContent = statusText;
+        imgWrap.appendChild(statusBadge);
+    }
 
     card.appendChild(imgWrap);
 
@@ -1409,29 +1488,6 @@ function buildTrackedCard(o, c, showBestDealTag){
         const promenaColor = c.promena < 0 ? "#16a34a" : "#dc2626";
         const promenaText = (c.promena > 0 ? "+" : "") + formatPrice(c.promena);
         metaHTML += `<div class="card-meta-row"><span>Promena</span><span style="color:${promenaColor};font-weight:600;">${promenaText}</span></div>`;
-    }
-
-    const daysRenewed = daysFromIsoDate(c.last_renewed_date);
-    const daysTracked = daysFromIsoDate(c.prvi_put_videno);
-
-    if(daysRenewed !== null){
-        let renewColor = "#27272a";
-        let renewText = "";
-        if(daysRenewed === 0) renewText = "obnovljen danas";
-        else if(daysRenewed === 1) renewText = "obnovljen juče";
-        else if(daysRenewed <= 7){
-            renewText = `obnovljen pre ${daysRenewed}d`;
-            renewColor = "#16a34a";
-        }else if(daysRenewed <= 30){
-            renewText = `obnovljen pre ${daysRenewed}d`;
-        }else if(daysRenewed <= 60){
-            renewText = `stoji ${daysRenewed}d`;
-            renewColor = "#ca8a04";
-        }else{
-            renewText = `stoji ${daysRenewed}d`;
-            renewColor = "#dc2626";
-        }
-        metaHTML += `<div class="card-meta-row"><span>Status</span><span style="color:${renewColor};font-weight:500;">${renewText}</span></div>`;
     }
 
     if(daysTracked !== null && daysTracked > 0){
