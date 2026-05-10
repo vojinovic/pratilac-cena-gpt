@@ -108,3 +108,28 @@ if len(html) < 5000:
     print(f"UPOZORENJE: HTML je samo {len(html)} chars - mozda blok")
 
 print("\nGOTOVO")
+print("\n" + "=" * 60)
+print("8. Sta je u HTML-u?")
+print("=" * 60)
+print(f"Duzina: {len(html)} chars")
+print(f"\nPRVIH 2000 KARAKTERA:")
+print(html[:2000])
+print(f"\nPOSLEDNJIH 1000 KARAKTERA:")
+print(html[-1000:])
+
+# Body classes
+body_match = re.search(r'<body[^>]*>', html)
+if body_match:
+    print(f"\nBody tag: {body_match.group(0)}")
+
+# Sve script src
+scripts = re.findall(r'<script[^>]*src="([^"]+)"', html)
+print(f"\nScript fajlova: {len(scripts)}")
+for s in scripts[:10]:
+    print(f"  {s}")
+
+# Sve linkove
+links = re.findall(r'<link[^>]*href="([^"]+)"', html)
+print(f"\nLink fajlova: {len(links)}")
+for l in links[:5]:
+    print(f"  {l}")
