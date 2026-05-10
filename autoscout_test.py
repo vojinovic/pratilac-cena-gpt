@@ -1,16 +1,9 @@
 #!/usr/bin/env python3
-"""
-AutoScout24 dijagnostika - Faza 1
-"""
-
 import requests
 import re
 import json
 
-# Volvo XC60 search, 2021-2023, do 170K km, EU
-SEARCH_URL = "https://www.autoscout24.com/lst/volvo/xc60?atype=C&damaged_listing=exclude&desc=0&fregfrom=2021&fregto=2023&kmto=170000&powertype=kw&search_id=&sort=standard&source=detailpage_back-to-search-link&ustate=N%2CU"
-
-DETAIL_URL_FALLBACK = "https://www.autoscout24.com/offers/volvo-xc60-test"  # fallback, koristi rezultat iz search-a
+SEARCH_URL = "https://www.autoscout24.com/lst/volvo/xc60?atype=C&damaged_listing=exclude&fregfrom=2021&fregto=2023&kmto=170000&sort=standard&ustate=N%2CU"
 
 HEADERS = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
@@ -26,52 +19,56 @@ HEADERS = {
     "Cache-Control": "max-age=0",
 }
 
+print("=" * 80)
+print("AUTOSCOUT24 DIJAGNOSTIKA")
+print("=" * 80)
+print(f"\nFETCH: {SEARCH_URL[:120]}")
 
-def fetch(url):
-    print(f"\nFETCH: {url[:120]}")
-    try:
-        r = requests.get(url, headers=HEADERS, timeout=20)
-        r.encoding = "utf-8"
-        print(f"Status: {r.status_code}")
-        print(f"Content length: {len(r.text)}")
-        print(f"Content-Type: {r.headers.get('content-type')}")
-        return r
-    except Exception as e:
-        print(f"GREŠKA: {e}")
-        return None
+r = requests.get(SEARCH_URL, headers=HEADERS, timeout=20)
+r.encoding = "utf-8"
 
+print(f"Status: {r.status_code}")
+print(f"Content length: {len(r.text)}")
+print(f"Content-Type: {r.headers.get('content-type')}")
 
-def detect_blockers(html):
-    print("\n=== DETEKCIJA BLOKADE ===")
-    text_lower = html.lower()
-    
-    detected = []
-    if "cloudflare" in text_lower or "cf-ray" in text_lower:
-        detected.append("Cloudflare")
-    if "akamai" in text_lower:
-        detected.append("Akamai")
-    if "datadome" in text_lower:
-        detected.append("DataDome")
-    if "perimeterx" in text_lower or "px-captcha" in text_lower:
-        detected.append("PerimeterX")
-    if "captcha" in text_lower:
-        detected.append("Captcha keyword")
-    if "access denied" in text_lower or "zugriff verweigert" in text_lower:
-        detected.append("Access denied")
-    if "blocked" in text_lower:
-        detected.append("Blocked keyword")
-    
-    if detected:
-        print(f"Detektovano: {', '.join(detected)}")
-    else:
-        print("Nista direktno detektovano - dobar znak")
-    
-    title_match = re.search(r'<title>(.*?)</title>', html, re.IGNORECASE | re.DOTALL)
-    if title_match:
-        print(f"Title: {title_match.group(1).strip()[:200]}")
+print("\n=== RESPONSE HEADERS ===")
+for k, v in r.headers.items():
+    print(f"  {k}: {v}")
 
+if r.status_code != 200:
+    print("\n=== PRVIH 2000 KARAKTERA TELA (jer status nije 200) ===")
+    print(r.text[:2000])
 
-def analyze_search(html):
+html = r.text
+text_lower = html.lower()
+
+print("\n=== DETEKCIJA BLOKADE ===")
+detected = []
+if "cloudflare" in text_lower or "cf-ray" in text_lower:
+    detected.append("Cloudflare")
+if "akamai" in text_lower:
+    detected.append("Akamai")
+if "datadome" in text_lower:
+    detected.append("DataDome")
+if "perimeterx" in text_lower:
+    detected.append("PerimeterX")
+if "captcha" in text_lower:
+    detected.append("Captcha keyword")
+if "access denied" in text_lower:
+    detected.append("Access denied")
+if "blocked" in text_lower:
+    detected.append("Blocked keyword")
+
+if detected:
+    print(f"Detektovano: {', '.join(detected)}")
+else:
+    print("Nista direktno detektovano - dobar znak")
+
+title_match = re.search(r"<title>(.*?)</title>", html, re.IGNORECASE | re.DOTALL)
+if title_match:
+    print(f"Title: {title_match.group(1).strip()[:200]}")
+
+if r.status_code == 200:
     print("\n=== JSON-LD ===")
     ld_matches = re.findall(r'<script[^>]*type="application/ld\+json"[^>]*>(.*?)</script>', html, re.DOTALL)
     print(f"Pronadjeno {len(ld_matches)} JSON-LD blokova")
@@ -80,25 +77,35 @@ def analyze_search(html):
             data = json.loads(ld.strip())
             data_type = data.get("@type", "?") if isinstance(data, dict) else "list"
             print(f"  {i+1}. type={data_type}")
-            if "ItemList" in str(data_type) or "Product" in str(data_type) or "Vehicle" in str(data_type):
-                print(f"     SNIPPET: {json.dumps(data, ensure_ascii=False)[:600]}")
-        except Exception as e:
-            print(f"  {i+1}. Parse error: {e}")
-    
-    print("\n=== INITIAL STATE / NEXT_DATA ===")
-    # AutoScout24 koristi Next.js, što znači __NEXT_DATA__ JSON je verovatno tu
-    next_data_match = re.search(r'<script id="__NEXT_DATA__" type="application/json">(.*?)</script>', html, re.DOTALL)
-    if next_data_match:
-        print(f"Pronadjen __NEXT_DATA__ ({len(next_data_match.group(1))} chars)")
+        except Exception as parse_err:
+            print(f"  {i+1}. parse error")
+
+    print("\n=== __NEXT_DATA__ (Next.js prerendered podaci) ===")
+    next_match = re.search(r'<script id="__NEXT_DATA__" type="application/json">(.*?)</script>', html, re.DOTALL)
+    if next_match:
+        print(f"Pronadjen, duzina: {len(next_match.group(1))} chars")
         try:
-            data = json.loads(next_data_match.group(1))
-            # Pokušaj da nadjem listinge
-            data_str = json.dumps(data)
-            if '"price"' in data_str.lower() and '"id"' in data_str.lower():
-                print("✓ Sadrzi price i id polja - listingi su verovatno ovde")
-                # Nadji prvi listing
-                if "props" in data and "pageProps" in data["props"]:
-                    page_props_keys = list(data["props"]["pageProps"].keys())
-                    print(f"pageProps ključevi: {page_props_keys[:20]}")
+            data = json.loads(next_match.group(1))
+            page_props = data.get("props", {}).get("pageProps", {})
+            print(f"pageProps keys: {list(page_props.keys())[:20]}")
         except Exception as e:
-            print(f"JSON parse greška: {e
+            print(f"Parse error")
+    else:
+        print("NIJE pronadjen")
+
+    print("\n=== Listing linkovi ===")
+    listing_links = re.findall(r'href="(/offers/[^"]+)"', html)
+    listing_links = list(set(listing_links))
+    print(f"Pronadjeno {len(listing_links)} unique linkova")
+    for link in listing_links[:5]:
+        print(f"  {link[:150]}")
+
+    print("\n=== Cene u tekstu (€) ===")
+    cene = re.findall(r"€\s*([\d,.]+)", html)
+    cene_unique = list(set(cene))[:15]
+    for c in cene_unique[:10]:
+        print(f"  €{c}")
+
+print("\n" + "=" * 80)
+print("GOTOVO")
+print("=" * 80)
