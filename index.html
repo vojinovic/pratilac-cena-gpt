@@ -1305,7 +1305,11 @@ function daysFromIsoDate(isoDate){
 
 function buildSparkline(istorija){
     if(!istorija || istorija.length < 2){
-        return null;
+        // Placeholder - prazan div sa istom visinom da kartice budu poravnate
+        const wrap = document.createElement("div");
+        wrap.className = "sparkline-wrap";
+        wrap.style.opacity = "0";
+        return wrap;
     }
 
     const cene = istorija.map(p => p.cena);
