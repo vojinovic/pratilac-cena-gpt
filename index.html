@@ -160,6 +160,50 @@ input::placeholder { color: var(--color-text-subtle); }
     margin-bottom: 14px;
 }
 
+.search-chips-row {
+    margin-bottom: 14px;
+}
+
+.search-chips-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--color-text-muted);
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.search-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.chip {
+    background: white;
+    border: 1px solid var(--color-border);
+    padding: 6px 12px;
+    border-radius: 16px;
+    font-size: 12px;
+    font-weight: 500;
+    color: #52525b;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.15s;
+    user-select: none;
+}
+
+.chip:hover {
+    border-color: var(--color-text);
+    color: var(--color-text);
+}
+
+.chip.active {
+    background: var(--color-text);
+    color: white;
+    border-color: var(--color-text);
+}
+
 .search-btn {
     width: 100%;
     background: var(--color-text); color: white;
@@ -1175,6 +1219,33 @@ input::placeholder { color: var(--color-text-subtle); }
                 <input id="yearToInput" type="number" placeholder="Godište do">
                 <input id="priceToInput" type="number" placeholder="Max cena (€)">
             </div>
+
+            <div class="search-chips-row">
+                <div class="search-chips-label">Gorivo</div>
+                <div class="search-chips" id="fuelChips">
+                    <button class="chip" data-value="2306" type="button">Benzin</button>
+                    <button class="chip" data-value="2308" type="button">Dizel</button>
+                    <button class="chip" data-value="2307" type="button">Benzin + gas</button>
+                    <button class="chip" data-value="2625" type="button">Hibrid</button>
+                    <button class="chip" data-value="2837" type="button">Plug-in hibrid</button>
+                    <button class="chip" data-value="2309" type="button">Elektro</button>
+                </div>
+            </div>
+
+            <div class="search-chips-row">
+                <div class="search-chips-label">Karoserija</div>
+                <div class="search-chips" id="chassisChips">
+                    <button class="chip" data-value="2631" type="button">Limuzina</button>
+                    <button class="chip" data-value="2632" type="button">Karavan</button>
+                    <button class="chip" data-value="2633" type="button">Hečbek</button>
+                    <button class="chip" data-value="2635" type="button">Kupe</button>
+                    <button class="chip" data-value="2634" type="button">Kabriolet</button>
+                    <button class="chip" data-value="2637" type="button">Monovolumen</button>
+                    <button class="chip" data-value="2639" type="button">SUV / terenac</button>
+                    <button class="chip" data-value="2640" type="button">Pickup</button>
+                </div>
+            </div>
+
             <button class="search-btn" id="searchBtn" onclick="doSearch()">Pretraži</button>
         </div>
 
@@ -1297,6 +1368,9 @@ let MODELS = [];
 let SELECTED_BRAND = null;
 let SELECTED_MODEL = null;
 
+let SELECTED_FUEL = new Set();
+let SELECTED_CHASSIS = new Set();
+
 function showSection(name, event){
     document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
     document.querySelectorAll(".section").forEach(s => s.classList.remove("active"));
@@ -1409,6 +1483,22 @@ function selectModel(item){
     const modelList = document.getElementById("modelList");
     modelInput.value = item.label;
     modelList.classList.remove("open");
+}
+
+function setupChips(containerId, selectedSet){
+    const container = document.getElementById(containerId);
+    container.querySelectorAll(".chip").forEach(chip => {
+        chip.addEventListener("click", () => {
+            const value = chip.dataset.value;
+            if(selectedSet.has(value)){
+                selectedSet.delete(value);
+                chip.classList.remove("active");
+            }else{
+                selectedSet.add(value);
+                chip.classList.add("active");
+            }
+        });
+    });
 }
 
 async function load(){
@@ -1598,7 +1688,6 @@ function renderEuResults(container, data, sourceCar){
     stats.innerHTML = statsHtml;
     container.appendChild(stats);
 
-    // EUR.1 toggle
     const eurToggleWrap = document.createElement("div");
     eurToggleWrap.className = "eu-eur1-toggle";
     const toggleId = "eur1-" + Math.random().toString(36).slice(2, 8);
@@ -2039,7 +2128,6 @@ function buildTrackedCard(o, c, showBestDealTag){
     meta.innerHTML = metaHTML;
     body.appendChild(meta);
 
-    // EU Cross-market section
     const euSection = document.createElement("div");
     euSection.className = "eu-section";
 
@@ -2261,6 +2349,9 @@ async function doSearch(page = 1){
     if(yearTo) params.set("year_to", yearTo);
     if(priceTo) params.set("price_to", priceTo);
     if(page > 1) params.set("page", page);
+
+    SELECTED_FUEL.forEach(v => params.append("fuel[]", v));
+    SELECTED_CHASSIS.forEach(v => params.append("chassis[]", v));
 
     const btn = document.getElementById("searchBtn");
     btn.disabled = true;
@@ -2517,6 +2608,8 @@ async function init(){
     await loadBrands();
     setupAutocomplete("brandInput", "brandList", () => BRANDS, selectBrand);
     setupAutocomplete("modelInput", "modelList", () => MODELS, selectModel);
+    setupChips("fuelChips", SELECTED_FUEL);
+    setupChips("chassisChips", SELECTED_CHASSIS);
     await load();
 }
 
