@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <title>Auto Drukara — Mi nađemo. Ti uštediš.</title>
-<meta name="description" content="Praćenje cena polovnih automobila sa pametnom analizom tržišta. Saznaj koji oglas vredi i kad je vreme za pregovor.">
+<meta name="description" content="Praćenje cena polovnih automobila sa pametnom analizom tržišta.">
 
 <link rel="icon" type="image/png" href="images/favicon.png">
 <link rel="apple-touch-icon" href="images/favicon.png">
@@ -47,8 +47,6 @@ body {
     font-feature-settings: "ss01", "cv11";
 }
 
-/* ============== HEADER ============== */
-
 .header-wrap {
     background: #0f0f10;
     border-bottom: 1px solid #1f1f22;
@@ -58,10 +56,7 @@ body {
 .header-wrap::after {
     content: "";
     position: absolute;
-    left: 0;
-    right: 0;
-    bottom: -1px;
-    height: 1px;
+    left: 0; right: 0; bottom: -1px; height: 1px;
     background: linear-gradient(90deg, transparent, rgba(229,57,53,0.4), transparent);
 }
 
@@ -75,24 +70,16 @@ body {
     gap: 24px;
 }
 
-.logo {
-    display: flex;
-    align-items: center;
-    gap: 18px;
-}
+.logo { display: flex; align-items: center; gap: 18px; }
 
 .logo-mark-img {
-    width: 72px;
-    height: 72px;
+    width: 72px; height: 72px;
     object-fit: contain;
     flex-shrink: 0;
     filter: invert(1) hue-rotate(0deg);
 }
 
-.logo-text {
-    display: flex;
-    flex-direction: column;
-}
+.logo-text { display: flex; flex-direction: column; }
 
 .logo-name {
     font-size: 38px;
@@ -112,38 +99,24 @@ body {
     letter-spacing: 0.01em;
 }
 
-/* ============== MAIN ============== */
-
-.container {
-    max-width: 1400px;
-    margin: 0 auto;
-    padding: 32px 24px;
-}
-
-/* ============== TABS ============== */
+.container { max-width: 1400px; margin: 0 auto; padding: 32px 24px; }
 
 .tabs {
-    display: flex;
-    gap: 0;
+    display: flex; gap: 0;
     border-bottom: 1px solid var(--color-border);
     margin-bottom: 32px;
     margin-top: -8px;
 }
 
 .tab {
-    background: transparent;
-    border: none;
-    padding: 14px 0;
-    margin-right: 32px;
-    font-size: 15px;
-    font-weight: 500;
+    background: transparent; border: none;
+    padding: 14px 0; margin-right: 32px;
+    font-size: 15px; font-weight: 500;
     color: var(--color-text-muted);
-    cursor: pointer;
-    font-family: inherit;
+    cursor: pointer; font-family: inherit;
     transition: color 0.15s;
     border-bottom: 2px solid transparent;
-    margin-bottom: -1px;
-    position: relative;
+    margin-bottom: -1px; position: relative;
 }
 
 .tab:hover { color: var(--color-text); }
@@ -157,8 +130,6 @@ body {
 .section { display: none; }
 .section.active { display: block; }
 
-/* ============== INPUTS ============== */
-
 input, select {
     width: 100%;
     padding: 10px 12px;
@@ -171,14 +142,8 @@ input, select {
     transition: border-color 0.15s;
 }
 
-input:focus, select:focus {
-    outline: none;
-    border-color: var(--color-text);
-}
-
+input:focus, select:focus { outline: none; border-color: var(--color-text); }
 input::placeholder { color: var(--color-text-subtle); }
-
-/* ============== SEARCH BOX ============== */
 
 .search-box {
     background: white;
@@ -197,30 +162,23 @@ input::placeholder { color: var(--color-text-subtle); }
 
 .search-btn {
     width: 100%;
-    background: var(--color-text);
-    color: white;
-    border: none;
-    border-radius: 8px;
+    background: var(--color-text); color: white;
+    border: none; border-radius: 8px;
     padding: 12px;
-    font-size: 14px;
-    font-weight: 600;
-    cursor: pointer;
-    font-family: inherit;
+    font-size: 14px; font-weight: 600;
+    cursor: pointer; font-family: inherit;
     transition: background 0.15s;
 }
 
 .search-btn:hover { background: #27272a; }
 .search-btn:disabled { background: var(--color-text-subtle); cursor: wait; }
 
-/* ============== AUTOCOMPLETE ============== */
-
 .autocomplete { position: relative; }
 
 .autocomplete-list {
     position: absolute;
     top: calc(100% + 4px);
-    left: 0;
-    right: 0;
+    left: 0; right: 0;
     background: white;
     border: 1px solid var(--color-border);
     border-radius: 8px;
@@ -250,8 +208,6 @@ input::placeholder { color: var(--color-text-subtle); }
     font-style: italic;
 }
 
-/* ============== SEARCH INFO ============== */
-
 .search-info-row {
     display: flex;
     justify-content: space-between;
@@ -273,13 +229,9 @@ input::placeholder { color: var(--color-text-subtle); }
 }
 
 .sort-control select {
-    width: auto;
-    min-width: 160px;
-    padding: 7px 10px;
-    font-size: 13px;
+    width: auto; min-width: 160px;
+    padding: 7px 10px; font-size: 13px;
 }
-
-/* ============== ADD BOX ============== */
 
 .add-box {
     background: white;
@@ -293,25 +245,18 @@ input::placeholder { color: var(--color-text-subtle); }
 .add-box input { margin-bottom: 10px; }
 
 .add-btn {
-    background: var(--color-text);
-    color: white;
-    border: none;
-    border-radius: 8px;
+    background: var(--color-text); color: white;
+    border: none; border-radius: 8px;
     padding: 10px 20px;
-    font-size: 14px;
-    font-weight: 600;
-    cursor: pointer;
-    font-family: inherit;
+    font-size: 14px; font-weight: 600;
+    cursor: pointer; font-family: inherit;
     transition: background 0.15s;
 }
 
 .add-btn:hover { background: #27272a; }
 
-/* ============== FILTERS ============== */
-
 .filters {
-    display: flex;
-    gap: 8px;
+    display: flex; gap: 8px;
     margin-bottom: 28px;
     flex-wrap: wrap;
 }
@@ -321,21 +266,15 @@ input::placeholder { color: var(--color-text-subtle); }
     border: 1px solid var(--color-border);
     padding: 7px 14px;
     border-radius: 8px;
-    font-size: 13px;
-    font-weight: 500;
+    font-size: 13px; font-weight: 500;
     color: #52525b;
-    cursor: pointer;
-    font-family: inherit;
+    cursor: pointer; font-family: inherit;
     transition: all 0.15s;
     display: inline-flex;
-    align-items: center;
-    gap: 6px;
+    align-items: center; gap: 6px;
 }
 
-.filter-btn:hover {
-    border-color: var(--color-text);
-    color: var(--color-text);
-}
+.filter-btn:hover { border-color: var(--color-text); color: var(--color-text); }
 
 .filter-btn.active {
     background: var(--color-text);
@@ -367,8 +306,6 @@ input::placeholder { color: var(--color-text-subtle); }
     font-size: 14px;
 }
 
-/* ============== GRID ============== */
-
 #list {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(330px, 1fr));
@@ -382,16 +319,13 @@ input::placeholder { color: var(--color-text-subtle); }
     gap: 16px;
 }
 
-/* ============== TRACKED CARD ============== */
-
 .card {
     background: var(--color-bg-card);
     border: 1px solid var(--color-border);
     border-radius: 14px;
     overflow: hidden;
     transition: all 0.2s ease;
-    display: flex;
-    flex-direction: column;
+    display: flex; flex-direction: column;
 }
 
 .card:hover {
@@ -414,15 +348,13 @@ input::placeholder { color: var(--color-text-subtle); }
 }
 
 .card-img-wrap img {
-    width: 100%;
-    height: 100%;
+    width: 100%; height: 100%;
     object-fit: cover;
     display: block;
 }
 
 .no-image {
-    width: 100%;
-    height: 100%;
+    width: 100%; height: 100%;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -433,8 +365,7 @@ input::placeholder { color: var(--color-text-subtle); }
 
 .score-badge {
     position: absolute;
-    top: 12px;
-    right: 12px;
+    top: 12px; right: 12px;
     background: rgba(17, 17, 17, 0.85);
     color: white;
     padding: 5px 11px;
@@ -448,8 +379,7 @@ input::placeholder { color: var(--color-text-subtle); }
 
 .status-badge {
     position: absolute;
-    bottom: 12px;
-    right: 12px;
+    bottom: 12px; right: 12px;
     padding: 4px 10px;
     border-radius: 6px;
     font-size: 11px;
@@ -467,8 +397,7 @@ input::placeholder { color: var(--color-text-subtle); }
 
 .best-deal-tag {
     position: absolute;
-    top: 12px;
-    left: 12px;
+    top: 12px; left: 12px;
     background: var(--color-red);
     color: white;
     padding: 4px 10px;
@@ -539,17 +468,12 @@ input::placeholder { color: var(--color-text-subtle); }
 .sparkline-fill.up { fill: rgba(229, 57, 53, 0.08); }
 .sparkline-fill.flat { fill: rgba(161, 161, 170, 0.08); }
 
-.sparkline-dot {
-    cursor: pointer;
-    transition: r 0.15s;
-}
-
+.sparkline-dot { cursor: pointer; transition: r 0.15s; }
 .sparkline-dot:hover { r: 4; }
 
 .sparkline-tooltip {
     position: absolute;
-    bottom: 100%;
-    left: 50%;
+    bottom: 100%; left: 50%;
     transform: translateX(-50%);
     background: rgba(17, 17, 17, 0.95);
     color: white;
@@ -569,8 +493,7 @@ input::placeholder { color: var(--color-text-subtle); }
 .sparkline-tooltip::after {
     content: "";
     position: absolute;
-    top: 100%;
-    left: 50%;
+    top: 100%; left: 50%;
     transform: translateX(-50%);
     border: 5px solid transparent;
     border-top-color: rgba(17, 17, 17, 0.95);
@@ -633,7 +556,7 @@ input::placeholder { color: var(--color-text-subtle); }
     font-size: 11px;
 }
 
-/* ============== EU CROSS-MARKET SECTION ============== */
+/* EU CROSS-MARKET SECTION */
 
 .eu-section {
     margin-top: 12px;
@@ -674,11 +597,7 @@ input::placeholder { color: var(--color-text-subtle); }
 
 .eu-toggle-btn.expanded .eu-arrow { transform: rotate(180deg); }
 
-.eu-content {
-    margin-top: 12px;
-    display: none;
-}
-
+.eu-content { margin-top: 12px; display: none; }
 .eu-content.expanded { display: block; }
 
 .eu-loading {
@@ -707,10 +626,7 @@ input::placeholder { color: var(--color-text-subtle); }
     line-height: 1.5;
 }
 
-.eu-stats strong {
-    color: var(--color-text);
-    font-weight: 600;
-}
+.eu-stats strong { color: var(--color-text); font-weight: 600; }
 
 .eu-comparison {
     background: #fef9e7;
@@ -730,21 +646,50 @@ input::placeholder { color: var(--color-text-subtle); }
 .eu-comparison strong { font-weight: 700; }
 .eu-comparison.savings strong { color: #16a34a; }
 
+.eu-eur1-toggle {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 10px;
+    font-size: 12px;
+    color: var(--color-text-muted);
+    padding: 8px 10px;
+    background: white;
+    border: 1px solid var(--color-border);
+    border-radius: 6px;
+}
+
+.eu-eur1-toggle input[type="checkbox"] {
+    width: auto;
+    margin: 0;
+    cursor: pointer;
+}
+
+.eu-eur1-toggle label {
+    cursor: pointer;
+    user-select: none;
+    flex: 1;
+}
+
+.eu-eur1-toggle .eu-eur1-info {
+    color: var(--color-text-subtle);
+    font-size: 10px;
+}
+
 .eu-results {
     display: flex;
     flex-direction: column;
     gap: 8px;
-    max-height: 400px;
+    max-height: 500px;
     overflow-y: auto;
 }
 
 .eu-result-card {
     display: flex;
-    gap: 10px;
+    flex-direction: column;
     padding: 8px;
     border: 1px solid var(--color-border);
     border-radius: 8px;
-    text-decoration: none;
     color: inherit;
     transition: all 0.15s;
     background: white;
@@ -753,6 +698,13 @@ input::placeholder { color: var(--color-text-subtle); }
 .eu-result-card:hover {
     border-color: var(--color-text);
     box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+}
+
+.eu-result-link {
+    display: flex;
+    gap: 10px;
+    text-decoration: none;
+    color: inherit;
 }
 
 .eu-result-img {
@@ -823,13 +775,105 @@ input::placeholder { color: var(--color-text-subtle); }
     margin-right: 4px;
 }
 
+.eu-result-landed-wrap {
+    margin-top: 6px;
+    padding-left: 90px;
+}
+
+.eu-result-landed {
+    padding: 6px 8px;
+    background: #f4f4f5;
+    border-radius: 4px;
+    font-size: 11px;
+    color: var(--color-text);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    border: 1px solid var(--color-border-soft);
+}
+
+.eu-result-landed.savings {
+    background: #f0fdf4;
+    border-color: #bbf7d0;
+}
+
+.eu-result-landed.expensive {
+    background: #fef9e7;
+    border-color: #fde68a;
+}
+
+.eu-result-landed-label {
+    color: var(--color-text-muted);
+    font-weight: 500;
+}
+
+.eu-result-landed-value {
+    font-weight: 700;
+    font-size: 12px;
+    color: var(--color-text);
+    letter-spacing: -0.01em;
+}
+
+.eu-result-landed-diff {
+    font-size: 10px;
+    font-weight: 600;
+    margin-left: 6px;
+}
+
+.eu-result-landed-diff.savings { color: #16a34a; }
+.eu-result-landed-diff.expensive { color: #dc2626; }
+
+.eu-breakdown-btn {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    color: var(--color-text-muted);
+    font-size: 11px;
+    padding: 2px 4px;
+    font-family: inherit;
+    text-decoration: underline;
+    text-decoration-style: dotted;
+    text-underline-offset: 2px;
+}
+
+.eu-breakdown-btn:hover { color: var(--color-text); }
+
+.eu-breakdown-popup {
+    margin-top: 6px;
+    padding: 10px;
+    background: white;
+    border: 1px solid var(--color-border);
+    border-radius: 6px;
+    font-size: 11px;
+    display: none;
+}
+
+.eu-breakdown-popup.open { display: block; }
+
+.eu-breakdown-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 3px 0;
+    color: var(--color-text-muted);
+}
+
+.eu-breakdown-row.total {
+    border-top: 1px solid var(--color-border);
+    margin-top: 4px;
+    padding-top: 6px;
+    color: var(--color-text);
+    font-weight: 700;
+}
+
+.eu-breakdown-row span:last-child { color: var(--color-text); font-weight: 500; }
+.eu-breakdown-row.total span:last-child { font-weight: 800; }
+
 .card-actions {
     display: flex;
     gap: 8px;
     margin-top: 14px;
 }
-
-/* ============== BUTTONS ============== */
 
 .btn {
     flex: 1;
@@ -850,20 +894,10 @@ input::placeholder { color: var(--color-text-subtle); }
     justify-content: center;
 }
 
-.btn:hover {
-    background: #fafafa;
-    border-color: var(--color-text);
-}
+.btn:hover { background: #fafafa; border-color: var(--color-text); }
 
-.btn-danger {
-    color: var(--color-red);
-    border-color: #fecaca;
-}
-
-.btn-danger:hover {
-    background: var(--color-red-light);
-    border-color: var(--color-red);
-}
+.btn-danger { color: var(--color-red); border-color: #fecaca; }
+.btn-danger:hover { background: var(--color-red-light); border-color: var(--color-red); }
 
 .btn-primary {
     background: var(--color-text);
@@ -871,12 +905,7 @@ input::placeholder { color: var(--color-text-subtle); }
     border-color: var(--color-text);
 }
 
-.btn-primary:hover {
-    background: #27272a;
-    border-color: #27272a;
-}
-
-/* ============== BADGES ============== */
+.btn-primary:hover { background: #27272a; border-color: #27272a; }
 
 .problem-badge {
     background: #fffbeb;
@@ -899,8 +928,6 @@ input::placeholder { color: var(--color-text-subtle); }
     font-weight: 500;
     margin-bottom: 12px;
 }
-
-/* ============== SEARCH CARD ============== */
 
 .search-card {
     background: white;
@@ -1040,8 +1067,6 @@ input::placeholder { color: var(--color-text-subtle); }
     font-weight: 600;
 }
 
-/* ============== PAGINATION ============== */
-
 .pagination {
     display: flex;
     gap: 8px;
@@ -1071,8 +1096,6 @@ input::placeholder { color: var(--color-text-subtle); }
     padding: 0 10px;
 }
 
-/* ============== RESPONSIVE ============== */
-
 @media (max-width: 768px) {
     .header-inner { padding: 24px 16px 22px; }
     .logo { gap: 14px; }
@@ -1089,6 +1112,7 @@ input::placeholder { color: var(--color-text-subtle); }
     .logo-sub { font-size: 12px; margin-top: 4px; }
     .tab { margin-right: 20px; font-size: 14px; }
     #list { grid-template-columns: 1fr; }
+    .eu-result-landed-wrap { padding-left: 0; }
 }
 </style>
 </head>
@@ -1179,6 +1203,89 @@ input::placeholder { color: var(--color-text-subtle); }
 <script>
 const API = "https://pratilac-cena-api.vojinovic82.workers.dev";
 
+// IMPORT COST CONSTANTS (Srbija, iz EU)
+const IMPORT_COSTS = {
+    transport: {
+        "DE": 1000,
+        "AT": 700,
+        "BE": 1100,
+        "NL": 1200,
+        "IT": 800,
+        "default": 1000
+    },
+    customsAgent: 150,
+    amssUverenje: 100,
+    customsDuty: {
+        withEur1: 0,
+        withoutEur1: 0.05
+    },
+    vat: 0.20,
+    exciseTax: [
+        { maxKw: 99, rate: 0 },
+        { maxKw: 130, rate: 0.025 },
+        { maxKw: 170, rate: 0.05 },
+        { maxKw: 200, rate: 0.075 },
+        { maxKw: 250, rate: 0.10 },
+        { maxKw: Infinity, rate: 0.125 }
+    ]
+};
+
+function getExciseRate(powerKw){
+    if(!powerKw) return 0;
+    for(const tier of IMPORT_COSTS.exciseTax){
+        if(powerKw <= tier.maxKw) return tier.rate;
+    }
+    return 0.125;
+}
+
+function parsePowerKw(powerStr){
+    if(!powerStr) return null;
+    const match = powerStr.match(/(\d+)\s*kW/i);
+    return match ? parseInt(match[1]) : null;
+}
+
+function getTransportCost(country){
+    return IMPORT_COSTS.transport[country] || IMPORT_COSTS.transport.default;
+}
+
+function calculateLandedCost(carPrice, country, powerKw, hasEur1){
+    if(!carPrice) return null;
+
+    const transport = getTransportCost(country);
+    const customsAgent = IMPORT_COSTS.customsAgent;
+    const amssUverenje = IMPORT_COSTS.amssUverenje;
+
+    const customsValue = carPrice + transport + customsAgent;
+
+    const customsRate = hasEur1 ? IMPORT_COSTS.customsDuty.withEur1 : IMPORT_COSTS.customsDuty.withoutEur1;
+    const customsDuty = customsValue * customsRate;
+
+    const afterCustoms = customsValue + customsDuty;
+
+    const vat = afterCustoms * IMPORT_COSTS.vat;
+    const afterVat = afterCustoms + vat;
+
+    const exciseRate = getExciseRate(powerKw);
+    const excise = afterVat * exciseRate;
+
+    const total = afterVat + excise + amssUverenje;
+
+    return {
+        carPrice, transport, customsAgent, customsDuty, customsRate,
+        vat, excise, exciseRate, amssUverenje,
+        total: Math.round(total),
+        breakdown: [
+            { label: "Cena auta", value: carPrice },
+            { label: `Transport (${country || "EU"})`, value: transport },
+            { label: "Carinska deklaracija", value: customsAgent },
+            { label: `Carina ${(customsRate * 100).toFixed(0)}%`, value: Math.round(customsDuty) },
+            { label: "PDV 20%", value: Math.round(vat) },
+            { label: `Akciza ${(exciseRate * 100).toFixed(1)}%${powerKw ? ` (${powerKw} kW)` : ""}`, value: Math.round(excise) },
+            { label: "AMSS uverenje", value: amssUverenje }
+        ]
+    };
+}
+
 let DATA = {};
 let FILTER = "all";
 
@@ -1193,11 +1300,7 @@ let SELECTED_MODEL = null;
 function showSection(name, event){
     document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
     document.querySelectorAll(".section").forEach(s => s.classList.remove("active"));
-
-    if(event && event.target){
-        event.target.classList.add("active");
-    }
-
+    if(event && event.target) event.target.classList.add("active");
     document.getElementById("section-" + name).classList.add("active");
 }
 
@@ -1206,9 +1309,7 @@ async function loadBrands(){
         const r = await fetch(API + "/brands");
         const data = await r.json();
         BRANDS = data.brands || [];
-    }catch(e){
-        console.error(e);
-    }
+    }catch(e){ console.error(e); }
 }
 
 async function loadModels(brandValue){
@@ -1230,7 +1331,6 @@ function filterItems(items, query){
 
 function renderAutocompleteList(listEl, items, onSelect){
     listEl.innerHTML = "";
-
     if(items.length === 0){
         const empty = document.createElement("div");
         empty.className = "autocomplete-empty";
@@ -1238,7 +1338,6 @@ function renderAutocompleteList(listEl, items, onSelect){
         listEl.appendChild(empty);
         return;
     }
-
     items.forEach(item => {
         const div = document.createElement("div");
         div.className = "autocomplete-item";
@@ -1306,10 +1405,8 @@ function selectBrand(item){
 
 function selectModel(item){
     SELECTED_MODEL = item;
-
     const modelInput = document.getElementById("modelInput");
     const modelList = document.getElementById("modelList");
-
     modelInput.value = item.label;
     modelList.classList.remove("open");
 }
@@ -1325,9 +1422,7 @@ async function load(){
     }
 }
 
-function getName(o, c){
-    return o.label || c.label || "Oglas";
-}
+function getName(o, c){ return o.label || c.label || "Oglas"; }
 
 function formatPrice(value){
     if(value === null || value === undefined || value === "") return "—";
@@ -1344,8 +1439,7 @@ function daysFromIsoDate(isoDate){
     const date = new Date(isoDate.replace(" ", "T"));
     if(isNaN(date.getTime())) return null;
     const now = new Date();
-    const diffMs = now - date;
-    return Math.floor(diffMs / (1000 * 60 * 60 * 24));
+    return Math.floor((now - date) / (1000 * 60 * 60 * 24));
 }
 
 function buildSparkline(istorija){
@@ -1416,13 +1510,9 @@ function buildSparkline(istorija){
         dot.setAttribute("class", "sparkline-dot");
         dot.setAttribute("fill", trend === "down" ? "#16a34a" : (trend === "up" ? "#e53935" : "#a1a1aa"));
 
-        dot.addEventListener("mouseenter", (e) => {
+        dot.addEventListener("mouseenter", () => {
             const date = new Date(p.datum.replace(" ", "T"));
-            const dateStr = date.toLocaleDateString("sr-RS", {
-                day: "numeric",
-                month: "numeric",
-                year: "numeric"
-            });
+            const dateStr = date.toLocaleDateString("sr-RS", { day: "numeric", month: "numeric", year: "numeric" });
             tooltip.textContent = `${dateStr}: ${p.cena.toLocaleString("sr-RS")} €`;
             tooltip.style.display = "block";
             const xPercent = (p.x / W) * 100;
@@ -1441,12 +1531,7 @@ function buildSparkline(istorija){
 }
 
 function countryFlag(code){
-    const map = {
-        "DE": "🇩🇪 DE",
-        "AT": "🇦🇹 AT",
-        "BE": "🇧🇪 BE",
-        "NL": "🇳🇱 NL"
-    };
+    const map = { "DE": "🇩🇪 DE", "AT": "🇦🇹 AT", "BE": "🇧🇪 BE", "NL": "🇳🇱 NL" };
     return map[code] || code;
 }
 
@@ -1466,8 +1551,7 @@ async function loadEuComparison(container, c){
     const yearTo = year ? year + 1 : "";
 
     const km = c.kilometraza;
-    let kmMin = "";
-    let kmMax = "";
+    let kmMin = "", kmMax = "";
     if(km){
         kmMin = Math.max(0, Math.floor(km * 0.7));
         kmMax = Math.ceil(km * 1.3);
@@ -1509,37 +1593,84 @@ function renderEuResults(container, data, sourceCar){
     const stats = document.createElement("div");
     stats.className = "eu-stats";
     let statsHtml = `Pronađeno <strong>${data.total || data.count}</strong> oglasa u DE/AT/BE/NL.`;
-    if(avg){
-        statsHtml += ` Prosek: <strong>€${avg.toLocaleString("en-US")}</strong>`;
-    }
-    if(min){
-        statsHtml += ` · Najniži: <strong>€${min.toLocaleString("en-US")}</strong>`;
-    }
+    if(avg) statsHtml += ` Prosek: <strong>€${avg.toLocaleString("en-US")}</strong>`;
+    if(min) statsHtml += ` · Najniži: <strong>€${min.toLocaleString("en-US")}</strong>`;
     stats.innerHTML = statsHtml;
     container.appendChild(stats);
 
-    if(min && sourceCar.cena){
-        const comp = document.createElement("div");
-        const diff = sourceCar.cena - min;
+    // EUR.1 toggle
+    const eurToggleWrap = document.createElement("div");
+    eurToggleWrap.className = "eu-eur1-toggle";
+    const toggleId = "eur1-" + Math.random().toString(36).slice(2, 8);
+    eurToggleWrap.innerHTML = `
+        <input type="checkbox" id="${toggleId}">
+        <label for="${toggleId}">EUR.1 sertifikat (carina 0%)</label>
+        <span class="eu-eur1-info">Retko, prodavac mora da izda</span>
+    `;
+    container.appendChild(eurToggleWrap);
 
-        if(diff > 0){
-            comp.className = "eu-comparison savings";
-            comp.innerHTML = `💡 Tvoj oglas <strong>${sourceCar.cena.toLocaleString("sr-RS")} €</strong> vs EU najjeftiniji <strong>€${min.toLocaleString("en-US")}</strong> → razlika <strong>${diff.toLocaleString("sr-RS")} €</strong> (sirovo, bez import troškova)`;
-        }else{
-            comp.className = "eu-comparison";
-            comp.innerHTML = `Tvoj oglas <strong>${sourceCar.cena.toLocaleString("sr-RS")} €</strong> je već konkurentan u odnosu na EU (najniži <strong>€${min.toLocaleString("en-US")}</strong>).`;
+    const compEl = document.createElement("div");
+    compEl.className = "eu-comparison";
+
+    function updateComparison(hasEur1){
+        if(!min || !sourceCar.cena){
+            compEl.style.display = "none";
+            return;
         }
-        container.appendChild(comp);
+
+        const cheapest = data.results.reduce((acc, r) =>
+            (r.price && (!acc || r.price < acc.price)) ? r : acc, null);
+
+        const cheapestLanded = calculateLandedCost(
+            cheapest.price,
+            cheapest.country,
+            parsePowerKw(cheapest.power),
+            hasEur1
+        );
+
+        if(!cheapestLanded){
+            compEl.style.display = "none";
+            return;
+        }
+
+        const diff = sourceCar.cena - cheapestLanded.total;
+
+        if(diff > 500){
+            compEl.className = "eu-comparison savings";
+            compEl.innerHTML = `💡 Tvoj <strong>${sourceCar.cena.toLocaleString("sr-RS")} €</strong> vs EU najjeftiniji landed <strong>${cheapestLanded.total.toLocaleString("sr-RS")} €</strong> → ušteda <strong>${diff.toLocaleString("sr-RS")} €</strong> uvozom`;
+        }else if(diff < -500){
+            compEl.className = "eu-comparison";
+            compEl.innerHTML = `Uvoz <strong>nije isplativ</strong>. EU najjeftiniji landed <strong>${cheapestLanded.total.toLocaleString("sr-RS")} €</strong> vs tvoj <strong>${sourceCar.cena.toLocaleString("sr-RS")} €</strong> → razlika <strong>${Math.abs(diff).toLocaleString("sr-RS")} €</strong>`;
+        }else{
+            compEl.className = "eu-comparison";
+            compEl.innerHTML = `Tvoj i EU najjeftiniji landed su skoro isti (<strong>${sourceCar.cena.toLocaleString("sr-RS")} €</strong> vs <strong>${cheapestLanded.total.toLocaleString("sr-RS")} €</strong>).`;
+        }
     }
+
+    updateComparison(false);
+    container.appendChild(compEl);
+
+    const checkbox = eurToggleWrap.querySelector("input");
+    checkbox.addEventListener("change", () => {
+        const hasEur1 = checkbox.checked;
+        updateComparison(hasEur1);
+        container.querySelectorAll(".eu-result-card").forEach(card => {
+            const updateFn = card._updateLanded;
+            if(updateFn) updateFn(hasEur1);
+        });
+    });
 
     const list = document.createElement("div");
     list.className = "eu-results";
 
     data.results.forEach(r => {
-        const card = document.createElement("a");
+        const card = document.createElement("div");
         card.className = "eu-result-card";
-        card.href = r.url;
-        card.target = "_blank";
+
+        const link = document.createElement("a");
+        link.className = "eu-result-link";
+        link.href = r.url;
+        link.target = "_blank";
 
         const imgWrap = document.createElement("div");
         imgWrap.className = "eu-result-img";
@@ -1575,11 +1706,82 @@ function renderEuResults(container, data, sourceCar){
         if(r.year) parts.push(r.year + ".");
         if(r.km) parts.push(r.km.toLocaleString("en-US") + " km");
         if(r.fuel) parts.push(r.fuel);
+        if(r.power) parts.push(r.power);
         meta.innerHTML = parts.join(" · ");
         body.appendChild(meta);
 
-        card.appendChild(imgWrap);
-        card.appendChild(body);
+        link.appendChild(imgWrap);
+        link.appendChild(body);
+        card.appendChild(link);
+
+        const landedWrap = document.createElement("div");
+        landedWrap.className = "eu-result-landed-wrap";
+
+        const powerKw = parsePowerKw(r.power);
+
+        function renderLanded(hasEur1){
+            landedWrap.innerHTML = "";
+            const landed = calculateLandedCost(r.price, r.country, powerKw, hasEur1);
+            if(!landed) return;
+
+            const diff = sourceCar.cena ? sourceCar.cena - landed.total : null;
+
+            const row = document.createElement("div");
+            row.className = "eu-result-landed";
+            if(diff !== null){
+                if(diff > 500) row.classList.add("savings");
+                else if(diff < -500) row.classList.add("expensive");
+            }
+
+            const labelEl = document.createElement("span");
+            labelEl.className = "eu-result-landed-label";
+            labelEl.textContent = "Landed SRB:";
+
+            const valueWrap = document.createElement("span");
+            valueWrap.innerHTML = `<span class="eu-result-landed-value">${landed.total.toLocaleString("sr-RS")} €</span>`;
+            if(diff !== null && Math.abs(diff) > 500){
+                const diffSpan = document.createElement("span");
+                diffSpan.className = "eu-result-landed-diff " + (diff > 0 ? "savings" : "expensive");
+                diffSpan.textContent = (diff > 0 ? "−" : "+") + Math.abs(diff).toLocaleString("sr-RS") + " €";
+                valueWrap.appendChild(diffSpan);
+            }
+
+            const breakdownBtn = document.createElement("button");
+            breakdownBtn.className = "eu-breakdown-btn";
+            breakdownBtn.textContent = "detalji";
+
+            row.appendChild(labelEl);
+            row.appendChild(valueWrap);
+            row.appendChild(breakdownBtn);
+
+            const popup = document.createElement("div");
+            popup.className = "eu-breakdown-popup";
+            landed.breakdown.forEach(item => {
+                const r2 = document.createElement("div");
+                r2.className = "eu-breakdown-row";
+                r2.innerHTML = `<span>${item.label}</span><span>${item.value.toLocaleString("sr-RS")} €</span>`;
+                popup.appendChild(r2);
+            });
+            const totalRow = document.createElement("div");
+            totalRow.className = "eu-breakdown-row total";
+            totalRow.innerHTML = `<span>UKUPNO (landed)</span><span>${landed.total.toLocaleString("sr-RS")} €</span>`;
+            popup.appendChild(totalRow);
+
+            breakdownBtn.onclick = (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                popup.classList.toggle("open");
+                breakdownBtn.textContent = popup.classList.contains("open") ? "sakrij" : "detalji";
+            };
+
+            landedWrap.appendChild(row);
+            landedWrap.appendChild(popup);
+        }
+
+        renderLanded(false);
+        card._updateLanded = renderLanded;
+        card.appendChild(landedWrap);
+
         list.appendChild(card);
     });
 
@@ -1589,21 +1791,14 @@ function renderEuResults(container, data, sourceCar){
 function setFilter(f, event){
     FILTER = f;
     document.querySelectorAll(".filter-btn").forEach(b => b.classList.remove("active"));
-    if(event && event.target){
-        event.target.classList.add("active");
-    }
+    if(event && event.target) event.target.classList.add("active");
     render();
 }
 
 async function addOglas(){
     const url = document.getElementById("urlInput").value.trim();
     const label = document.getElementById("labelInput").value.trim();
-
-    if(!url){
-        alert("Unesi URL oglasa.");
-        return;
-    }
-
+    if(!url){ alert("Unesi URL oglasa."); return; }
     await addOglasByUrl(url, label);
     document.getElementById("urlInput").value = "";
     document.getElementById("labelInput").value = "";
@@ -1616,20 +1811,14 @@ async function addOglasByUrl(url, label){
             headers:{"Content-Type":"application/json"},
             body:JSON.stringify({url:url, label:label || ""})
         });
-
         const data = await r.json();
-
         if(!r.ok || data.error){
             alert(data.error || "Greška pri dodavanju oglasa.");
             return false;
         }
-
         await load();
-        if(SEARCH_DATA){
-            renderSearch();
-        }
+        if(SEARCH_DATA) renderSearch();
         return true;
-
     }catch(e){
         console.error(e);
         alert("Greška pri dodavanju oglasa.");
@@ -1638,28 +1827,20 @@ async function addOglasByUrl(url, label){
 }
 
 async function deleteOglas(url){
-    if(!confirm("Da li želiš da obrišeš ovaj oglas?")){
-        return;
-    }
-
+    if(!confirm("Da li želiš da obrišeš ovaj oglas?")) return;
     try{
         const r = await fetch(API + "/delete", {
             method:"POST",
             headers:{"Content-Type":"application/json"},
             body:JSON.stringify({url:url})
         });
-
         const data = await r.json();
-
         if(!r.ok || data.error){
             alert(data.error || "Greška pri brisanju oglasa.");
             return;
         }
-
         await load();
-        if(SEARCH_DATA){
-            renderSearch();
-        }
+        if(SEARCH_DATA) renderSearch();
     }catch(e){
         console.error(e);
         alert("Greška pri brisanju oglasa.");
@@ -1679,9 +1860,7 @@ function passesFilter(c, filterName){
 function updateFilterCounts(){
     const oglasi = DATA?.oglasi || [];
     const cene = DATA?.cene || {};
-
     const filters = ["all", "top", "active", "inactive", "changes", "problem"];
-
     filters.forEach(f => {
         const count = oglasi.filter(o => {
             const c = cene[o.url] || {};
@@ -1747,22 +1926,14 @@ function buildTrackedCard(o, c, showBestDealTag){
     if(daysRenewed !== null){
         const statusBadge = document.createElement("div");
         statusBadge.className = "status-badge";
-        let statusText = "";
-        let statusClass = "";
+        let statusText = "", statusClass = "";
 
-        if(daysRenewed === 0){
-            statusText = "Danas"; statusClass = "fresh";
-        }else if(daysRenewed === 1){
-            statusText = "Juče"; statusClass = "fresh";
-        }else if(daysRenewed <= 7){
-            statusText = `Pre ${daysRenewed}d`; statusClass = "fresh";
-        }else if(daysRenewed <= 30){
-            statusText = `Pre ${daysRenewed}d`; statusClass = "normal";
-        }else if(daysRenewed <= 60){
-            statusText = `Stoji ${daysRenewed}d`; statusClass = "stale";
-        }else{
-            statusText = `Star ${daysRenewed}d`; statusClass = "old";
-        }
+        if(daysRenewed === 0){ statusText = "Danas"; statusClass = "fresh"; }
+        else if(daysRenewed === 1){ statusText = "Juče"; statusClass = "fresh"; }
+        else if(daysRenewed <= 7){ statusText = `Pre ${daysRenewed}d`; statusClass = "fresh"; }
+        else if(daysRenewed <= 30){ statusText = `Pre ${daysRenewed}d`; statusClass = "normal"; }
+        else if(daysRenewed <= 60){ statusText = `Stoji ${daysRenewed}d`; statusClass = "stale"; }
+        else{ statusText = `Star ${daysRenewed}d`; statusClass = "old"; }
 
         statusBadge.classList.add(statusClass);
         statusBadge.textContent = statusText;
@@ -1932,9 +2103,7 @@ function render(){
         return passesFilter(c, FILTER);
     });
 
-    list.sort((a,b)=>{
-        return (cene[b.url]?.score || 0) - (cene[a.url]?.score || 0);
-    });
+    list.sort((a,b) => (cene[b.url]?.score || 0) - (cene[a.url]?.score || 0));
 
     const container = document.getElementById("list");
     const emptyState = document.getElementById("emptyState");
@@ -1952,7 +2121,7 @@ function render(){
 
     const topUrl = (list[0] && (cene[list[0].url]?.score || 0) >= 80) ? list[0].url : null;
 
-    list.forEach(o=>{
+    list.forEach(o => {
         const c = cene[o.url] || {};
         const isBestDeal = o.url === topUrl;
         container.appendChild(buildTrackedCard(o, c, isBestDeal));
@@ -1969,15 +2138,11 @@ function daysSinceRenew(renewdate){
     if(!renewdate) return null;
     const date = new Date(renewdate.replace(" ", "T"));
     if(isNaN(date.getTime())) return null;
-    const now = new Date();
-    const diffMs = now - date;
-    return Math.floor(diffMs / (1000 * 60 * 60 * 24));
+    return Math.floor((new Date() - date) / (1000 * 60 * 60 * 24));
 }
 
 function buildHybridStats(searchResults, brandValue, modelValue){
-    const cene = [];
-    const kms = [];
-    const godine = [];
+    const cene = [], kms = [], godine = [];
 
     searchResults.forEach(r => {
         if(r.cena) cene.push(r.cena);
@@ -2083,10 +2248,7 @@ function calculateSearchScore(result, stats){
 }
 
 async function doSearch(page = 1){
-    if(!SELECTED_BRAND){
-        alert("Izaberi brend iz liste.");
-        return;
-    }
+    if(!SELECTED_BRAND){ alert("Izaberi brend iz liste."); return; }
 
     const yearFrom = document.getElementById("yearFromInput").value.trim();
     const yearTo = document.getElementById("yearToInput").value.trim();
@@ -2309,12 +2471,8 @@ function renderSearch(){
 
     if(stats && stats.avgCena){
         infoHtml += ` Prosek: <strong>${Math.round(stats.avgCena).toLocaleString("sr-RS")} €</strong>`;
-        if(stats.avgKm){
-            infoHtml += ` · <strong>${Math.round(stats.avgKm).toLocaleString("sr-RS")} km</strong>`;
-        }
-        if(stats.avgGod){
-            infoHtml += ` · <strong>${stats.avgGod.toFixed(1)}.</strong> godište`;
-        }
+        if(stats.avgKm) infoHtml += ` · <strong>${Math.round(stats.avgKm).toLocaleString("sr-RS")} km</strong>`;
+        if(stats.avgGod) infoHtml += ` · <strong>${stats.avgGod.toFixed(1)}.</strong> godište`;
     }
 
     info.innerHTML = infoHtml;
@@ -2322,10 +2480,7 @@ function renderSearch(){
     container.innerHTML = "";
 
     const sorted = getSortedResults();
-
-    sorted.forEach(r => {
-        container.appendChild(buildSearchCard(r));
-    });
+    sorted.forEach(r => container.appendChild(buildSearchCard(r)));
 
     pagination.innerHTML = "";
     const total = data.total || 0;
@@ -2355,17 +2510,13 @@ function renderSearch(){
 
 async function trackFromSearch(url, label){
     const ok = await addOglasByUrl(url, label);
-    if(ok){
-        renderSearch();
-    }
+    if(ok) renderSearch();
 }
 
 async function init(){
     await loadBrands();
-
     setupAutocomplete("brandInput", "brandList", () => BRANDS, selectBrand);
     setupAutocomplete("modelInput", "modelList", () => MODELS, selectModel);
-
     await load();
 }
 
