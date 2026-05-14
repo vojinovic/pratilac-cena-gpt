@@ -99,6 +99,118 @@ body {
     letter-spacing: 0.01em;
 }
 
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 13px;
+}
+
+.user-email {
+    color: rgba(255, 255, 255, 0.9);
+    font-weight: 500;
+}
+
+.logout-btn {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: rgba(255, 255, 255, 0.85);
+    padding: 7px 14px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.15s;
+}
+
+.logout-btn:hover {
+    background: rgba(255, 255, 255, 0.15);
+    border-color: rgba(255, 255, 255, 0.25);
+    color: white;
+}
+
+/* LOGIN SCREEN */
+
+.login-screen {
+    min-height: calc(100vh - 132px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+}
+
+.login-card {
+    max-width: 440px;
+    width: 100%;
+    text-align: center;
+    padding: 48px 32px;
+}
+
+.login-title {
+    font-size: 32px;
+    font-weight: 800;
+    letter-spacing: -1px;
+    margin-bottom: 12px;
+    color: var(--color-text);
+}
+
+.login-subtitle {
+    font-size: 15px;
+    color: var(--color-text-muted);
+    margin-bottom: 36px;
+    line-height: 1.6;
+}
+
+.google-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    background: white;
+    border: 1px solid #dadce0;
+    color: #3c4043;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.15s;
+    text-decoration: none;
+    min-width: 240px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+
+.google-btn:hover {
+    background: #f8f9fa;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    border-color: #c8c8c8;
+}
+
+.google-btn svg {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+}
+
+.login-footer {
+    margin-top: 32px;
+    font-size: 12px;
+    color: var(--color-text-subtle);
+    line-height: 1.6;
+}
+
+.login-loading {
+    color: var(--color-text-muted);
+    font-size: 14px;
+    padding: 60px 20px;
+    text-align: center;
+}
+
+/* MAIN APP */
+
 .container { max-width: 1400px; margin: 0 auto; padding: 32px 24px; }
 
 .tabs {
@@ -160,9 +272,7 @@ input::placeholder { color: var(--color-text-subtle); }
     margin-bottom: 14px;
 }
 
-.search-chips-row {
-    margin-bottom: 14px;
-}
+.search-chips-row { margin-bottom: 14px; }
 
 .search-chips-label {
     font-size: 12px;
@@ -173,11 +283,7 @@ input::placeholder { color: var(--color-text-subtle); }
     letter-spacing: 0.04em;
 }
 
-.search-chips {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-}
+.search-chips { display: flex; flex-wrap: wrap; gap: 6px; }
 
 .chip {
     background: white;
@@ -193,10 +299,7 @@ input::placeholder { color: var(--color-text-subtle); }
     user-select: none;
 }
 
-.chip:hover {
-    border-color: var(--color-text);
-    color: var(--color-text);
-}
+.chip:hover { border-color: var(--color-text); color: var(--color-text); }
 
 .chip.active {
     background: var(--color-text);
@@ -600,8 +703,6 @@ input::placeholder { color: var(--color-text-subtle); }
     font-size: 11px;
 }
 
-/* EU CROSS-MARKET SECTION */
-
 .eu-section {
     margin-top: 12px;
     padding-top: 12px;
@@ -626,19 +727,9 @@ input::placeholder { color: var(--color-text-subtle); }
     gap: 8px;
 }
 
-.eu-toggle-btn:hover {
-    background: #f4f4f5;
-    border-color: var(--color-text);
-}
-
+.eu-toggle-btn:hover { background: #f4f4f5; border-color: var(--color-text); }
 .eu-toggle-btn .eu-flag { font-size: 16px; }
-
-.eu-toggle-btn .eu-arrow {
-    transition: transform 0.2s;
-    font-size: 12px;
-    color: var(--color-text-muted);
-}
-
+.eu-toggle-btn .eu-arrow { transition: transform 0.2s; font-size: 12px; color: var(--color-text-muted); }
 .eu-toggle-btn.expanded .eu-arrow { transform: rotate(180deg); }
 
 .eu-content { margin-top: 12px; display: none; }
@@ -682,11 +773,7 @@ input::placeholder { color: var(--color-text-subtle); }
     line-height: 1.5;
 }
 
-.eu-comparison.savings {
-    background: #f0fdf4;
-    border-color: #bbf7d0;
-}
-
+.eu-comparison.savings { background: #f0fdf4; border-color: #bbf7d0; }
 .eu-comparison strong { font-weight: 700; }
 .eu-comparison.savings strong { color: #16a34a; }
 
@@ -703,22 +790,9 @@ input::placeholder { color: var(--color-text-subtle); }
     border-radius: 6px;
 }
 
-.eu-eur1-toggle input[type="checkbox"] {
-    width: auto;
-    margin: 0;
-    cursor: pointer;
-}
-
-.eu-eur1-toggle label {
-    cursor: pointer;
-    user-select: none;
-    flex: 1;
-}
-
-.eu-eur1-toggle .eu-eur1-info {
-    color: var(--color-text-subtle);
-    font-size: 10px;
-}
+.eu-eur1-toggle input[type="checkbox"] { width: auto; margin: 0; cursor: pointer; }
+.eu-eur1-toggle label { cursor: pointer; user-select: none; flex: 1; }
+.eu-eur1-toggle .eu-eur1-info { color: var(--color-text-subtle); font-size: 10px; }
 
 .eu-results {
     display: flex;
@@ -739,17 +813,9 @@ input::placeholder { color: var(--color-text-subtle); }
     background: white;
 }
 
-.eu-result-card:hover {
-    border-color: var(--color-text);
-    box-shadow: 0 2px 6px rgba(0,0,0,0.06);
-}
+.eu-result-card:hover { border-color: var(--color-text); box-shadow: 0 2px 6px rgba(0,0,0,0.06); }
 
-.eu-result-link {
-    display: flex;
-    gap: 10px;
-    text-decoration: none;
-    color: inherit;
-}
+.eu-result-link { display: flex; gap: 10px; text-decoration: none; color: inherit; }
 
 .eu-result-img {
     width: 80px;
@@ -760,20 +826,9 @@ input::placeholder { color: var(--color-text-subtle); }
     background: #f4f4f5;
 }
 
-.eu-result-img img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
-}
+.eu-result-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
 
-.eu-result-body {
-    flex: 1;
-    min-width: 0;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-}
+.eu-result-body { flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: space-between; }
 
 .eu-result-top {
     display: flex;
@@ -802,11 +857,7 @@ input::placeholder { color: var(--color-text-subtle); }
     letter-spacing: -0.02em;
 }
 
-.eu-result-meta {
-    font-size: 11px;
-    color: var(--color-text-muted);
-    line-height: 1.4;
-}
+.eu-result-meta { font-size: 11px; color: var(--color-text-muted); line-height: 1.4; }
 
 .eu-result-country {
     display: inline-block;
@@ -819,10 +870,7 @@ input::placeholder { color: var(--color-text-subtle); }
     margin-right: 4px;
 }
 
-.eu-result-landed-wrap {
-    margin-top: 6px;
-    padding-left: 90px;
-}
+.eu-result-landed-wrap { margin-top: 6px; padding-left: 90px; }
 
 .eu-result-landed {
     padding: 6px 8px;
@@ -837,34 +885,11 @@ input::placeholder { color: var(--color-text-subtle); }
     border: 1px solid var(--color-border-soft);
 }
 
-.eu-result-landed.savings {
-    background: #f0fdf4;
-    border-color: #bbf7d0;
-}
-
-.eu-result-landed.expensive {
-    background: #fef9e7;
-    border-color: #fde68a;
-}
-
-.eu-result-landed-label {
-    color: var(--color-text-muted);
-    font-weight: 500;
-}
-
-.eu-result-landed-value {
-    font-weight: 700;
-    font-size: 12px;
-    color: var(--color-text);
-    letter-spacing: -0.01em;
-}
-
-.eu-result-landed-diff {
-    font-size: 10px;
-    font-weight: 600;
-    margin-left: 6px;
-}
-
+.eu-result-landed.savings { background: #f0fdf4; border-color: #bbf7d0; }
+.eu-result-landed.expensive { background: #fef9e7; border-color: #fde68a; }
+.eu-result-landed-label { color: var(--color-text-muted); font-weight: 500; }
+.eu-result-landed-value { font-weight: 700; font-size: 12px; color: var(--color-text); letter-spacing: -0.01em; }
+.eu-result-landed-diff { font-size: 10px; font-weight: 600; margin-left: 6px; }
 .eu-result-landed-diff.savings { color: #16a34a; }
 .eu-result-landed-diff.expensive { color: #dc2626; }
 
@@ -913,11 +938,7 @@ input::placeholder { color: var(--color-text-subtle); }
 .eu-breakdown-row span:last-child { color: var(--color-text); font-weight: 500; }
 .eu-breakdown-row.total span:last-child { font-weight: 800; }
 
-.card-actions {
-    display: flex;
-    gap: 8px;
-    margin-top: 14px;
-}
+.card-actions { display: flex; gap: 8px; margin-top: 14px; }
 
 .btn {
     flex: 1;
@@ -943,12 +964,7 @@ input::placeholder { color: var(--color-text-subtle); }
 .btn-danger { color: var(--color-red); border-color: #fecaca; }
 .btn-danger:hover { background: var(--color-red-light); border-color: var(--color-red); }
 
-.btn-primary {
-    background: var(--color-text);
-    color: white;
-    border-color: var(--color-text);
-}
-
+.btn-primary { background: var(--color-text); color: white; border-color: var(--color-text); }
 .btn-primary:hover { background: #27272a; border-color: #27272a; }
 
 .problem-badge {
@@ -983,21 +999,9 @@ input::placeholder { color: var(--color-text-subtle); }
     flex-direction: column;
 }
 
-.search-card:hover {
-    border-color: #d4d4d8;
-    box-shadow: 0 8px 20px rgba(0,0,0,0.06);
-    transform: translateY(-2px);
-}
-
-.search-card.tracked {
-    border-color: var(--color-green);
-    background: #f0fdf4;
-}
-
-.search-card.score-fire {
-    border-color: var(--color-red);
-    border-width: 2px;
-}
+.search-card:hover { border-color: #d4d4d8; box-shadow: 0 8px 20px rgba(0,0,0,0.06); transform: translateY(-2px); }
+.search-card.tracked { border-color: var(--color-green); background: #f0fdf4; }
+.search-card.score-fire { border-color: var(--color-red); border-width: 2px; }
 
 .search-card .thumb {
     width: 100%;
@@ -1007,26 +1011,11 @@ input::placeholder { color: var(--color-text-subtle); }
     overflow: hidden;
 }
 
-.search-card .thumb img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
-}
+.search-card .thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
 
-.search-card-body {
-    padding: 14px 16px 16px;
-    display: flex;
-    flex-direction: column;
-    flex: 1;
-}
+.search-card-body { padding: 14px 16px 16px; display: flex; flex-direction: column; flex: 1; }
 
-.search-tags-row {
-    display: flex;
-    gap: 4px;
-    margin-bottom: 8px;
-    flex-wrap: wrap;
-}
+.search-tags-row { display: flex; gap: 4px; margin-bottom: 8px; flex-wrap: wrap; }
 
 .featured-tag {
     background: var(--color-yellow-light);
@@ -1037,13 +1026,7 @@ input::placeholder { color: var(--color-text-subtle); }
     font-weight: 600;
 }
 
-.age-tag {
-    padding: 2px 7px;
-    border-radius: 4px;
-    font-size: 11px;
-    font-weight: 500;
-}
-
+.age-tag { padding: 2px 7px; border-radius: 4px; font-size: 11px; font-weight: 500; }
 .age-tag.fresh { background: var(--color-green-light); color: #14532d; }
 .age-tag.normal { background: #f4f4f5; color: #52525b; }
 .age-tag.stale { background: var(--color-yellow-light); color: #854d0e; }
@@ -1082,23 +1065,9 @@ input::placeholder { color: var(--color-text-subtle); }
     letter-spacing: -0.02em;
 }
 
-.search-card .meta {
-    font-size: 11px;
-    color: var(--color-text-muted);
-    line-height: 1.6;
-    margin-bottom: 12px;
-}
-
-.search-card .actions {
-    margin-top: auto;
-    display: flex;
-    gap: 6px;
-}
-
-.search-card .actions .btn {
-    padding: 8px 8px;
-    font-size: 12px;
-}
+.search-card .meta { font-size: 11px; color: var(--color-text-muted); line-height: 1.6; margin-bottom: 12px; }
+.search-card .actions { margin-top: auto; display: flex; gap: 6px; }
+.search-card .actions .btn { padding: 8px 8px; font-size: 12px; }
 
 .tracked-tag {
     flex: 1;
@@ -1133,19 +1102,16 @@ input::placeholder { color: var(--color-text-subtle); }
 }
 
 .pagination button:hover { border-color: var(--color-text); }
-
-.pagination span {
-    color: var(--color-text-muted);
-    font-size: 13px;
-    padding: 0 10px;
-}
+.pagination span { color: var(--color-text-muted); font-size: 13px; padding: 0 10px; }
 
 @media (max-width: 768px) {
-    .header-inner { padding: 24px 16px 22px; }
+    .header-inner { padding: 24px 16px 22px; flex-wrap: wrap; }
     .logo { gap: 14px; }
     .logo-mark-img { width: 56px; height: 56px; }
     .logo-name { font-size: 30px; letter-spacing: -0.8px; }
     .logo-sub { font-size: 13px; margin-top: 6px; }
+    .user-info { font-size: 12px; gap: 8px; }
+    .user-email { max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 }
 
 @media (max-width: 600px) {
@@ -1157,6 +1123,8 @@ input::placeholder { color: var(--color-text-subtle); }
     .tab { margin-right: 20px; font-size: 14px; }
     #list { grid-template-columns: 1fr; }
     .eu-result-landed-wrap { padding-left: 0; }
+    .login-card { padding: 32px 20px; }
+    .login-title { font-size: 26px; }
 }
 </style>
 </head>
@@ -1172,9 +1140,38 @@ input::placeholder { color: var(--color-text-subtle); }
                 <div class="logo-sub">Mi nađemo. Ti uštediš.</div>
             </div>
         </div>
+        <div class="user-info" id="userInfo" style="display:none;">
+            <span class="user-email" id="userEmail"></span>
+            <button class="logout-btn" onclick="logout()">Logout</button>
+        </div>
     </div>
 </header>
 
+<!-- LOADING (dok se proverava session) -->
+<div id="loadingScreen" class="login-loading">Učitavanje...</div>
+
+<!-- LOGIN SCREEN (ako nema sesije) -->
+<div id="loginScreen" class="login-screen" style="display:none;">
+    <div class="login-card">
+        <div class="login-title">Dobrodošao</div>
+        <div class="login-subtitle">Prijavi se Google nalogom da bi pratio cene polovnih automobila i otkrio najbolje ponude.</div>
+        <a href="#" class="google-btn" onclick="loginWithGoogle(); return false;">
+            <svg viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg">
+                <path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z" fill="#4285F4"/>
+                <path d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z" fill="#34A853"/>
+                <path d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332z" fill="#FBBC05"/>
+                <path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z" fill="#EA4335"/>
+            </svg>
+            Prijavi se Google nalogom
+        </a>
+        <div class="login-footer">
+            Tvoji oglasi su privatni i vidiš samo ti njih.
+        </div>
+    </div>
+</div>
+
+<!-- MAIN APP (ako ulogovan) -->
+<div id="mainApp" style="display:none;">
 <div class="container">
 
     <div class="tabs">
@@ -1269,27 +1266,29 @@ input::placeholder { color: var(--color-text-subtle); }
     </div>
 
 </div>
+</div>
 
 
 <script>
 const API = "https://pratilac-cena-api.vojinovic82.workers.dev";
 
+// Sve fetch pozive ide sa credentials: "include" da bi cookie sesija radila
+function apiFetch(path, options = {}){
+    return fetch(API + path, {
+        ...options,
+        credentials: "include",
+        headers: {
+            ...(options.headers || {}),
+        }
+    });
+}
+
 // IMPORT COST CONSTANTS (Srbija, iz EU)
 const IMPORT_COSTS = {
-    transport: {
-        "DE": 1000,
-        "AT": 700,
-        "BE": 1100,
-        "NL": 1200,
-        "IT": 800,
-        "default": 1000
-    },
+    transport: { "DE": 1000, "AT": 700, "BE": 1100, "NL": 1200, "IT": 800, "default": 1000 },
     customsAgent: 150,
     amssUverenje: 100,
-    customsDuty: {
-        withEur1: 0,
-        withoutEur1: 0.05
-    },
+    customsDuty: { withEur1: 0, withoutEur1: 0.05 },
     vat: 0.20,
     exciseTax: [
         { maxKw: 99, rate: 0 },
@@ -1332,7 +1331,6 @@ function calculateLandedCost(carPrice, country, powerKw, hasEur1){
     const customsDuty = customsValue * customsRate;
 
     const afterCustoms = customsValue + customsDuty;
-
     const vat = afterCustoms * IMPORT_COSTS.vat;
     const afterVat = afterCustoms + vat;
 
@@ -1371,6 +1369,58 @@ let SELECTED_MODEL = null;
 let SELECTED_FUEL = new Set();
 let SELECTED_CHASSIS = new Set();
 
+let CURRENT_USER = null;
+
+// ========================================================================
+// AUTH
+// ========================================================================
+
+function loginWithGoogle(){
+    window.location.href = API + "/auth/google";
+}
+
+async function logout(){
+    try{
+        await apiFetch("/auth/logout", { method: "POST" });
+    }catch(e){}
+    CURRENT_USER = null;
+    showLoginScreen();
+}
+
+async function checkAuth(){
+    try{
+        const r = await apiFetch("/auth/me");
+        const data = await r.json();
+        if(data.authenticated){
+            CURRENT_USER = data;
+            return true;
+        }
+    }catch(e){
+        console.error("Auth check failed:", e);
+    }
+    return false;
+}
+
+function showLoginScreen(){
+    document.getElementById("loadingScreen").style.display = "none";
+    document.getElementById("loginScreen").style.display = "flex";
+    document.getElementById("mainApp").style.display = "none";
+    document.getElementById("userInfo").style.display = "none";
+}
+
+function showMainApp(){
+    document.getElementById("loadingScreen").style.display = "none";
+    document.getElementById("loginScreen").style.display = "none";
+    document.getElementById("mainApp").style.display = "block";
+    const userInfo = document.getElementById("userInfo");
+    userInfo.style.display = "flex";
+    document.getElementById("userEmail").textContent = CURRENT_USER.email;
+}
+
+// ========================================================================
+// APP
+// ========================================================================
+
 function showSection(name, event){
     document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
     document.querySelectorAll(".section").forEach(s => s.classList.remove("active"));
@@ -1380,7 +1430,7 @@ function showSection(name, event){
 
 async function loadBrands(){
     try{
-        const r = await fetch(API + "/brands");
+        const r = await apiFetch("/brands");
         const data = await r.json();
         BRANDS = data.brands || [];
     }catch(e){ console.error(e); }
@@ -1388,7 +1438,7 @@ async function loadBrands(){
 
 async function loadModels(brandValue){
     try{
-        const r = await fetch(API + "/models?brand=" + encodeURIComponent(brandValue));
+        const r = await apiFetch("/models?brand=" + encodeURIComponent(brandValue));
         const data = await r.json();
         MODELS = data.models || [];
     }catch(e){
@@ -1503,7 +1553,13 @@ function setupChips(containerId, selectedSet){
 
 async function load(){
     try{
-        const r = await fetch(API + "/data");
+        const r = await apiFetch("/data");
+        if(r.status === 401){
+            // Sesija je istekla
+            CURRENT_USER = null;
+            showLoginScreen();
+            return;
+        }
         DATA = await r.json();
         render();
     }catch(e){
@@ -1654,7 +1710,7 @@ async function loadEuComparison(container, c){
     if(kmMax) params.set("km_max", kmMax);
 
     try{
-        const r = await fetch(API + "/eu-search?" + params.toString());
+        const r = await apiFetch("/eu-search?" + params.toString());
         const data = await r.json();
 
         if(data.error || !data.results){
@@ -1711,10 +1767,7 @@ function renderEuResults(container, data, sourceCar){
             (r.price && (!acc || r.price < acc.price)) ? r : acc, null);
 
         const cheapestLanded = calculateLandedCost(
-            cheapest.price,
-            cheapest.country,
-            parsePowerKw(cheapest.power),
-            hasEur1
+            cheapest.price, cheapest.country, parsePowerKw(cheapest.power), hasEur1
         );
 
         if(!cheapestLanded){
@@ -1895,7 +1948,7 @@ async function addOglas(){
 
 async function addOglasByUrl(url, label){
     try{
-        const r = await fetch(API + "/add", {
+        const r = await apiFetch("/add", {
             method:"POST",
             headers:{"Content-Type":"application/json"},
             body:JSON.stringify({url:url, label:label || ""})
@@ -1918,7 +1971,7 @@ async function addOglasByUrl(url, label){
 async function deleteOglas(url){
     if(!confirm("Da li želiš da obrišeš ovaj oglas?")) return;
     try{
-        const r = await fetch(API + "/delete", {
+        const r = await apiFetch("/delete", {
             method:"POST",
             headers:{"Content-Type":"application/json"},
             body:JSON.stringify({url:url})
@@ -2366,7 +2419,7 @@ async function doSearch(page = 1){
     document.getElementById("sortControl").style.display = "none";
 
     try{
-        const r = await fetch(API + "/search?" + params.toString());
+        const r = await apiFetch("/search?" + params.toString());
         const data = await r.json();
 
         if(!r.ok || data.error){
@@ -2383,7 +2436,6 @@ async function doSearch(page = 1){
         );
 
         SEARCH_RESULTS_WITH_SCORE = data.results.map(r => {
-            // Score i outlier samo kad je model selektovan (poredjenje istog modela)
             if(!SELECTED_MODEL){
                 return { ...r, score: null, ageStatus: null, ageDays: daysSinceRenew(r.renewdate), outlier: false, _stats: stats };
             }
@@ -2572,7 +2624,6 @@ function renderSearch(){
 
     let infoHtml = `Ukupno <strong>${data.total || data.count}</strong> oglasa, prikazano ${data.count} (str. ${data.page}).`;
 
-    // Prosek prikazuj samo kad je model selektovan (poredjenje istog modela)
     if(SELECTED_MODEL && stats && stats.avgCena){
         infoHtml += ` Prosek: <strong>${Math.round(stats.avgCena).toLocaleString("sr-RS")} €</strong>`;
         if(stats.avgKm) infoHtml += ` · <strong>${Math.round(stats.avgKm).toLocaleString("sr-RS")} km</strong>`;
@@ -2618,6 +2669,14 @@ async function trackFromSearch(url, label){
 }
 
 async function init(){
+    const isAuthenticated = await checkAuth();
+    if(!isAuthenticated){
+        showLoginScreen();
+        return;
+    }
+
+    showMainApp();
+
     await loadBrands();
     setupAutocomplete("brandInput", "brandList", () => BRANDS, selectBrand);
     setupAutocomplete("modelInput", "modelList", () => MODELS, selectModel);
