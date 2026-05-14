@@ -2336,14 +2336,17 @@ function calculateSearchScore(result, stats){
 }
 
 async function doSearch(page = 1){
-    if(!SELECTED_BRAND){ alert("Izaberi brend iz liste."); return; }
+    if(!SELECTED_BRAND && SELECTED_FUEL.size === 0 && SELECTED_CHASSIS.size === 0){
+        alert("Izaberi bar brend, gorivo ili karoseriju.");
+        return;
+    }
 
     const yearFrom = document.getElementById("yearFromInput").value.trim();
     const yearTo = document.getElementById("yearToInput").value.trim();
     const priceTo = document.getElementById("priceToInput").value.trim();
 
     const params = new URLSearchParams();
-    params.set("brand", SELECTED_BRAND.value);
+    if(SELECTED_BRAND) params.set("brand", SELECTED_BRAND.value);
     if(SELECTED_MODEL) params.set("model", SELECTED_MODEL.value);
     if(yearFrom) params.set("year_from", yearFrom);
     if(yearTo) params.set("year_to", yearTo);
