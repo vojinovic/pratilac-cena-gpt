@@ -63,20 +63,27 @@ body {
 .header-inner {
     max-width: 1400px;
     margin: 0 auto;
-    padding: 32px 24px 28px;
+    padding: 16px 24px;
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 24px;
+    min-height: 96px;
 }
 
-.logo { display: flex; align-items: center; }
+.logo {
+    display: flex;
+    align-items: center;
+    height: 96px;
+    overflow: hidden;
+}
 
 .logo-full-img {
-    height: 64px;
+    height: 140px;
     width: auto;
     object-fit: contain;
     display: block;
+    margin: -22px 0;
 }
 
 .user-info {
@@ -1085,15 +1092,18 @@ input::placeholder { color: var(--color-text-subtle); }
 .pagination span { color: var(--color-text-muted); font-size: 13px; padding: 0 10px; }
 
 @media (max-width: 768px) {
-    .header-inner { padding: 24px 16px 22px; flex-wrap: wrap; }
-    .logo-full-img { height: 52px; }
+    .header-inner { padding: 12px 16px; min-height: 80px; }
+    .logo { height: 80px; }
+    .logo-full-img { height: 116px; margin: -18px 0; }
     .user-info { font-size: 12px; gap: 8px; }
     .user-email { max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 }
 
 @media (max-width: 600px) {
     .container { padding: 24px 16px; }
-    .logo-full-img { height: 44px; }
+    .header-inner { min-height: 70px; }
+    .logo { height: 70px; }
+    .logo-full-img { height: 100px; margin: -15px 0; }
     .tab { margin-right: 20px; font-size: 14px; }
     #list { grid-template-columns: 1fr; }
     .eu-result-landed-wrap { padding-left: 0; }
@@ -1105,7 +1115,7 @@ input::placeholder { color: var(--color-text-subtle); }
 
 <body>
 
-<header class="header-wrap">
+<header class="header-wrap" id="appHeader" style="display:none;">
     <div class="header-inner">
         <div class="logo">
             <img src="images/logo-full.png" alt="Auto Drukara" class="logo-full-img">
@@ -1375,6 +1385,7 @@ function showLoginScreen(){
     document.getElementById("loadingScreen").style.display = "none";
     document.getElementById("loginScreen").style.display = "flex";
     document.getElementById("mainApp").style.display = "none";
+    document.getElementById("appHeader").style.display = "none";
     document.getElementById("userInfo").style.display = "none";
 }
 
@@ -1382,6 +1393,7 @@ function showMainApp(){
     document.getElementById("loadingScreen").style.display = "none";
     document.getElementById("loginScreen").style.display = "none";
     document.getElementById("mainApp").style.display = "block";
+    document.getElementById("appHeader").style.display = "block";
     const userInfo = document.getElementById("userInfo");
     userInfo.style.display = "flex";
     document.getElementById("userEmail").textContent = CURRENT_USER.email;
