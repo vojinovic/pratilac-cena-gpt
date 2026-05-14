@@ -63,27 +63,23 @@ body {
 .header-inner {
     max-width: 1400px;
     margin: 0 auto;
-    padding: 16px 24px;
+    padding: 12px 24px;
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 24px;
-    min-height: 96px;
 }
 
 .logo {
     display: flex;
     align-items: center;
-    height: 96px;
-    overflow: hidden;
 }
 
 .logo-full-img {
-    height: 140px;
+    height: 84px;
     width: auto;
     object-fit: contain;
     display: block;
-    margin: -22px 0;
 }
 
 .user-info {
@@ -1092,18 +1088,15 @@ input::placeholder { color: var(--color-text-subtle); }
 .pagination span { color: var(--color-text-muted); font-size: 13px; padding: 0 10px; }
 
 @media (max-width: 768px) {
-    .header-inner { padding: 12px 16px; min-height: 80px; }
-    .logo { height: 80px; }
-    .logo-full-img { height: 116px; margin: -18px 0; }
+    .header-inner { padding: 10px 16px; }
+    .logo-full-img { height: 64px; }
     .user-info { font-size: 12px; gap: 8px; }
     .user-email { max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 }
 
 @media (max-width: 600px) {
     .container { padding: 24px 16px; }
-    .header-inner { min-height: 70px; }
-    .logo { height: 70px; }
-    .logo-full-img { height: 100px; margin: -15px 0; }
+    .logo-full-img { height: 52px; }
     .tab { margin-right: 20px; font-size: 14px; }
     #list { grid-template-columns: 1fr; }
     .eu-result-landed-wrap { padding-left: 0; }
