@@ -2383,6 +2383,10 @@ async function doSearch(page = 1){
         );
 
         SEARCH_RESULTS_WITH_SCORE = data.results.map(r => {
+            // Score i outlier samo kad je model selektovan (poredjenje istog modela)
+            if(!SELECTED_MODEL){
+                return { ...r, score: null, ageStatus: null, ageDays: daysSinceRenew(r.renewdate), outlier: false, _stats: stats };
+            }
             const scoreInfo = calculateSearchScore(r, stats);
             return { ...r, ...scoreInfo, _stats: stats };
         });
@@ -2430,7 +2434,8 @@ function getSortedResults(){
 
 function buildSearchCard(r){
     const tracked = isAlreadyTracked(r.url);
-    const score = r.score || 0;
+    const score = r.score;
+    const hasScore = score !== null && score !== undefined;
 
     let scoreEmoji = "🔴";
     if(score >= 80) scoreEmoji = "🔥";
@@ -2438,7 +2443,7 @@ function buildSearchCard(r){
     else if(score >= 40) scoreEmoji = "🟡";
 
     const card = document.createElement("div");
-    card.className = "search-card" + (tracked ? " tracked" : "") + (score >= 80 ? " score-fire" : "");
+    card.className = "search-card" + (tracked ? " tracked" : "") + (hasScore && score >= 80 ? " score-fire" : "");
 
     const thumb = document.createElement("div");
     thumb.className = "thumb";
@@ -2448,10 +2453,12 @@ function buildSearchCard(r){
         img.src = r.slika;
         img.onerror = () => {
             thumb.innerHTML = '<div class="no-image">Bez slike</div>';
-            const sb = document.createElement("div");
-            sb.className = "score-badge";
-            sb.textContent = `${scoreEmoji} ${score}`;
-            thumb.appendChild(sb);
+            if(hasScore){
+                const sb = document.createElement("div");
+                sb.className = "score-badge";
+                sb.textContent = `${scoreEmoji} ${score}`;
+                thumb.appendChild(sb);
+            }
         };
         thumb.appendChild(img);
     }else{
@@ -2461,10 +2468,12 @@ function buildSearchCard(r){
         thumb.appendChild(noImg);
     }
 
-    const sb = document.createElement("div");
-    sb.className = "score-badge";
-    sb.textContent = `${scoreEmoji} ${score}`;
-    thumb.appendChild(sb);
+    if(hasScore){
+        const sb = document.createElement("div");
+        sb.className = "score-badge";
+        sb.textContent = `${scoreEmoji} ${score}`;
+        thumb.appendChild(sb);
+    }
 
     card.appendChild(thumb);
 
@@ -2563,7 +2572,8 @@ function renderSearch(){
 
     let infoHtml = `Ukupno <strong>${data.total || data.count}</strong> oglasa, prikazano ${data.count} (str. ${data.page}).`;
 
-    if(stats && stats.avgCena){
+    // Prosek prikazuj samo kad je model selektovan (poredjenje istog modela)
+    if(SELECTED_MODEL && stats && stats.avgCena){
         infoHtml += ` Prosek: <strong>${Math.round(stats.avgCena).toLocaleString("sr-RS")} €</strong>`;
         if(stats.avgKm) infoHtml += ` · <strong>${Math.round(stats.avgKm).toLocaleString("sr-RS")} km</strong>`;
         if(stats.avgGod) infoHtml += ` · <strong>${stats.avgGod.toFixed(1)}.</strong> godište`;
