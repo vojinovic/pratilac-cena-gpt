@@ -70,33 +70,13 @@ body {
     gap: 24px;
 }
 
-.logo { display: flex; align-items: center; gap: 18px; }
+.logo { display: flex; align-items: center; }
 
-.logo-mark-img {
-    width: 72px; height: 72px;
+.logo-full-img {
+    height: 64px;
+    width: auto;
     object-fit: contain;
-    flex-shrink: 0;
-    filter: invert(1) hue-rotate(0deg);
-}
-
-.logo-text { display: flex; flex-direction: column; }
-
-.logo-name {
-    font-size: 38px;
-    font-weight: 900;
-    letter-spacing: -1.2px;
-    line-height: 1;
-}
-
-.logo-name .name-black { color: #fff; }
-.logo-name .name-red { color: var(--color-red); }
-
-.logo-sub {
-    font-size: 14px;
-    color: rgba(255, 255, 255, 0.55);
-    margin-top: 8px;
-    font-weight: 500;
-    letter-spacing: 0.01em;
+    display: block;
 }
 
 .user-info {
@@ -142,24 +122,24 @@ body {
 }
 
 .login-card {
-    max-width: 440px;
+    max-width: 460px;
     width: 100%;
     text-align: center;
     padding: 48px 32px;
 }
 
-.login-title {
-    font-size: 32px;
-    font-weight: 800;
-    letter-spacing: -1px;
-    margin-bottom: 12px;
-    color: var(--color-text);
+.login-logo-img {
+    width: 100%;
+    max-width: 380px;
+    height: auto;
+    display: block;
+    margin: 0 auto 28px;
 }
 
 .login-subtitle {
     font-size: 15px;
     color: var(--color-text-muted);
-    margin-bottom: 36px;
+    margin-bottom: 32px;
     line-height: 1.6;
 }
 
@@ -1106,25 +1086,19 @@ input::placeholder { color: var(--color-text-subtle); }
 
 @media (max-width: 768px) {
     .header-inner { padding: 24px 16px 22px; flex-wrap: wrap; }
-    .logo { gap: 14px; }
-    .logo-mark-img { width: 56px; height: 56px; }
-    .logo-name { font-size: 30px; letter-spacing: -0.8px; }
-    .logo-sub { font-size: 13px; margin-top: 6px; }
+    .logo-full-img { height: 52px; }
     .user-info { font-size: 12px; gap: 8px; }
     .user-email { max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 }
 
 @media (max-width: 600px) {
     .container { padding: 24px 16px; }
-    .logo { gap: 12px; }
-    .logo-mark-img { width: 48px; height: 48px; }
-    .logo-name { font-size: 24px; letter-spacing: -0.5px; }
-    .logo-sub { font-size: 12px; margin-top: 4px; }
+    .logo-full-img { height: 44px; }
     .tab { margin-right: 20px; font-size: 14px; }
     #list { grid-template-columns: 1fr; }
     .eu-result-landed-wrap { padding-left: 0; }
     .login-card { padding: 32px 20px; }
-    .login-title { font-size: 26px; }
+    .login-logo-img { max-width: 280px; }
 }
 </style>
 </head>
@@ -1134,11 +1108,7 @@ input::placeholder { color: var(--color-text-subtle); }
 <header class="header-wrap">
     <div class="header-inner">
         <div class="logo">
-            <img src="images/logo-mark.png" alt="Auto Drukara" class="logo-mark-img">
-            <div class="logo-text">
-                <div class="logo-name"><span class="name-black">AUTO </span><span class="name-red">DRUKARA</span></div>
-                <div class="logo-sub">Mi nađemo. Ti uštediš.</div>
-            </div>
+            <img src="images/logo-full.png" alt="Auto Drukara" class="logo-full-img">
         </div>
         <div class="user-info" id="userInfo" style="display:none;">
             <span class="user-email" id="userEmail"></span>
@@ -1153,7 +1123,7 @@ input::placeholder { color: var(--color-text-subtle); }
 <!-- LOGIN SCREEN (ako nema sesije) -->
 <div id="loginScreen" class="login-screen" style="display:none;">
     <div class="login-card">
-        <div class="login-title">Dobrodošao</div>
+        <img src="images/logo-full.png" alt="Auto Drukara" class="login-logo-img">
         <div class="login-subtitle">Prijavi se Google nalogom da bi pratio cene polovnih automobila i otkrio najbolje ponude.</div>
         <a href="#" class="google-btn" onclick="loginWithGoogle(); return false;">
             <svg viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg">
