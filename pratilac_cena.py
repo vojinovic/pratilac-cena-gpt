@@ -62,26 +62,62 @@ def parsiraj_broj(text):
     return None
 
 
-def izvuci_cenu(soup):
-    el = soup.find("span", class_="priceClassified")
+def izvuci_data_layer(html):
+    """
+    Izvlači dataLayer JSON sa strukturiranim podacima oglasa.
+    Polovniautomobili ubacuje dataLayer.push({...}) sa svim podacima:
+    object_price, object_production_year, object_mileage, object_damage,
+    object_prvi_vlasnik, object_servisna_knjizica, object_garancija itd.
+    """
+    pattern = r'dataLayer\.push\((\{[^;]*?"object_uid"[^;]*?\})\);'
+    match = re.search(pattern, html)
 
+    if not match:
+        return {}
+
+    try:
+        return json.loads(match.group(1))
+    except (json.JSONDecodeError, ValueError) as e:
+        print(f"  Ne mogu da parsiram dataLayer JSON: {e}")
+        return {}
+
+
+def izvuci_cenu(soup, data_layer=None):
+    # Primarni izvor: dataLayer JSON (najpouzdaniji)
+    if data_layer and data_layer.get("object_price"):
+        cena = parsiraj_broj(data_layer.get("object_price"))
+        if cena:
+            return cena
+
+    # Fallback 1: classic span
+    el = soup.find("span", class_="priceClassified")
     if el:
         cena = parsiraj_broj(el.get_text(" ", strip=True))
         if cena:
             return cena
 
     el = soup.find(class_=re.compile(r"priceClassified"))
-
     if el:
         cena = parsiraj_broj(el.get_text(" ", strip=True))
         if cena:
             return cena
 
+    # Fallback 2: meta tag
     meta = soup.find("meta", attrs={"property": "product:price:amount"})
     if meta and meta.get("content"):
         cena = parsiraj_broj(meta.get("content"))
         if cena:
             return cena
+
+    # Fallback 3: data-title atribut (format "Naziv - 34.990 €")
+    el = soup.find(attrs={"data-title": True})
+    if el:
+        title = el.get("data-title", "")
+        match = re.search(r"-\s*([\d.,]+)\s*€", title)
+        if match:
+            cena = parsiraj_broj(match.group(1))
+            if cena:
+                return cena
 
     return None
 
@@ -95,14 +131,15 @@ def izvuci_sliku(soup):
     return None
 
 
-def izvuci_naziv(soup):
-    h1 = soup.find("h1")
+def izvuci_naziv(soup, data_layer=None):
+    if data_layer and data_layer.get("name"):
+        return data_layer.get("name")
 
+    h1 = soup.find("h1")
     if h1:
         return h1.get_text(" ", strip=True)
 
     title = soup.find("title")
-
     if title:
         text = title.get_text(" ", strip=True)
         text = text.replace("| Polovni Automobili", "").replace("- Polovni automobili", "").replace("Polovni Automobili", "").strip()
@@ -155,6 +192,7 @@ def calculate_score(
     najmanja_cena,
     ukupno_snizenje,
     promena_tip,
+    data_layer=None,
 ):
     text = ((label or "") + " " + (html or "")).lower()
 
@@ -196,33 +234,60 @@ def calculate_score(
         if keyword in text:
             score += points
 
-    stanje_plus = {
-        "prvi vlasnik": 10,
-        "1 vlasnik": 10,
-        "servisna": 6,
-        "servisna knjiga": 8,
-        "bez ulaganja": 8,
-        "kupljen u srbiji": 6,
-        "garaziran": 5,
-    }
+    # Strukturirane signale - iz dataLayer (pouzdanije od HTML pretrage)
+    if data_layer:
+        if data_layer.get("object_prvi_vlasnik") == "yes":
+            score += 10
+        if data_layer.get("object_servisna_knjizica") == "yes":
+            score += 8
+        if data_layer.get("object_garancija") == "yes":
+            score += 8
+        if data_layer.get("object_kupljen_nov_u_srbiji") == "yes":
+            score += 6
 
-    for keyword, points in stanje_plus.items():
-        if keyword in text:
-            score += points
+        damage = (data_layer.get("object_damage") or "").lower()
+        if "udaren" in damage:
+            score -= 25
+        elif "oštećen" in damage and "nije" not in damage:
+            score -= 20
 
-    stanje_minus = {
-        "udaren": -25,
-        "ostecen": -20,
-        "oštećen": -20,
-        "hitno": -5,
-        "zamena": -5,
-        "fiksno": -3,
-        "potrebna ulaganja": -15,
-    }
+        if data_layer.get("object_taxi") == "yes":
+            score -= 15
+    else:
+        # Fallback na keywords pretragu HTML-a
+        stanje_plus = {
+            "prvi vlasnik": 10,
+            "1 vlasnik": 10,
+            "servisna": 6,
+            "servisna knjiga": 8,
+            "bez ulaganja": 8,
+            "kupljen u srbiji": 6,
+            "garaziran": 5,
+        }
 
-    for keyword, points in stanje_minus.items():
-        if keyword in text:
-            score += points
+        for keyword, points in stanje_plus.items():
+            if keyword in text:
+                score += points
+
+        stanje_minus = {
+            "udaren": -25,
+            "ostecen": -20,
+            "oštećen": -20,
+        }
+
+        for keyword, points in stanje_minus.items():
+            if keyword in text:
+                score += points
+
+    # Negativni signali iz teksta (uvek se gledaju)
+    if "hitno" in text:
+        score -= 5
+    if "zamena" in text:
+        score -= 5
+    if "fiksno" in text:
+        score -= 3
+    if "potrebna ulaganja" in text:
+        score -= 15
 
     if ukupno_snizenje >= 2000:
         score += 12
@@ -256,22 +321,23 @@ def proveri_oglas(url):
 
     except Exception as e:
         print("Greška:", e)
-        return None, None, None, "", False
+        return None, None, None, "", {}, False
 
     # Detekcija obrisanog oglasa: polovniautomobili redirektuje na search stranicu
     # sa ?redirect_message=1 parametrom
     final_url = response.url
     if "redirect_message" in final_url or "/auto-oglasi/pretraga" in final_url:
         print(f"  OGLAS OBRISAN (redirect na: {final_url})")
-        return None, None, None, "", False
+        return None, None, None, "", {}, False
 
     soup = BeautifulSoup(response.text, "html.parser")
+    data_layer = izvuci_data_layer(response.text)
 
-    cena = izvuci_cenu(soup)
+    cena = izvuci_cenu(soup, data_layer)
     slika = izvuci_sliku(soup)
-    naziv = izvuci_naziv(soup)
+    naziv = izvuci_naziv(soup, data_layer)
 
-    return cena, slika, naziv, response.text, True
+    return cena, slika, naziv, response.text, data_layer, True
 
 
 def main():
@@ -285,12 +351,10 @@ def main():
 
         print("\nPROVERA:", url)
 
-        cena, slika, naziv, html, aktivan = proveri_oglas(url)
+        cena, slika, naziv, html, data_layer, aktivan = proveri_oglas(url)
 
         stara = baza.get(url, {})
 
-        # Custom label korisnika -> ako nema, sveži naziv iz HTML -> tek onda stari
-        # (sveži pre starog jer je možda ranije bio polomljen UTF-8)
         label = (
             oglas.get("label")
             or naziv
@@ -328,6 +392,34 @@ def main():
             time.sleep(PAUZA)
             continue
 
+        # Izvlačenje strukturiranih podataka iz dataLayer
+        godiste = None
+        kilometraza = None
+        gorivo = None
+        karoserija = None
+        last_renewed_date = None
+
+        if data_layer:
+            try:
+                if data_layer.get("object_production_year"):
+                    godiste = int(data_layer.get("object_production_year"))
+            except (ValueError, TypeError):
+                pass
+            try:
+                if data_layer.get("object_mileage"):
+                    kilometraza = int(data_layer.get("object_mileage"))
+            except (ValueError, TypeError):
+                pass
+            gorivo = data_layer.get("object_fuel")
+            karoserija = data_layer.get("object_chassis")
+            last_renewed_date = data_layer.get("object_last_renewed_date")
+
+        # Fallback na staro stanje ako dataLayer nema podatke
+        godiste = godiste or stara.get("godiste")
+        kilometraza = kilometraza or stara.get("kilometraza")
+        gorivo = gorivo or stara.get("gorivo")
+        karoserija = karoserija or stara.get("karoserija")
+
         prethodna_cena = stara.get("cena")
 
         prva_cena = stara.get("prva_cena") or cena
@@ -363,11 +455,25 @@ def main():
             najmanja_cena=najmanja_cena,
             ukupno_snizenje=ukupno_snizenje,
             promena_tip=promena_tip,
+            data_layer=data_layer,
         )
 
         print("MODEL:", model)
         print("MARKET AVG:", market_avg)
         print("CENA:", cena)
+        print("GODIŠTE:", godiste, "KM:", kilometraza)
+        if data_layer:
+            indicators = []
+            if data_layer.get("object_prvi_vlasnik") == "yes":
+                indicators.append("prvi vlasnik")
+            if data_layer.get("object_servisna_knjizica") == "yes":
+                indicators.append("servisna")
+            if data_layer.get("object_garancija") == "yes":
+                indicators.append("garancija")
+            if data_layer.get("object_kupljen_nov_u_srbiji") == "yes":
+                indicators.append("kupljen u SRB")
+            if indicators:
+                print("INDIKATORI:", ", ".join(indicators))
         print("SCORE:", score)
         print("LABEL:", label)
 
@@ -375,6 +481,10 @@ def main():
             "label": label,
             "model": model,
             "cena": cena,
+            "godiste": godiste,
+            "kilometraza": kilometraza,
+            "gorivo": gorivo,
+            "karoserija": karoserija,
             "prva_cena": prva_cena,
             "najmanja_cena": najmanja_cena,
             "broj_promena": broj_promena,
@@ -388,6 +498,13 @@ def main():
             "problem_cena": False,
             "poslednja_provera": now,
             "score": score,
+            "last_renewed_date": last_renewed_date,
+            "prvi_vlasnik": data_layer.get("object_prvi_vlasnik") == "yes" if data_layer else False,
+            "servisna_knjizica": data_layer.get("object_servisna_knjizica") == "yes" if data_layer else False,
+            "garancija": data_layer.get("object_garancija") == "yes" if data_layer else False,
+            "kupljen_nov_u_srbiji": data_layer.get("object_kupljen_nov_u_srbiji") == "yes" if data_layer else False,
+            "damage": data_layer.get("object_damage") if data_layer else None,
+            "owner_name": data_layer.get("companyName") if data_layer else None,
         }
 
         time.sleep(PAUZA)
