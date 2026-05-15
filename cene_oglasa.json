@@ -5,8 +5,8 @@
     "cena": 30950,
     "godiste": 2022,
     "kilometraza": 158216,
-    "karoserija": "Džip/SUV",
     "gorivo": "Dizel",
+    "karoserija": "Džip/SUV",
     "prva_cena": 31950,
     "najmanja_cena": 30950,
     "broj_promena": 1,
@@ -17,29 +17,16 @@
     "promena_tip": "bez_promene",
     "datum_promene": "09.05.2026 11:47",
     "aktivan": true,
-    "problem_cena": true,
-    "poslednja_provera": "15.05.2026 18:19",
-    "score": 63,
-    "outlier": false,
-    "prvi_put_videno": "2026-05-09 15:01:16",
+    "problem_cena": false,
+    "poslednja_provera": "15.05.2026 18:33",
+    "score": 72,
     "last_renewed_date": "2026-05-03 11:27:25",
     "prvi_vlasnik": false,
     "servisna_knjizica": false,
     "garancija": false,
     "kupljen_nov_u_srbiji": false,
     "damage": "Nije oštećen",
-    "owner_rating": "5",
-    "owner_name": "Holliday d.o.o.",
-    "istorija_cena": [
-      {
-        "datum": "2026-05-09 15:01:16",
-        "cena": 31950
-      },
-      {
-        "datum": "2026-05-10 19:46:40",
-        "cena": 30950
-      }
-    ]
+    "owner_name": "Holliday d.o.o."
   },
   "https://www.polovniautomobili.com/auto-oglasi/28877577/volvo-xc60-20-awd?attp=p9_pv0_pc0_pl11_plv0": {
     "label": "Volvo XC60 AWD",
@@ -47,8 +34,8 @@
     "cena": 34990,
     "godiste": 2022,
     "kilometraza": 152583,
-    "karoserija": "Džip/SUV",
     "gorivo": "Dizel",
+    "karoserija": "Džip/SUV",
     "prva_cena": 34990,
     "najmanja_cena": 34990,
     "broj_promena": 0,
@@ -59,34 +46,25 @@
     "promena_tip": "bez_promene",
     "datum_promene": "07.05.2026 16:58",
     "aktivan": true,
-    "problem_cena": true,
-    "poslednja_provera": "15.05.2026 18:19",
-    "score": 33,
-    "outlier": false,
-    "prvi_put_videno": "2026-05-09 15:01:16",
+    "problem_cena": false,
+    "poslednja_provera": "15.05.2026 18:33",
+    "score": 55,
     "last_renewed_date": "2026-05-04 13:13:57",
     "prvi_vlasnik": false,
     "servisna_knjizica": false,
     "garancija": false,
     "kupljen_nov_u_srbiji": false,
     "damage": "Nije oštećen",
-    "owner_rating": "4.43",
-    "owner_name": "Delta Motors",
-    "istorija_cena": [
-      {
-        "datum": "2026-05-09 15:01:16",
-        "cena": 34990
-      }
-    ]
+    "owner_name": "Delta Motors"
   },
   "https://www.polovniautomobili.com/auto-oglasi/29005264/volvo-xc60-4x4-d4kupljovde1vl?attp=p9_pv0_pc0_pl11_plv0": {
-    "label": "Oglas",
+    "label": "Volvo XC60 4x4 D4Kuplj.ovde1vl",
     "model": "volvo-xc60",
     "cena": 26999,
     "godiste": 2021,
     "kilometraza": 143000,
-    "karoserija": "Džip/SUV",
     "gorivo": "Dizel",
+    "karoserija": "Džip/SUV",
     "prva_cena": 26999,
     "najmanja_cena": 26999,
     "broj_promena": 2,
@@ -97,34 +75,25 @@
     "promena_tip": "bez_promene",
     "datum_promene": "08.05.2026 15:02",
     "aktivan": true,
-    "problem_cena": true,
-    "poslednja_provera": "15.05.2026 18:19",
-    "score": 81,
-    "outlier": false,
-    "prvi_put_videno": "2026-05-09 15:01:16",
+    "problem_cena": false,
+    "poslednja_provera": "15.05.2026 18:33",
+    "score": 80,
     "last_renewed_date": "2026-05-08 02:23:56",
     "prvi_vlasnik": false,
     "servisna_knjizica": false,
     "garancija": false,
     "kupljen_nov_u_srbiji": false,
     "damage": "Nije oštećen",
-    "owner_rating": "4.33",
-    "owner_name": "AMA Prodaja vozila",
-    "istorija_cena": [
-      {
-        "datum": "2026-05-09 15:01:16",
-        "cena": 26999
-      }
-    ]
+    "owner_name": "AMA Prodaja vozila"
   },
   "https://www.polovniautomobili.com/auto-oglasi/28451802/volvo-xc60-20b4mhev-momentum?attp=p9_pv0_pc0_pl11_plv0": {
-    "label": "Oglas",
+    "label": "Volvo XC60 2.0B4/MHEV MOMENTUM",
     "model": "volvo-xc60",
     "cena": 27900,
     "godiste": 2021,
     "kilometraza": 182562,
-    "karoserija": "Džip/SUV",
     "gorivo": "Dizel",
+    "karoserija": "Džip/SUV",
     "prva_cena": 27900,
     "najmanja_cena": 27900,
     "broj_promena": 0,
@@ -135,34 +104,25 @@
     "promena_tip": "bez_promene",
     "datum_promene": "07.05.2026 16:58",
     "aktivan": true,
-    "problem_cena": true,
-    "poslednja_provera": "15.05.2026 18:19",
-    "score": 60,
-    "outlier": false,
-    "prvi_put_videno": "2026-05-09 15:01:16",
+    "problem_cena": false,
+    "poslednja_provera": "15.05.2026 18:33",
+    "score": 72,
     "last_renewed_date": "2026-05-09 07:12:33",
     "prvi_vlasnik": false,
     "servisna_knjizica": false,
     "garancija": false,
     "kupljen_nov_u_srbiji": false,
     "damage": "Nije oštećen",
-    "owner_rating": "4.96",
-    "owner_name": "Everest Automobili doo",
-    "istorija_cena": [
-      {
-        "datum": "2026-05-09 15:01:16",
-        "cena": 27900
-      }
-    ]
+    "owner_name": "Everest Automobili doo"
   },
   "https://www.polovniautomobili.com/auto-oglasi/28597036/volvo-xc60-b4-awd-inscription?attp=p9_pv0_pc0_pl11_plv0": {
-    "label": "Oglas",
+    "label": "Volvo XC60 B4 AWD Inscription",
     "model": "volvo-xc60",
     "cena": 32950,
     "godiste": 2021,
     "kilometraza": 158600,
-    "karoserija": "Džip/SUV",
     "gorivo": "Hibridni pogon (Dizel)",
+    "karoserija": "Džip/SUV",
     "prva_cena": 32950,
     "najmanja_cena": 32950,
     "broj_promena": 0,
@@ -173,25 +133,16 @@
     "promena_tip": "bez_promene",
     "datum_promene": "07.05.2026 16:58",
     "aktivan": true,
-    "problem_cena": true,
-    "poslednja_provera": "15.05.2026 18:19",
-    "score": 30,
-    "outlier": false,
-    "prvi_put_videno": "2026-05-09 15:01:16",
+    "problem_cena": false,
+    "poslednja_provera": "15.05.2026 18:33",
+    "score": 51,
     "last_renewed_date": "2026-04-28 21:33:41",
     "prvi_vlasnik": false,
     "servisna_knjizica": false,
     "garancija": false,
     "kupljen_nov_u_srbiji": false,
     "damage": "Nije oštećen",
-    "owner_rating": "0",
-    "owner_name": "",
-    "istorija_cena": [
-      {
-        "datum": "2026-05-09 15:01:16",
-        "cena": 32950
-      }
-    ]
+    "owner_name": ""
   },
   "https://www.polovniautomobili.com/auto-oglasi/29012594/volvo-xc60?attp=p9_pv0_pc0_pl11_plv0": {
     "label": "Xc60 daje ga za 27",
@@ -199,8 +150,8 @@
     "cena": 29500,
     "godiste": 2021,
     "kilometraza": 131808,
-    "karoserija": "Džip/SUV",
     "gorivo": "Dizel",
+    "karoserija": "Džip/SUV",
     "prva_cena": 29500,
     "najmanja_cena": 29500,
     "broj_promena": 0,
@@ -211,34 +162,25 @@
     "promena_tip": "bez_promene",
     "datum_promene": "07.05.2026 16:58",
     "aktivan": true,
-    "problem_cena": true,
-    "poslednja_provera": "15.05.2026 18:19",
-    "score": 53,
-    "outlier": false,
-    "prvi_put_videno": "2026-05-09 15:01:16",
+    "problem_cena": false,
+    "poslednja_provera": "15.05.2026 18:33",
+    "score": 70,
     "last_renewed_date": "2026-04-22 20:07:15",
     "prvi_vlasnik": false,
     "servisna_knjizica": false,
     "garancija": false,
     "kupljen_nov_u_srbiji": false,
     "damage": "Nije oštećen",
-    "owner_rating": "0",
-    "owner_name": "",
-    "istorija_cena": [
-      {
-        "datum": "2026-05-09 15:01:16",
-        "cena": 29500
-      }
-    ]
+    "owner_name": ""
   },
   "https://www.polovniautomobili.com/auto-oglasi/28720117/skoda-kodiaq-20tdisport4x4pano?attp=p9_pv0_pc0_pl11_plv0": {
-    "label": "Oglas",
+    "label": "Škoda Kodiaq 20TDI/SPORT/4x4/PANO",
     "model": "skoda-kodiaq",
     "cena": 23999,
     "godiste": 2021,
     "kilometraza": 193000,
-    "karoserija": "Džip/SUV",
     "gorivo": "Dizel",
+    "karoserija": "Džip/SUV",
     "prva_cena": 23999,
     "najmanja_cena": 23999,
     "broj_promena": 0,
@@ -249,34 +191,25 @@
     "promena_tip": "bez_promene",
     "datum_promene": "07.05.2026 16:58",
     "aktivan": true,
-    "problem_cena": true,
-    "poslednja_provera": "15.05.2026 18:19",
-    "score": 57,
-    "outlier": false,
-    "prvi_put_videno": "2026-05-09 15:01:16",
+    "problem_cena": false,
+    "poslednja_provera": "15.05.2026 18:33",
+    "score": 94,
     "last_renewed_date": "2026-05-11 13:53:07",
     "prvi_vlasnik": false,
     "servisna_knjizica": false,
     "garancija": false,
     "kupljen_nov_u_srbiji": false,
     "damage": "Nije oštećen",
-    "owner_rating": "2.71",
-    "owner_name": "S&T AUTO",
-    "istorija_cena": [
-      {
-        "datum": "2026-05-09 15:01:16",
-        "cena": 23999
-      }
-    ]
+    "owner_name": "S&T AUTO"
   },
   "http://www.polovniautomobili.com/auto-oglasi/29216093/volvo-xc60-b4-d-awd-inscription": {
-    "label": "Oglas",
+    "label": "Volvo XC60 B4 D AWD INSCRIPTION",
     "model": "volvo-xc60",
     "cena": 28690,
     "godiste": 2021,
     "kilometraza": 152098,
-    "karoserija": "Džip/SUV",
     "gorivo": "Dizel",
+    "karoserija": "Džip/SUV",
     "prva_cena": 28690,
     "najmanja_cena": 28690,
     "broj_promena": 0,
@@ -287,34 +220,25 @@
     "promena_tip": "bez_promene",
     "datum_promene": null,
     "aktivan": true,
-    "problem_cena": true,
-    "poslednja_provera": "15.05.2026 18:19",
-    "score": 60,
-    "outlier": false,
-    "prvi_put_videno": "2026-05-09 15:01:16",
+    "problem_cena": false,
+    "poslednja_provera": "15.05.2026 18:33",
+    "score": 70,
     "last_renewed_date": "2026-05-07 21:56:12",
     "prvi_vlasnik": false,
     "servisna_knjizica": false,
     "garancija": false,
     "kupljen_nov_u_srbiji": false,
     "damage": "Nije oštećen",
-    "owner_rating": "5",
-    "owner_name": "OZI - VOZI DOO",
-    "istorija_cena": [
-      {
-        "datum": "2026-05-09 15:01:16",
-        "cena": 28690
-      }
-    ]
+    "owner_name": "OZI - VOZI DOO"
   },
   "http://www.polovniautomobili.com/auto-oglasi/29091836/skoda-kodiaq-style-20": {
-    "label": "Oglas",
+    "label": "Škoda Kodiaq Style 2.0",
     "model": "skoda-kodiaq",
     "cena": 34000,
     "godiste": 2023,
     "kilometraza": 41000,
-    "karoserija": "Džip/SUV",
     "gorivo": "Dizel",
+    "karoserija": "Džip/SUV",
     "prva_cena": 34000,
     "najmanja_cena": 34000,
     "broj_promena": 0,
@@ -325,25 +249,16 @@
     "promena_tip": "bez_promene",
     "datum_promene": null,
     "aktivan": true,
-    "problem_cena": true,
-    "poslednja_provera": "15.05.2026 18:19",
-    "score": 50,
-    "outlier": false,
-    "prvi_put_videno": "2026-05-09 15:01:16",
+    "problem_cena": false,
+    "poslednja_provera": "15.05.2026 18:33",
+    "score": 41,
     "last_renewed_date": "2026-04-25 07:30:01",
     "prvi_vlasnik": false,
     "servisna_knjizica": false,
     "garancija": false,
     "kupljen_nov_u_srbiji": false,
     "damage": "Nije oštećen",
-    "owner_rating": "0",
-    "owner_name": "",
-    "istorija_cena": [
-      {
-        "datum": "2026-05-09 15:01:16",
-        "cena": 34000
-      }
-    ]
+    "owner_name": ""
   },
   "https://www.polovniautomobili.com/auto-oglasi/28666773/skoda-kodiaq-20tdi-4x4-dsg-style?attp=p9_pv0_pc0_pl11_plv0": {
     "label": "Oglas",
@@ -364,7 +279,7 @@
     "datum_promene": "12.05.2026 11:50",
     "aktivan": false,
     "problem_cena": true,
-    "poslednja_provera": "15.05.2026 18:19",
+    "poslednja_provera": "15.05.2026 18:33",
     "score": 54,
     "outlier": false,
     "prvi_put_videno": "2026-05-09 15:01:16",
@@ -415,8 +330,8 @@
     "cena": 28690,
     "godiste": 2021,
     "kilometraza": 152098,
-    "karoserija": "Džip/SUV",
     "gorivo": "Dizel",
+    "karoserija": "Džip/SUV",
     "prva_cena": 28690,
     "najmanja_cena": 28690,
     "broj_promena": 0,
@@ -427,25 +342,16 @@
     "promena_tip": "bez_promene",
     "datum_promene": null,
     "aktivan": true,
-    "problem_cena": true,
-    "poslednja_provera": "15.05.2026 18:19",
-    "score": 60,
-    "outlier": false,
-    "prvi_put_videno": "2026-05-09 15:01:16",
+    "problem_cena": false,
+    "poslednja_provera": "15.05.2026 18:33",
+    "score": 70,
     "last_renewed_date": "2026-05-07 21:56:12",
     "prvi_vlasnik": false,
     "servisna_knjizica": false,
     "garancija": false,
     "kupljen_nov_u_srbiji": false,
     "damage": "Nije oštećen",
-    "owner_rating": "5",
-    "owner_name": "OZI - VOZI DOO",
-    "istorija_cena": [
-      {
-        "datum": "2026-05-09 15:01:16",
-        "cena": 28690
-      }
-    ]
+    "owner_name": "OZI - VOZI DOO"
   },
   "https://www.polovniautomobili.com/auto-oglasi/28733983/volvo-xc60-inscription-m-hev?attp=p1_pv0_pc1_pl1_plv0": {
     "label": "Volvo XC60 Inscription M-hev",
@@ -453,8 +359,8 @@
     "cena": 28990,
     "godiste": 2021,
     "kilometraza": 163537,
-    "karoserija": "Džip/SUV",
     "gorivo": "Hibridni pogon (Dizel)",
+    "karoserija": "Džip/SUV",
     "prva_cena": 28990,
     "najmanja_cena": 28990,
     "broj_promena": 0,
@@ -465,25 +371,16 @@
     "promena_tip": "bez_promene",
     "datum_promene": null,
     "aktivan": true,
-    "problem_cena": true,
-    "poslednja_provera": "15.05.2026 18:19",
-    "score": 55,
-    "outlier": false,
-    "prvi_put_videno": "2026-05-09 15:01:16",
+    "problem_cena": false,
+    "poslednja_provera": "15.05.2026 18:33",
+    "score": 74,
     "last_renewed_date": "2026-05-07 07:56:02",
     "prvi_vlasnik": false,
     "servisna_knjizica": false,
     "garancija": false,
     "kupljen_nov_u_srbiji": false,
     "damage": "Nije oštećen",
-    "owner_rating": "0",
-    "owner_name": "DRIVE LAND",
-    "istorija_cena": [
-      {
-        "datum": "2026-05-09 15:01:16",
-        "cena": 28990
-      }
-    ]
+    "owner_name": "DRIVE LAND"
   },
   "https://www.polovniautomobili.com/auto-oglasi/28215893/volvo-xc60-b4-d-awd-r-design?attp=p3_pv0_pc1_pl1_plv0": {
     "label": "Volvo XC60 B4 D Awd R-design",
@@ -491,8 +388,8 @@
     "cena": 31900,
     "godiste": 2021,
     "kilometraza": 119564,
-    "karoserija": "Džip/SUV",
     "gorivo": "Hibridni pogon (Dizel)",
+    "karoserija": "Džip/SUV",
     "prva_cena": 31900,
     "najmanja_cena": 31900,
     "broj_promena": 0,
@@ -503,25 +400,16 @@
     "promena_tip": "bez_promene",
     "datum_promene": null,
     "aktivan": true,
-    "problem_cena": true,
-    "poslednja_provera": "15.05.2026 18:19",
-    "score": 53,
-    "outlier": false,
-    "prvi_put_videno": "2026-05-09 15:01:16",
+    "problem_cena": false,
+    "poslednja_provera": "15.05.2026 18:33",
+    "score": 64,
     "last_renewed_date": "2026-05-06 13:13:27",
     "prvi_vlasnik": false,
     "servisna_knjizica": false,
     "garancija": false,
     "kupljen_nov_u_srbiji": false,
     "damage": "Nije oštećen",
-    "owner_rating": "5",
-    "owner_name": "Vv Auto",
-    "istorija_cena": [
-      {
-        "datum": "2026-05-09 15:01:16",
-        "cena": 31900
-      }
-    ]
+    "owner_name": "Vv Auto"
   },
   "https://www.polovniautomobili.com/auto-oglasi/28824615/volvo-xc60-b4-d-restajling?attp=p3_pv0_pc1_pl1_plv0": {
     "label": "Volvo XC60 B4 D RESTAJLING",
@@ -529,8 +417,8 @@
     "cena": 23900,
     "godiste": 2021,
     "kilometraza": 212906,
-    "karoserija": "Džip/SUV",
     "gorivo": "Hibridni pogon (Dizel)",
+    "karoserija": "Džip/SUV",
     "prva_cena": 23900,
     "najmanja_cena": 23900,
     "broj_promena": 0,
@@ -541,25 +429,16 @@
     "promena_tip": "bez_promene",
     "datum_promene": null,
     "aktivan": true,
-    "problem_cena": true,
-    "poslednja_provera": "15.05.2026 18:19",
-    "score": 70,
-    "outlier": false,
-    "prvi_put_videno": "2026-05-09 15:01:16",
+    "problem_cena": false,
+    "poslednja_provera": "15.05.2026 18:33",
+    "score": 79,
     "last_renewed_date": "2026-05-05 19:33:26",
     "prvi_vlasnik": false,
     "servisna_knjizica": false,
     "garancija": false,
     "kupljen_nov_u_srbiji": false,
     "damage": "Nije oštećen",
-    "owner_rating": "5",
-    "owner_name": "Vv Auto",
-    "istorija_cena": [
-      {
-        "datum": "2026-05-09 15:01:16",
-        "cena": 23900
-      }
-    ]
+    "owner_name": "Vv Auto"
   },
   "https://www.polovniautomobili.com/auto-oglasi/28808020/volvo-xc60-b4-d-awd-restajling?attp=p1_pv0_pc1_pl1_plv0": {
     "label": "Volvo XC60 B4 D Awd RESTAJLING",
@@ -567,8 +446,8 @@
     "cena": 23900,
     "godiste": 2021,
     "kilometraza": 202975,
-    "karoserija": "Džip/SUV",
     "gorivo": "Hibridni pogon (Dizel)",
+    "karoserija": "Džip/SUV",
     "prva_cena": 23900,
     "najmanja_cena": 23900,
     "broj_promena": 0,
@@ -579,25 +458,16 @@
     "promena_tip": "bez_promene",
     "datum_promene": null,
     "aktivan": true,
-    "problem_cena": true,
-    "poslednja_provera": "15.05.2026 18:19",
-    "score": 75,
-    "outlier": false,
-    "prvi_put_videno": "2026-05-09 15:01:16",
+    "problem_cena": false,
+    "poslednja_provera": "15.05.2026 18:33",
+    "score": 86,
     "last_renewed_date": "2026-05-05 19:33:18",
     "prvi_vlasnik": false,
     "servisna_knjizica": false,
     "garancija": false,
     "kupljen_nov_u_srbiji": false,
     "damage": "Nije oštećen",
-    "owner_rating": "5",
-    "owner_name": "Vv Auto",
-    "istorija_cena": [
-      {
-        "datum": "2026-05-09 15:01:16",
-        "cena": 23900
-      }
-    ]
+    "owner_name": "Vv Auto"
   },
   "https://www.polovniautomobili.com/auto-oglasi/28664582/volvo-xc60-b4awdmomentum-pro?attp=p0_pv0_pc0_pl1_plv0": {
     "label": "Volvo XC60 B4/AWD/MOMENTUM-PRO",
@@ -605,8 +475,8 @@
     "cena": 24999,
     "godiste": 2021,
     "kilometraza": 223000,
-    "karoserija": "Džip/SUV",
     "gorivo": "Dizel",
+    "karoserija": "Džip/SUV",
     "prva_cena": 24999,
     "najmanja_cena": 24999,
     "broj_promena": 0,
@@ -617,34 +487,25 @@
     "promena_tip": "bez_promene",
     "datum_promene": null,
     "aktivan": true,
-    "problem_cena": true,
-    "poslednja_provera": "15.05.2026 18:19",
-    "score": 65,
-    "outlier": false,
-    "prvi_put_videno": "2026-05-09 15:01:16",
+    "problem_cena": false,
+    "poslednja_provera": "15.05.2026 18:33",
+    "score": 91,
     "last_renewed_date": "2026-05-10 17:51:44",
     "prvi_vlasnik": false,
     "servisna_knjizica": false,
     "garancija": false,
     "kupljen_nov_u_srbiji": false,
     "damage": "Nije oštećen",
-    "owner_rating": "0",
-    "owner_name": "",
-    "istorija_cena": [
-      {
-        "datum": "2026-05-09 15:01:16",
-        "cena": 24999
-      }
-    ]
+    "owner_name": ""
   },
   "https://www.polovniautomobili.com/auto-oglasi/28210108/volkswagen-tiguan-tdi-200-4x4?attp=p9_pv0_pc0_pl11_plv0": {
-    "label": "Oglas",
+    "label": "Volkswagen Tiguan TDI 200 4x4",
     "model": "volkswagen-tiguan",
     "cena": 31100,
     "godiste": 2023,
     "kilometraza": 25000,
-    "karoserija": "Džip/SUV",
     "gorivo": "Dizel",
+    "karoserija": "Džip/SUV",
     "prva_cena": 31700,
     "najmanja_cena": 31100,
     "broj_promena": 2,
@@ -655,33 +516,16 @@
     "promena_tip": "bez_promene",
     "datum_promene": "13.05.2026 06:44",
     "aktivan": true,
-    "problem_cena": true,
-    "poslednja_provera": "15.05.2026 18:19",
-    "score": 54,
-    "outlier": false,
-    "prvi_put_videno": "2026-05-09 15:56:09",
+    "problem_cena": false,
+    "poslednja_provera": "15.05.2026 18:33",
+    "score": 72,
     "last_renewed_date": "2026-04-23 16:27:23",
     "prvi_vlasnik": false,
     "servisna_knjizica": false,
     "garancija": false,
     "kupljen_nov_u_srbiji": false,
     "damage": "Nije oštećen",
-    "owner_rating": "0",
-    "owner_name": "",
-    "istorija_cena": [
-      {
-        "datum": "2026-05-09 15:56:09",
-        "cena": 31700
-      },
-      {
-        "datum": "2026-05-10 19:46:40",
-        "cena": 31500
-      },
-      {
-        "datum": "2026-05-13 06:44:37",
-        "cena": 31100
-      }
-    ]
+    "owner_name": ""
   },
   "https://www.polovniautomobili.com/auto-oglasi/29187581/volvo-xc60-b4-awd?attp=p0_pv0_pc0_pl1_plv0": {
     "label": "Volvo XC60 B4 AWD",
@@ -689,8 +533,8 @@
     "cena": 27499,
     "godiste": 2021,
     "kilometraza": 149790,
-    "karoserija": "Džip/SUV",
     "gorivo": "Dizel",
+    "karoserija": "Džip/SUV",
     "prva_cena": 27499,
     "najmanja_cena": 27499,
     "broj_promena": 0,
@@ -701,25 +545,16 @@
     "promena_tip": "bez_promene",
     "datum_promene": null,
     "aktivan": true,
-    "problem_cena": true,
-    "poslednja_provera": "15.05.2026 18:19",
-    "score": 55,
-    "outlier": false,
-    "prvi_put_videno": "2026-05-09 16:50:10",
+    "problem_cena": false,
+    "poslednja_provera": "15.05.2026 18:33",
+    "score": 65,
     "last_renewed_date": "2026-05-05 16:34:11",
     "prvi_vlasnik": false,
     "servisna_knjizica": false,
     "garancija": false,
     "kupljen_nov_u_srbiji": false,
     "damage": "Nije oštećen",
-    "owner_rating": "4.67",
-    "owner_name": "IMPERIAL",
-    "istorija_cena": [
-      {
-        "datum": "2026-05-09 16:50:10",
-        "cena": 27499
-      }
-    ]
+    "owner_name": "IMPERIAL"
   },
   "https://www.polovniautomobili.com/auto-oglasi/28593046/volvo-xc60-b4-d-awd-restajling?attp=p3_pv0_pc1_pl1_plv0": {
     "label": "Volvo XC60 B4 D Awd RESTAJLING",
@@ -727,8 +562,8 @@
     "cena": 26900,
     "godiste": 2021,
     "kilometraza": 163710,
-    "karoserija": "Džip/SUV",
     "gorivo": "Hibridni pogon (Dizel)",
+    "karoserija": "Džip/SUV",
     "prva_cena": 26900,
     "najmanja_cena": 26900,
     "broj_promena": 0,
@@ -739,25 +574,16 @@
     "promena_tip": "bez_promene",
     "datum_promene": null,
     "aktivan": true,
-    "problem_cena": true,
-    "poslednja_provera": "15.05.2026 18:19",
-    "score": 63,
-    "outlier": false,
-    "prvi_put_videno": "2026-05-09 16:50:10",
+    "problem_cena": false,
+    "poslednja_provera": "15.05.2026 18:33",
+    "score": 74,
     "last_renewed_date": "2026-05-05 19:33:07",
     "prvi_vlasnik": false,
     "servisna_knjizica": false,
     "garancija": false,
     "kupljen_nov_u_srbiji": false,
     "damage": "Nije oštećen",
-    "owner_rating": "5",
-    "owner_name": "Vv Auto",
-    "istorija_cena": [
-      {
-        "datum": "2026-05-09 16:50:10",
-        "cena": 26900
-      }
-    ]
+    "owner_name": "Vv Auto"
   },
   "https://www.polovniautomobili.com/auto-oglasi/28495851/volvo-xc60-b4d-awd?attp=p1_pv0_pc1_pl1_plv0": {
     "label": "Volvo XC60 B4d AWD (može zamena)",
@@ -765,8 +591,8 @@
     "cena": 29990,
     "godiste": 2022,
     "kilometraza": 168987,
-    "karoserija": "Džip/SUV",
     "gorivo": "Dizel",
+    "karoserija": "Džip/SUV",
     "prva_cena": 29990,
     "najmanja_cena": 29990,
     "broj_promena": 0,
@@ -777,25 +603,16 @@
     "promena_tip": "bez_promene",
     "datum_promene": null,
     "aktivan": true,
-    "problem_cena": true,
-    "poslednja_provera": "15.05.2026 18:19",
-    "score": 60,
-    "outlier": false,
-    "prvi_put_videno": "2026-05-09 16:50:10",
+    "problem_cena": false,
+    "poslednja_provera": "15.05.2026 18:33",
+    "score": 70,
     "last_renewed_date": "2026-05-14 14:50:10",
     "prvi_vlasnik": false,
     "servisna_knjizica": false,
     "garancija": false,
     "kupljen_nov_u_srbiji": false,
     "damage": "Nije oštećen",
-    "owner_rating": "5",
-    "owner_name": "Goldmotors",
-    "istorija_cena": [
-      {
-        "datum": "2026-05-09 16:50:10",
-        "cena": 29990
-      }
-    ]
+    "owner_name": "Goldmotors"
   },
   "https://www.polovniautomobili.com/auto-oglasi/28666680/volvo-xc60-20d-b4-inscription?attp=p3_pv0_pc1_pl1_plv0": {
     "label": "Volvo XC60 2.0d B4 Inscription (može zamena)",
@@ -803,8 +620,8 @@
     "cena": 29500,
     "godiste": 2022,
     "kilometraza": 175000,
-    "karoserija": "Džip/SUV",
     "gorivo": "Dizel",
+    "karoserija": "Džip/SUV",
     "prva_cena": 29500,
     "najmanja_cena": 29500,
     "broj_promena": 0,
@@ -815,25 +632,16 @@
     "promena_tip": "bez_promene",
     "datum_promene": null,
     "aktivan": true,
-    "problem_cena": true,
-    "poslednja_provera": "15.05.2026 18:19",
-    "score": 60,
-    "outlier": false,
-    "prvi_put_videno": "2026-05-09 16:50:10",
+    "problem_cena": false,
+    "poslednja_provera": "15.05.2026 18:33",
+    "score": 64,
     "last_renewed_date": "2026-05-13 21:22:01",
     "prvi_vlasnik": false,
     "servisna_knjizica": false,
     "garancija": false,
     "kupljen_nov_u_srbiji": false,
     "damage": "Nije oštećen",
-    "owner_rating": "5",
-    "owner_name": "Auto centar VERITAS CARS",
-    "istorija_cena": [
-      {
-        "datum": "2026-05-09 16:50:10",
-        "cena": 29500
-      }
-    ]
+    "owner_name": "Auto centar VERITAS CARS"
   },
   "https://www.polovniautomobili.com/auto-oglasi/28842611/volvo-xc60-20-dr-desing4-awd?attp=p1_pv0_pc1_pl1_plv0": {
     "label": "Volvo XC60 2.0 D/R-DESING/4 AWD",
@@ -841,8 +649,8 @@
     "cena": 31999,
     "godiste": 2021,
     "kilometraza": 143000,
-    "karoserija": "Džip/SUV",
     "gorivo": "Dizel",
+    "karoserija": "Džip/SUV",
     "prva_cena": 31999,
     "najmanja_cena": 31999,
     "broj_promena": 0,
@@ -853,24 +661,15 @@
     "promena_tip": "bez_promene",
     "datum_promene": null,
     "aktivan": true,
-    "problem_cena": true,
-    "poslednja_provera": "15.05.2026 18:19",
-    "score": 43,
-    "outlier": false,
-    "prvi_put_videno": "2026-05-11 12:15:19",
+    "problem_cena": false,
+    "poslednja_provera": "15.05.2026 18:33",
+    "score": 61,
     "last_renewed_date": "2026-05-11 13:52:09",
     "prvi_vlasnik": false,
     "servisna_knjizica": false,
     "garancija": false,
     "kupljen_nov_u_srbiji": false,
     "damage": "Nije oštećen",
-    "owner_rating": "2.71",
-    "owner_name": "S&T AUTO",
-    "istorija_cena": [
-      {
-        "datum": "2026-05-11 12:15:19",
-        "cena": 31999
-      }
-    ]
+    "owner_name": "S&T AUTO"
   }
 }
