@@ -6,26 +6,12 @@ import re
 import time
 from datetime import datetime
 
-import requests
+from curl_cffi import requests
 from bs4 import BeautifulSoup
 
 OGLASI_FAJL = "oglasi.json"
 BAZA_FAJL = "cene_oglasa.json"
 PAUZA = 4
-
-HEADERS = {
-    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
-    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8",
-    "Accept-Language": "sr-RS,sr;q=0.9,en-US;q=0.8,en;q=0.7",
-    "Accept-Encoding": "gzip, deflate, br",
-    "Connection": "keep-alive",
-    "Upgrade-Insecure-Requests": "1",
-    "Sec-Fetch-Dest": "document",
-    "Sec-Fetch-Mode": "navigate",
-    "Sec-Fetch-Site": "none",
-    "Sec-Fetch-User": "?1",
-    "Cache-Control": "max-age=0",
-}
 
 
 def ucitaj_oglase():
@@ -313,7 +299,7 @@ def calculate_score(
 
 def proveri_oglas(url):
     try:
-        response = requests.get(url, headers=HEADERS, timeout=20)
+        response = requests.get(url, impersonate="chrome", timeout=20)
         response.raise_for_status()
 
         # FIX: prisilno postavi UTF-8 jer requests pogađa Latin-1 i to lomi naše š/č/ć/ž
