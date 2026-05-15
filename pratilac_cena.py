@@ -305,6 +305,7 @@ def main():
                 **stara,
                 "label": label,
                 "model": model,
+                "aktivan": False,
                 "problem_cena": True,
                 "poslednja_provera": now,
             }
