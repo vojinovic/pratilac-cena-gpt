@@ -1,5 +1,4 @@
 name: Provera cena
-
 on:
   schedule:
     - cron: "0 * * * *"
@@ -7,114 +6,26 @@ on:
   repository_dispatch:
     types: [scrape]
 
-permissions:
-  contents: write
-
 jobs:
   provera:
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      
+
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-      
+
       - name: Install dependencies
         run: |
           pip install curl_cffi beautifulsoup4
-      
+
       - name: Pokreni skriptu
         env:
-          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
-          EMAIL_PRIMALAC: ${{ secrets.EMAIL_PRIMALAC }}
+          API_URL: https://pratilac-cena-api.vojinovic82.workers.dev
+          SCRAPER_SECRET: ${{ secrets.SCRAPER_SECRET }}
         run: |
           python pratilac_cena.py
-      
-      - name: Commituj bazu cena
-        run: |
-          git config --global user.name "github-actions"
-          git config --global user.email "github-actions@github.com"
-          
-          git add cene_oglasa.json oglasi.json
-          
-          if git diff --staged --quiet; then
-            echo "Nema promena za commit"
-            exit 0
-          fi
-          
-          git commit -m "Ažurirane cene"
-          
-          # Pokušaj push-a sa retry + smart merge
-          for i in 1 2 3; do
-            if git push; then
-              echo "Push uspešan u pokušaju $i"
-              exit 0
-            fi
-            
-            echo "Push odbijen u pokušaju $i, radim smart merge..."
-            
-            # Sačuvaj naše rezultate
-            cp cene_oglasa.json /tmp/our_cene.json
-            cp oglasi.json /tmp/our_oglasi.json
-            
-            # Hard reset na remote
-            git fetch origin main
-            git reset --hard origin/main
-            
-            # Custom Python merge
-            python3 <<'PYEOF'
-          import json
-          
-          with open('/tmp/our_cene.json', 'r', encoding='utf-8') as f:
-              our_cene = json.load(f)
-          with open('/tmp/our_oglasi.json', 'r', encoding='utf-8') as f:
-              our_oglasi = json.load(f)
-          
-          with open('cene_oglasa.json', 'r', encoding='utf-8') as f:
-              remote_cene = json.load(f)
-          with open('oglasi.json', 'r', encoding='utf-8') as f:
-              remote_oglasi = json.load(f)
-          
-          # Cene: spoj remote + our; naši (svežiji skrejp) pobeđuju za zajedničke URL-ove
-          merged_cene = {**remote_cene, **our_cene}
-          
-          # Oglasi: dedupe po URL-u, prvo remote (može imati nove iz /add), pa naši
-          urls_seen = set()
-          merged_oglasi = []
-          for o in remote_oglasi:
-              url = o.get('url')
-              if url and url not in urls_seen:
-                  urls_seen.add(url)
-                  merged_oglasi.append(o)
-          for o in our_oglasi:
-              url = o.get('url')
-              if url and url not in urls_seen:
-                  urls_seen.add(url)
-                  merged_oglasi.append(o)
-          
-          with open('cene_oglasa.json', 'w', encoding='utf-8') as f:
-              json.dump(merged_cene, f, ensure_ascii=False, indent=2)
-          with open('oglasi.json', 'w', encoding='utf-8') as f:
-              json.dump(merged_oglasi, f, ensure_ascii=False, indent=2)
-          
-          print(f"Merge gotov: {len(merged_cene)} cena, {len(merged_oglasi)} oglasa")
-          PYEOF
-            
-            git add cene_oglasa.json oglasi.json
-            
-            if git diff --staged --quiet; then
-              echo "Nema razlike posle merge-a, ništa za commit"
-              exit 0
-            fi
-            
-            git commit -m "Ažurirane cene (smart merged)"
-          done
-          
-          echo "Push nije uspeo ni posle 3 pokušaja sa smart merge-om"
-          exit 1
