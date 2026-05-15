@@ -570,6 +570,48 @@ input::placeholder { color: var(--color-text-subtle); }
     line-height: 1;
 }
 
+.score-reasons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    margin-bottom: 12px;
+}
+
+.reason-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 8px;
+    border-radius: 5px;
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 1.3;
+    white-space: nowrap;
+}
+
+.reason-tag.pos {
+    background: var(--color-green-light);
+    color: #14532d;
+}
+
+.reason-tag.neg {
+    background: var(--color-red-light);
+    color: #7f1d1d;
+}
+
+.reason-tag-value {
+    opacity: 0.7;
+    font-weight: 500;
+    font-size: 10px;
+}
+
+.score-scope-hint {
+    font-size: 10px;
+    color: var(--color-text-subtle);
+    margin-top: 4px;
+    font-style: italic;
+}
+
 .sparkline-wrap {
     margin-bottom: 14px;
     position: relative;
@@ -2096,6 +2138,12 @@ function buildTrackedCard(o, c, showBestDealTag){
     const sparkline = buildSparkline(c.istorija_cena);
     body.appendChild(sparkline);
 
+    // Top 3 razloga za score (iz score_breakdown koje racuna pratilac_cena.py)
+    if(c.score_breakdown && c.score_breakdown.length > 0){
+        const reasonsRow = buildReasonsRow(c.score_breakdown);
+        if(reasonsRow) body.appendChild(reasonsRow);
+    }
+
     const indicators = [];
     if(c.prvi_vlasnik) indicators.push("👤 Prvi vlasnik");
     if(c.servisna_knjizica) indicators.push("📖 Servisna");
@@ -2257,22 +2305,89 @@ function daysSinceRenew(renewdate){
     return Math.floor((new Date() - date) / (1000 * 60 * 60 * 24));
 }
 
-function buildHybridStats(searchResults, brandValue, modelValue){
-    const cene = [], kms = [], godine = [];
+// ========================================================================
+// SCORING SYSTEM (identican Python verziji u pratilac_cena.py)
+// ========================================================================
 
+const PACKAGE_KEYWORDS = {
+    "volvo": {
+        top: ["r-design", "r design", "polestar", "inscription"],
+        mid: ["momentum", "summum", "ocean race"]
+    },
+    "bmw": {
+        top: ["m sport", "m-sport", "m pack", "m paket", "m performance"],
+        mid: ["luxury line", "sport line", "modern line"]
+    },
+    "audi": {
+        top: ["s line", "s-line", "rs ", "quattro"],
+        mid: ["design", "advanced"]
+    },
+    "mercedes-benz": {
+        top: ["amg", "amg line"],
+        mid: ["avantgarde", "exclusive"]
+    },
+    "skoda": {
+        top: ["rs ", "sportline", "monte carlo"],
+        mid: ["style", "ambition"]
+    },
+    "volkswagen": {
+        top: ["r-line", "r line", "gti", "gtd"],
+        mid: ["highline", "comfortline"]
+    },
+    "porsche": {
+        top: [" s ", "gts", "turbo", "4s"],
+        mid: []
+    }
+};
+
+const GENERIC_FEATURES = {
+    "panorama": 3,
+    "pano krov": 3,
+    "matrix": 3,
+    "harman": 3,
+    "bowers": 3,
+    "kamera 360": 2,
+    "360 kamera": 2,
+    "head-up": 2,
+    "head up": 2,
+    "awd": 2,
+    "4x4": 2
+};
+
+const NEG_TITLE_KEYWORDS = {
+    "havarisan": -20,
+    "udaren": -15,
+    "oštećen": -10,
+    "ostecen": -10,
+    "hitno": -3,
+    "zamena": -3
+};
+
+function buildBrandModelStats(searchResults, brandValue, modelValue, chassisHint){
+    // Imitacija "wider segment" pristupa iz pratilac_cena.py.
+    // Prvi izbor: isti model. Fallback: brand+karoserija.
+    const cene = [], kms = [], godine = [];
+    let scope = "model";
+
+    function addItem(c){
+        if(c.cena) cene.push(c.cena);
+        if(c.kilometraza) kms.push(c.kilometraza);
+        if(c.godiste || c.godina) godine.push(c.godiste || c.godina);
+    }
+
+    // Iz search rezultata - sve sa istim brendom (vec su filtrirani)
     searchResults.forEach(r => {
         if(r.cena) cene.push(r.cena);
         if(r.kilometraza) kms.push(r.kilometraza);
         if(r.godina) godine.push(r.godina);
     });
 
+    // Iz tracked baze - po modelu
     if(brandValue && modelValue && DATA?.cene){
         const targetModel = brandValue + "-" + modelValue;
         Object.values(DATA.cene).forEach(c => {
             if(c.model === targetModel){
-                if(c.cena) cene.push(c.cena);
-                if(c.kilometraza) kms.push(c.kilometraza);
-                if(c.godiste) godine.push(c.godiste);
+                addItem(c);
             }
         });
     }
@@ -2280,6 +2395,7 @@ function buildHybridStats(searchResults, brandValue, modelValue){
     const avg = arr => arr.length > 0 ? arr.reduce((a,b)=>a+b,0) / arr.length : null;
 
     return {
+        scope: scope,
         avgCena: avg(cene),
         avgKm: avg(kms),
         avgGod: avg(godine),
@@ -2288,79 +2404,150 @@ function buildHybridStats(searchResults, brandValue, modelValue){
 }
 
 function calculateSearchScore(result, stats){
-    const text = (result.naslov || "").toLowerCase();
-    let score = 50;
+    const naslov = (result.naslov || "").toLowerCase();
+    const breakdown = [];
 
+    let hasDamage = false;
+
+    // KATEGORIJA 1: CENA
     if(stats.avgCena && result.cena){
-        const diffPercent = ((stats.avgCena - result.cena) / stats.avgCena) * 100;
-        if(diffPercent >= 15) score += 20;
-        else if(diffPercent >= 10) score += 15;
-        else if(diffPercent >= 5) score += 8;
-        else if(diffPercent <= -15) score -= 20;
-        else if(diffPercent <= -10) score -= 10;
+        const diff = ((stats.avgCena - result.cena) / stats.avgCena) * 100;
+        if(diff >= 20) breakdown.push({label:`Cena ${diff.toFixed(0)}% niža`, value:30, category:"cena"});
+        else if(diff >= 15) breakdown.push({label:`Cena ${diff.toFixed(0)}% niža`, value:25, category:"cena"});
+        else if(diff >= 10) breakdown.push({label:`Cena ${diff.toFixed(0)}% niža`, value:20, category:"cena"});
+        else if(diff >= 5) breakdown.push({label:`Cena ${diff.toFixed(0)}% niža`, value:12, category:"cena"});
+        else if(diff <= -10) breakdown.push({label:`Cena ${Math.abs(diff).toFixed(0)}% viša`, value:-15, category:"cena"});
+        else if(diff <= -5) breakdown.push({label:`Cena ${Math.abs(diff).toFixed(0)}% viša`, value:-5, category:"cena"});
     }
 
-    if(stats.avgKm && result.kilometraza){
-        const ratio = result.kilometraza / stats.avgKm;
-        if(ratio <= 0.5) score += 15;
-        else if(ratio <= 0.75) score += 8;
-        else if(ratio <= 0.9) score += 3;
-        else if(ratio >= 1.5) score -= 10;
-        else if(ratio >= 1.25) score -= 5;
-    }
-
-    if(stats.avgGod && result.godina){
-        const diff = result.godina - stats.avgGod;
-        if(diff >= 2) score += 10;
-        else if(diff >= 1) score += 5;
-        else if(diff <= -2) score -= 8;
-        else if(diff <= -1) score -= 3;
-    }
-
-    const plusKeywords = {
-        "awd": 5, "4x4": 5, "r-design": 5, "inscription": 5,
-        "momentum": 3, "sport": 4, "pano": 5, "panorama": 5,
-        "kamera": 3, "matrix": 4, "harman": 3, "bowers": 4,
-    };
-
-    for(const [kw, pts] of Object.entries(plusKeywords)){
-        if(text.includes(kw)) score += pts;
-    }
-
-    const minusKeywords = {
-        "udaren": -25, "ostecen": -20, "oštećen": -20,
-        "hitno": -5, "zamena": -5,
-    };
-
-    for(const [kw, pts] of Object.entries(minusKeywords)){
-        if(text.includes(kw)) score += pts;
-    }
-
-    const days = daysSinceRenew(result.renewdate);
-    let ageStatus = null;
-
-    if(days !== null){
-        if(days <= 7){ score += 5; ageStatus = "fresh"; }
-        else if(days <= 30){ ageStatus = "normal"; }
-        else if(days <= 60){ score -= 3; ageStatus = "stale"; }
-        else{ score -= 8; ageStatus = "old"; }
-    }
-
-    let outlier = false;
-    if(stats.avgCena && result.cena){
-        const diffPercent = ((stats.avgCena - result.cena) / stats.avgCena) * 100;
-        if(diffPercent >= 25){
-            const hasNegative = Object.keys(minusKeywords).some(kw => text.includes(kw));
-            const highKm = stats.avgKm && result.kilometraza && (result.kilometraza / stats.avgKm) > 1.4;
-            if(hasNegative || highKm) outlier = true;
+    // KATEGORIJA 2: STANJE - search nema strukturirane podatke, samo title keywords
+    for(const [kw, val] of Object.entries(NEG_TITLE_KEYWORDS)){
+        if(naslov.includes(kw)){
+            // skip "nije ostecen"
+            if((kw === "ostecen" || kw === "oštećen") && naslov.includes("nije")) continue;
+            breakdown.push({label:`Naslov: "${kw}"`, value:val, category:"stanje"});
+            hasDamage = true;
+            break;
         }
     }
 
-    if(score > 100) score = 100;
-    if(score < 0) score = 0;
-    if(outlier && score > 50) score = 50;
+    // KATEGORIJA 3: KILOMETRAŽA po godini
+    if(result.kilometraza && result.godina){
+        const yearsOld = Math.max(new Date().getFullYear() - result.godina, 1);
+        const kmPerYear = result.kilometraza / yearsOld;
+        if(kmPerYear <= 8000) breakdown.push({label:`Vrlo malo vožen (${Math.round(kmPerYear)} km/god)`, value:20, category:"kilometraza"});
+        else if(kmPerYear <= 12000) breakdown.push({label:`Manje vožen (${Math.round(kmPerYear)} km/god)`, value:12, category:"kilometraza"});
+        else if(kmPerYear >= 25000) breakdown.push({label:`Mnogo vožen (${Math.round(kmPerYear)} km/god)`, value:-12, category:"kilometraza"});
+        else if(kmPerYear >= 18000) breakdown.push({label:`Iznad proseka (${Math.round(kmPerYear)} km/god)`, value:-5, category:"kilometraza"});
+    }
 
-    return { score: Math.round(score), ageStatus, ageDays: days, outlier };
+    // KATEGORIJA 4: GODISTE vs prosek
+    if(stats.avgGod && result.godina){
+        const diff = result.godina - stats.avgGod;
+        if(diff >= 2) breakdown.push({label:`Mlađi od proseka (${result.godina}.)`, value:8, category:"godiste"});
+        else if(diff >= 1) breakdown.push({label:`Mlađi od proseka (${result.godina}.)`, value:4, category:"godiste"});
+        else if(diff <= -2) breakdown.push({label:`Stariji od proseka (${result.godina}.)`, value:-8, category:"godiste"});
+        else if(diff <= -1) breakdown.push({label:`Stariji od proseka (${result.godina}.)`, value:-3, category:"godiste"});
+    }
+
+    // PAKET - brand specific
+    const brand = SELECTED_BRAND ? SELECTED_BRAND.value : null;
+    if(brand && PACKAGE_KEYWORDS[brand]){
+        const pkg = PACKAGE_KEYWORDS[brand];
+        let packageAdded = false;
+        for(const kw of (pkg.top || [])){
+            if(naslov.includes(kw)){
+                breakdown.push({label:`Top paket (${kw.trim().toUpperCase()})`, value:5, category:"paket"});
+                packageAdded = true;
+                break;
+            }
+        }
+        if(!packageAdded){
+            for(const kw of (pkg.mid || [])){
+                if(naslov.includes(kw)){
+                    breakdown.push({label:`Srednji paket (${kw})`, value:3, category:"paket"});
+                    break;
+                }
+            }
+        }
+    }
+
+    // Generic features
+    for(const [feature, val] of Object.entries(GENERIC_FEATURES)){
+        if(naslov.includes(feature)){
+            breakdown.push({label:`Oprema: ${feature}`, value:val, category:"paket"});
+        }
+    }
+
+    // KATEGORIJA 5: SVEZINA
+    const days = daysSinceRenew(result.renewdate);
+    let ageStatus = null;
+    if(days !== null){
+        if(days <= 3){ breakdown.push({label:`Svež oglas (${days}d)`, value:10, category:"svezina"}); ageStatus = "fresh"; }
+        else if(days <= 7){ breakdown.push({label:`Svež oglas (${days}d)`, value:7, category:"svezina"}); ageStatus = "fresh"; }
+        else if(days <= 14){ breakdown.push({label:`Skoro objavljen (${days}d)`, value:4, category:"svezina"}); ageStatus = "normal"; }
+        else if(days <= 30){ ageStatus = "normal"; }
+        else if(days <= 60){ breakdown.push({label:`Stoji ${days}d`, value:-3, category:"svezina"}); ageStatus = "stale"; }
+        else { breakdown.push({label:`Stoji predugo (${days}d)`, value:-8, category:"svezina"}); ageStatus = "old"; }
+    }
+
+    // OUTLIER detekcija
+    let outlier = false;
+    if(stats.avgCena && result.cena){
+        const diff = ((stats.avgCena - result.cena) / stats.avgCena) * 100;
+        if(diff >= 25){
+            let negSignals = 0;
+            if(hasDamage) negSignals++;
+            if(stats.avgKm && result.kilometraza && (result.kilometraza / stats.avgKm) > 1.4) negSignals++;
+            for(const kw of ["hitno", "zamena"]){
+                if(naslov.includes(kw)){ negSignals++; break; }
+            }
+            if(negSignals >= 2){
+                outlier = true;
+                breakdown.push({label:"⚠️ Sumnjivo niska cena", value:0, category:"outlier"});
+            }
+        }
+    }
+
+    // FINALNA SUMA
+    let rawScore = 50 + breakdown.reduce((sum, item) => sum + item.value, 0);
+    if(outlier) rawScore = Math.min(rawScore, 40);
+    rawScore = Math.max(0, Math.min(100, rawScore));
+
+    return {
+        score: Math.round(rawScore),
+        outlier: outlier,
+        breakdown: breakdown,
+        ageStatus: ageStatus,
+        ageDays: days
+    };
+}
+
+// Vraca top N razloga (najveca apsolutna vrednost)
+function getTopReasons(breakdown, n = 3){
+    if(!breakdown || breakdown.length === 0) return [];
+    return [...breakdown]
+        .filter(item => item.value !== 0)
+        .sort((a, b) => Math.abs(b.value) - Math.abs(a.value))
+        .slice(0, n);
+}
+
+function buildReasonsRow(breakdown){
+    const top = getTopReasons(breakdown, 3);
+    if(top.length === 0) return null;
+
+    const row = document.createElement("div");
+    row.className = "score-reasons";
+
+    top.forEach(item => {
+        const tag = document.createElement("span");
+        tag.className = "reason-tag " + (item.value >= 0 ? "pos" : "neg");
+        const sign = item.value > 0 ? "+" : "";
+        tag.innerHTML = `${item.label}<span class="reason-tag-value">${sign}${item.value}</span>`;
+        row.appendChild(tag);
+    });
+
+    return row;
 }
 
 async function doSearch(page = 1){
@@ -2404,15 +2591,16 @@ async function doSearch(page = 1){
 
         SEARCH_DATA = data;
 
-        const stats = buildHybridStats(
+        const stats = buildBrandModelStats(
             data.results,
             SELECTED_BRAND ? SELECTED_BRAND.value : "",
-            SELECTED_MODEL ? SELECTED_MODEL.value : ""
+            SELECTED_MODEL ? SELECTED_MODEL.value : "",
+            null
         );
 
         SEARCH_RESULTS_WITH_SCORE = data.results.map(r => {
             if(!SELECTED_MODEL){
-                return { ...r, score: null, ageStatus: null, ageDays: daysSinceRenew(r.renewdate), outlier: false, _stats: stats };
+                return { ...r, score: null, ageStatus: null, ageDays: daysSinceRenew(r.renewdate), outlier: false, breakdown: [], _stats: stats };
             }
             const scoreInfo = calculateSearchScore(r, stats);
             return { ...r, ...scoreInfo, _stats: stats };
@@ -2550,6 +2738,12 @@ function buildSearchCard(r){
     priceRow.className = "price-row";
     priceRow.textContent = formatPrice(r.cena);
     body.appendChild(priceRow);
+
+    // Top 3 razloga za score
+    if(hasScore && r.breakdown){
+        const reasonsRow = buildReasonsRow(r.breakdown);
+        if(reasonsRow) body.appendChild(reasonsRow);
+    }
 
     const meta = document.createElement("div");
     meta.className = "meta";
