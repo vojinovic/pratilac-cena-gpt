@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 """
-Pratilac cena - multi-user verzija.
+Pratilac cena - multi-user verzija sa naprednim scoring sistemom.
 
 Workflow:
-1. GET /admin/all-oglasi?key=SCRAPER_SECRET → dobija oglase svih korisnika
-2. Za svakog korisnika, scrape-uje sve oglase
-3. POST /admin/save-cene?key=SCRAPER_SECRET → upisuje cene nazad u worker (KV)
+1. GET /admin/all-oglasi → oglase svih korisnika
+2. Za svakog korisnika, scrape sve oglase
+3. POST /admin/save-cene → upisuje cene + score breakdown nazad u worker (KV)
 """
 
 import json
@@ -22,6 +22,10 @@ SCRAPER_SECRET = os.environ.get("SCRAPER_SECRET", "")
 PAUZA = 4
 
 
+# ========================================================================
+# PARSIRANJE OGLASA
+# ========================================================================
+
 def parsiraj_broj(text):
     if not text:
         return None
@@ -35,7 +39,6 @@ def parsiraj_broj(text):
 
 
 def izvuci_data_layer(html):
-    """Izvlači dataLayer JSON sa strukturiranim podacima."""
     pattern = r'dataLayer\.push\((\{[^;]*?"object_uid"[^;]*?\})\);'
     match = re.search(pattern, html)
     if not match:
@@ -121,82 +124,316 @@ def extract_model(url):
     return "unknown"
 
 
-def market_average(model, baza):
-    cene = [d["cena"] for _, d in baza.items() if d.get("model") == model and d.get("cena")]
-    if not cene:
+def extract_brand(model):
+    if not model or model == "unknown":
         return None
-    return sum(cene) / len(cene)
+    return model.split("-")[0]
 
 
-def calculate_score(label, html, cena, market_avg, ukupno_snizenje, promena_tip, data_layer=None):
-    text = ((label or "") + " " + (html or "")).lower()
-    score = 50
+# ========================================================================
+# MARKET STATISTIKE (sa brand+karoserija fallback)
+# ========================================================================
 
-    if market_avg and cena:
-        diff_percent = ((market_avg - cena) / market_avg) * 100
-        if diff_percent >= 15:
-            score += 20
-        elif diff_percent >= 10:
-            score += 15
-        elif diff_percent >= 5:
-            score += 8
-        elif diff_percent <= -15:
-            score -= 20
-        elif diff_percent <= -10:
-            score -= 10
+def _avg(arr):
+    return sum(arr) / len(arr) if arr else None
 
-    plus_keywords = {
-        "awd": 5, "4x4": 5, "r-design": 5, "inscription": 5,
-        "momentum": 3, "sport": 4, "pano": 5, "panorama": 5,
-        "kamera": 3, "hud": 4, "webasto": 4, "led": 3,
-        "matrix": 4, "harman": 3, "bowers": 4,
+
+def market_stats(model, karoserija, baza, min_sample=3):
+    """Prvo isti model, fallback na brand+karoserija."""
+    same_model = [d for d in baza.values() if d.get("model") == model and d.get("cena")]
+
+    if len(same_model) >= min_sample:
+        scope = "model"
+        items = same_model
+    else:
+        brand = extract_brand(model)
+        if brand and karoserija:
+            wider = [
+                d for d in baza.values()
+                if extract_brand(d.get("model") or "") == brand
+                and d.get("karoserija") == karoserija
+                and d.get("cena")
+            ]
+            if len(wider) >= min_sample:
+                scope = "brand+chassis"
+                items = wider
+            else:
+                scope = "model"
+                items = same_model
+        else:
+            scope = "model"
+            items = same_model
+
+    cene = [d["cena"] for d in items if d.get("cena")]
+    kms = [d["kilometraza"] for d in items if d.get("kilometraza")]
+    godine = [d["godiste"] for d in items if d.get("godiste")]
+
+    return {
+        "scope": scope,
+        "sample_size": len(items),
+        "avg_cena": _avg(cene),
+        "avg_km": _avg(kms),
+        "avg_godiste": _avg(godine),
     }
-    for keyword, points in plus_keywords.items():
-        if keyword in text:
-            score += points
 
-    if data_layer:
-        if data_layer.get("object_prvi_vlasnik") == "yes":
-            score += 10
-        if data_layer.get("object_servisna_knjizica") == "yes":
-            score += 8
-        if data_layer.get("object_garancija") == "yes":
-            score += 8
-        if data_layer.get("object_kupljen_nov_u_srbiji") == "yes":
-            score += 6
 
-        damage = (data_layer.get("object_damage") or "").lower()
-        if "udaren" in damage:
-            score -= 25
-        elif "oštećen" in damage and "nije" not in damage:
-            score -= 20
+def days_since(date_str):
+    if not date_str:
+        return None
+    try:
+        date = datetime.strptime(date_str, "%Y-%m-%d %H:%M:%S")
+        delta = datetime.now() - date
+        return delta.days
+    except (ValueError, TypeError):
+        return None
 
-        if data_layer.get("object_taxi") == "yes":
-            score -= 15
 
-    if "hitno" in text:
-        score -= 5
-    if "zamena" in text:
-        score -= 5
-    if "fiksno" in text:
-        score -= 3
-    if "potrebna ulaganja" in text:
-        score -= 15
+# ========================================================================
+# BRAND-SPECIFIC PAKETI
+# ========================================================================
 
-    if ukupno_snizenje >= 2000:
-        score += 12
-    elif ukupno_snizenje >= 1000:
-        score += 8
-    elif ukupno_snizenje > 0:
-        score += 4
+PACKAGE_KEYWORDS = {
+    "volvo": {
+        "top": ["r-design", "r design", "polestar", "inscription"],
+        "mid": ["momentum", "summum", "ocean race"],
+    },
+    "bmw": {
+        "top": ["m sport", "m-sport", "m pack", "m paket", "m performance"],
+        "mid": ["luxury line", "sport line", "modern line"],
+    },
+    "audi": {
+        "top": ["s line", "s-line", "rs ", "quattro"],
+        "mid": ["design", "advanced"],
+    },
+    "mercedes-benz": {
+        "top": ["amg", "amg line"],
+        "mid": ["avantgarde", "exclusive"],
+    },
+    "skoda": {
+        "top": ["rs ", "sportline", "monte carlo"],
+        "mid": ["style", "ambition"],
+    },
+    "volkswagen": {
+        "top": ["r-line", "r line", "gti", "gtd"],
+        "mid": ["highline", "comfortline"],
+    },
+    "porsche": {
+        "top": [" s ", "gts", "turbo", "4s"],
+        "mid": [],
+    },
+}
+
+GENERIC_FEATURES = {
+    "panorama": 3,
+    "pano krov": 3,
+    "matrix": 3,
+    "harman": 3,
+    "bowers": 3,
+    "kamera 360": 2,
+    "360 kamera": 2,
+    "head-up": 2,
+    "awd": 2,
+    "4x4": 2,
+}
+
+NEGATIVE_TITLE_KEYWORDS = {
+    "havarisan": -20,
+    "udaren": -15,
+    "oštećen": -10,
+    "ostecen": -10,
+    "hitno": -3,
+    "zamena": -3,
+}
+
+
+# ========================================================================
+# SCORING V2 - WEIGHTED SA BREAKDOWN LISTOM
+# ========================================================================
+
+def calculate_score_v2(
+    cena, naslov, kilometraza, godiste,
+    market_stats_data, structured_data,
+    last_renewed_date, promena_tip, ukupno_snizenje, model,
+):
+    """
+    Vraca: {
+        "score": 0-100,
+        "outlier": bool,
+        "scope": "model"|"brand+chassis",
+        "sample_size": int,
+        "breakdown": [{"label": str, "value": int, "category": str}, ...]
+    }
+    """
+    breakdown = []
+    market_cena = market_stats_data.get("avg_cena") if market_stats_data else None
+    market_km = market_stats_data.get("avg_km") if market_stats_data else None
+    market_god = market_stats_data.get("avg_godiste") if market_stats_data else None
+
+    naslov_lower = (naslov or "").lower()
+    brand = extract_brand(model) if model else None
+
+    # KATEGORIJA 1: CENA (max ~35)
+    if market_cena and cena:
+        diff = ((market_cena - cena) / market_cena) * 100
+        if diff >= 20:
+            breakdown.append({"label": f"Cena {diff:.0f}% niža od proseka", "value": 30, "category": "cena"})
+        elif diff >= 15:
+            breakdown.append({"label": f"Cena {diff:.0f}% niža od proseka", "value": 25, "category": "cena"})
+        elif diff >= 10:
+            breakdown.append({"label": f"Cena {diff:.0f}% niža od proseka", "value": 20, "category": "cena"})
+        elif diff >= 5:
+            breakdown.append({"label": f"Cena {diff:.0f}% niža od proseka", "value": 12, "category": "cena"})
+        elif diff <= -10:
+            breakdown.append({"label": f"Cena {abs(diff):.0f}% viša od proseka", "value": -15, "category": "cena"})
+        elif diff <= -5:
+            breakdown.append({"label": f"Cena {abs(diff):.0f}% viša od proseka", "value": -5, "category": "cena"})
+
+    # Pad cene bonus
+    if ukupno_snizenje and ukupno_snizenje >= 2000:
+        breakdown.append({"label": f"Pad cene ukupno {ukupno_snizenje}€", "value": 5, "category": "cena"})
+    elif ukupno_snizenje and ukupno_snizenje >= 1000:
+        breakdown.append({"label": f"Pad cene ukupno {ukupno_snizenje}€", "value": 3, "category": "cena"})
 
     if promena_tip == "snizenje":
-        score += 5
-    if promena_tip == "poskupljenje":
-        score -= 8
+        breakdown.append({"label": "Skorašnje sniženje", "value": 3, "category": "cena"})
+    elif promena_tip == "poskupljenje":
+        breakdown.append({"label": "Skorašnje poskupljenje", "value": -5, "category": "cena"})
 
-    return max(0, min(100, round(score)))
+    # KATEGORIJA 2: STANJE (max ~25)
+    has_damage = False
+    if structured_data:
+        if structured_data.get("object_prvi_vlasnik") == "yes":
+            breakdown.append({"label": "Prvi vlasnik", "value": 6, "category": "stanje"})
+        if structured_data.get("object_servisna_knjizica") == "yes":
+            breakdown.append({"label": "Servisna knjižica", "value": 5, "category": "stanje"})
+        if structured_data.get("object_garancija") == "yes":
+            breakdown.append({"label": "Garancija", "value": 4, "category": "stanje"})
+        if structured_data.get("object_kupljen_nov_u_srbiji") == "yes":
+            breakdown.append({"label": "Kupljen nov u Srbiji", "value": 5, "category": "stanje"})
 
+        damage = (structured_data.get("object_damage") or "").lower()
+        if "udaren" in damage:
+            breakdown.append({"label": "Auto je udaran", "value": -25, "category": "stanje"})
+            has_damage = True
+        elif "oštećen" in damage and "nije" not in damage:
+            breakdown.append({"label": "Auto je oštećen", "value": -20, "category": "stanje"})
+            has_damage = True
+        elif "nije" in damage:
+            breakdown.append({"label": "Bez oštećenja", "value": 5, "category": "stanje"})
+
+        if structured_data.get("object_taxi") == "yes":
+            breakdown.append({"label": "Taksi vozilo", "value": -15, "category": "stanje"})
+        if structured_data.get("object_test_vozilo") == "yes":
+            breakdown.append({"label": "Test vozilo", "value": -5, "category": "stanje"})
+
+    # Negativni keywords u naslovu (ako nije već damage)
+    if not has_damage:
+        for kw, val in NEGATIVE_TITLE_KEYWORDS.items():
+            if val < 0 and kw in naslov_lower:
+                if (kw == "ostecen" or kw == "oštećen") and "nije" in naslov_lower:
+                    continue
+                breakdown.append({"label": f"Naslov: '{kw}'", "value": val, "category": "stanje"})
+                has_damage = True
+                break
+
+    # KATEGORIJA 3: KILOMETRAZA po godini (max ~20)
+    if kilometraza and godiste:
+        current_year = datetime.now().year
+        years_old = max(current_year - godiste, 1)
+        km_per_year = kilometraza / years_old
+
+        if km_per_year <= 8000:
+            breakdown.append({"label": f"Vrlo malo vožen ({km_per_year:.0f} km/god)", "value": 20, "category": "kilometraza"})
+        elif km_per_year <= 12000:
+            breakdown.append({"label": f"Manje vožen ({km_per_year:.0f} km/god)", "value": 12, "category": "kilometraza"})
+        elif km_per_year >= 25000:
+            breakdown.append({"label": f"Mnogo vožen ({km_per_year:.0f} km/god)", "value": -12, "category": "kilometraza"})
+        elif km_per_year >= 18000:
+            breakdown.append({"label": f"Iznad proseka ({km_per_year:.0f} km/god)", "value": -5, "category": "kilometraza"})
+
+    # KATEGORIJA 4: GODISTE + PAKET (max ~15)
+    if market_god and godiste:
+        diff = godiste - market_god
+        if diff >= 2:
+            breakdown.append({"label": f"Mlađi od proseka ({godiste}.)", "value": 8, "category": "godiste"})
+        elif diff >= 1:
+            breakdown.append({"label": f"Mlađi od proseka ({godiste}.)", "value": 4, "category": "godiste"})
+        elif diff <= -2:
+            breakdown.append({"label": f"Stariji od proseka ({godiste}.)", "value": -8, "category": "godiste"})
+        elif diff <= -1:
+            breakdown.append({"label": f"Stariji od proseka ({godiste}.)", "value": -3, "category": "godiste"})
+
+    if brand and brand in PACKAGE_KEYWORDS:
+        pkg = PACKAGE_KEYWORDS[brand]
+        package_added = False
+        for kw in pkg.get("top", []):
+            if kw in naslov_lower:
+                breakdown.append({"label": f"Top paket ({kw.strip().upper()})", "value": 5, "category": "paket"})
+                package_added = True
+                break
+        if not package_added:
+            for kw in pkg.get("mid", []):
+                if kw in naslov_lower:
+                    breakdown.append({"label": f"Srednji paket ({kw})", "value": 3, "category": "paket"})
+                    break
+
+    for feature, val in GENERIC_FEATURES.items():
+        if feature in naslov_lower:
+            breakdown.append({"label": f"Oprema: {feature}", "value": val, "category": "paket"})
+
+    # KATEGORIJA 5: SVEZINA OGLASA (max ~10)
+    days_renewed = days_since(last_renewed_date)
+    if days_renewed is not None:
+        if days_renewed <= 3:
+            breakdown.append({"label": f"Svež oglas ({days_renewed}d)", "value": 10, "category": "svezina"})
+        elif days_renewed <= 7:
+            breakdown.append({"label": f"Svež oglas ({days_renewed}d)", "value": 7, "category": "svezina"})
+        elif days_renewed <= 14:
+            breakdown.append({"label": f"Skoro objavljen ({days_renewed}d)", "value": 4, "category": "svezina"})
+        elif days_renewed > 60:
+            breakdown.append({"label": f"Stoji predugo ({days_renewed}d)", "value": -8, "category": "svezina"})
+        elif days_renewed > 30:
+            breakdown.append({"label": f"Stoji {days_renewed} dana", "value": -3, "category": "svezina"})
+
+    # OUTLIER detekcija
+    outlier = False
+    if market_cena and cena:
+        diff = ((market_cena - cena) / market_cena) * 100
+        if diff >= 25:
+            neg_signals = 0
+            if has_damage:
+                neg_signals += 1
+            if market_km and kilometraza and (kilometraza / market_km) > 1.4:
+                neg_signals += 1
+            if structured_data and structured_data.get("object_taxi") == "yes":
+                neg_signals += 1
+            for kw in ["hitno", "zamena"]:
+                if kw in naslov_lower:
+                    neg_signals += 1
+                    break
+
+            if neg_signals >= 2:
+                outlier = True
+                breakdown.append({"label": "⚠️ Sumnjivo niska cena", "value": 0, "category": "outlier"})
+
+    # FINALNA SUMA
+    raw_score = 50 + sum(item["value"] for item in breakdown)
+    if outlier:
+        raw_score = min(raw_score, 40)
+    raw_score = max(0, min(100, raw_score))
+
+    return {
+        "score": int(round(raw_score)),
+        "outlier": outlier,
+        "scope": market_stats_data.get("scope") if market_stats_data else None,
+        "sample_size": market_stats_data.get("sample_size") if market_stats_data else 0,
+        "breakdown": breakdown,
+    }
+
+
+# ========================================================================
+# SCRAPE
+# ========================================================================
 
 def proveri_oglas(url):
     try:
@@ -222,10 +459,12 @@ def proveri_oglas(url):
     return cena, slika, naziv, response.text, data_layer, True
 
 
+# ========================================================================
+# WORKER API
+# ========================================================================
+
 def fetch_all_oglasi():
-    """Vraca {email: [oglasi]} mapu iz worker-a."""
     url = f"{API_URL}/admin/all-oglasi?key={SCRAPER_SECRET}"
-    print(f"GET {url[:60]}...")
     res = requests.get(url, timeout=30)
     res.raise_for_status()
     data = res.json()
@@ -233,37 +472,28 @@ def fetch_all_oglasi():
 
 
 def save_cene_for_user(email, cene):
-    """Salje cene za jednog korisnika u worker."""
     url = f"{API_URL}/admin/save-cene?key={SCRAPER_SECRET}"
-    res = requests.post(
-        url,
-        json={"user_email": email, "cene": cene},
-        timeout=30
-    )
+    res = requests.post(url, json={"user_email": email, "cene": cene}, timeout=30)
     res.raise_for_status()
     return res.json()
 
 
-def fetch_user_cene(email):
-    """Trenutne cene za usera (da bismo imali prethodno stanje za diff)."""
-    # Worker nema endpoint za ovo (samo /data zahteva auth)
-    # Workaround: koristimo cene koje smo upravo skrejpovali i merge na worker strani
-    return {}
-
+# ========================================================================
+# MAIN
+# ========================================================================
 
 def scrape_for_user(email, oglasi):
-    """Scrape sve oglase jednog korisnika i vrati cene mapu."""
     print(f"\n{'=' * 70}")
     print(f"USER: {email} | {len(oglasi)} oglasa")
     print(f"{'=' * 70}")
 
     now = datetime.now().strftime("%d.%m.%Y %H:%M")
-    now_iso = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-    # Trenutne cene iz worker-a (ne mozemo direktno - workflow nema user JWT)
-    # Resenje: worker /admin/save-cene merge-uje sa postojecima, pa nije problem
+    # Prvo prolaz: skupi samo "sirove" podatke da bismo izračunali stats
+    # Drugi prolaz: izračunaj score sa tačnim market stats
     baza_nova = {}
 
+    # PROLAZ 1: scrape svih oglasa, sirovi podaci u baza_nova
     for oglas in oglasi:
         url = oglas["url"]
         print(f"\nPROVERA: {url}")
@@ -284,7 +514,7 @@ def scrape_for_user(email, oglasi):
             continue
 
         if cena is None:
-            print("UPOZORENJE: cena nije pronađena")
+            print("  UPOZORENJE: cena nije pronađena")
             baza_nova[url] = {
                 "label": label,
                 "model": model,
@@ -296,7 +526,7 @@ def scrape_for_user(email, oglasi):
             time.sleep(PAUZA)
             continue
 
-        # Strukturisani podaci iz dataLayer
+        # Strukturisani podaci
         godiste = None
         kilometraza = None
         gorivo = None
@@ -318,19 +548,6 @@ def scrape_for_user(email, oglasi):
             karoserija = data_layer.get("object_chassis")
             last_renewed_date = data_layer.get("object_last_renewed_date")
 
-        market_avg = market_average(model, baza_nova)
-        score = calculate_score(
-            label=label,
-            html=html,
-            cena=cena,
-            market_avg=market_avg,
-            ukupno_snizenje=0,
-            promena_tip="bez_promene",
-            data_layer=data_layer,
-        )
-
-        print(f"MODEL: {model} | CENA: {cena} | GODIŠTE: {godiste} | KM: {kilometraza} | SCORE: {score}")
-
         baza_nova[url] = {
             "label": label,
             "model": model,
@@ -350,7 +567,6 @@ def scrape_for_user(email, oglasi):
             "aktivan": True,
             "problem_cena": False,
             "poslednja_provera": now,
-            "score": score,
             "last_renewed_date": last_renewed_date,
             "prvi_vlasnik": data_layer.get("object_prvi_vlasnik") == "yes" if data_layer else False,
             "servisna_knjizica": data_layer.get("object_servisna_knjizica") == "yes" if data_layer else False,
@@ -358,9 +574,45 @@ def scrape_for_user(email, oglasi):
             "kupljen_nov_u_srbiji": data_layer.get("object_kupljen_nov_u_srbiji") == "yes" if data_layer else False,
             "damage": data_layer.get("object_damage") if data_layer else None,
             "owner_name": data_layer.get("companyName") if data_layer else None,
+            "_data_layer": data_layer,  # privremeno, brisaće se posle
+            "_naslov": naziv,
         }
 
         time.sleep(PAUZA)
+
+    # PROLAZ 2: izračunaj score sa kompletnom bazom za stats
+    print(f"\n--- Izračunavam score sa kompletnom bazom ({len(baza_nova)} oglasa) ---")
+    for url, c in list(baza_nova.items()):
+        if c.get("problem_cena") or not c.get("cena"):
+            continue
+
+        stats = market_stats(c["model"], c.get("karoserija"), baza_nova, min_sample=3)
+
+        score_result = calculate_score_v2(
+            cena=c["cena"],
+            naslov=c.get("_naslov") or c.get("label"),
+            kilometraza=c.get("kilometraza"),
+            godiste=c.get("godiste"),
+            market_stats_data=stats,
+            structured_data=c.get("_data_layer"),
+            last_renewed_date=c.get("last_renewed_date"),
+            promena_tip="bez_promene",
+            ukupno_snizenje=0,
+            model=c["model"],
+        )
+
+        c["score"] = score_result["score"]
+        c["outlier"] = score_result["outlier"]
+        c["score_breakdown"] = score_result["breakdown"]
+        c["score_scope"] = score_result["scope"]
+        c["score_sample_size"] = score_result["sample_size"]
+
+        # Cleanup privremenih polja
+        c.pop("_data_layer", None)
+        c.pop("_naslov", None)
+
+        sign = "🔥" if c["score"] >= 80 else ("🟢" if c["score"] >= 60 else ("🟡" if c["score"] >= 40 else "🔴"))
+        print(f"  {sign} {c['score']:>3} | {c['label'][:50]:<50} | scope: {score_result['scope']} ({score_result['sample_size']} sample)")
 
     return baza_nova
 
