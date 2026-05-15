@@ -258,6 +258,13 @@ def proveri_oglas(url):
         print("Greška:", e)
         return None, None, None, "", False
 
+    # Detekcija obrisanog oglasa: polovniautomobili redirektuje na search stranicu
+    # sa ?redirect_message=1 parametrom
+    final_url = response.url
+    if "redirect_message" in final_url or "/auto-oglasi/pretraga" in final_url:
+        print(f"  OGLAS OBRISAN (redirect na: {final_url})")
+        return None, None, None, "", False
+
     soup = BeautifulSoup(response.text, "html.parser")
 
     cena = izvuci_cenu(soup)
