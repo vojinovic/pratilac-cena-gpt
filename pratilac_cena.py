@@ -1,4 +1,12 @@
 #!/usr/bin/env python3
+"""
+Pratilac cena - multi-user verzija.
+
+Workflow:
+1. GET /admin/all-oglasi?key=SCRAPER_SECRET → dobija oglase svih korisnika
+2. Za svakog korisnika, scrape-uje sve oglase
+3. POST /admin/save-cene?key=SCRAPER_SECRET → upisuje cene nazad u worker (KV)
+"""
 
 import json
 import os
@@ -9,73 +17,41 @@ from datetime import datetime
 from curl_cffi import requests
 from bs4 import BeautifulSoup
 
-OGLASI_FAJL = "oglasi.json"
-BAZA_FAJL = "cene_oglasa.json"
+API_URL = os.environ.get("API_URL", "https://pratilac-cena-api.vojinovic82.workers.dev")
+SCRAPER_SECRET = os.environ.get("SCRAPER_SECRET", "")
 PAUZA = 4
-
-
-def ucitaj_oglase():
-    with open(OGLASI_FAJL, "r", encoding="utf-8") as f:
-        return json.load(f)
-
-
-def ucitaj_bazu():
-    if os.path.exists(BAZA_FAJL):
-        with open(BAZA_FAJL, "r", encoding="utf-8") as f:
-            return json.load(f)
-    return {}
-
-
-def sacuvaj_bazu(baza):
-    with open(BAZA_FAJL, "w", encoding="utf-8") as f:
-        json.dump(baza, f, ensure_ascii=False, indent=2)
 
 
 def parsiraj_broj(text):
     if not text:
         return None
-
     cifre = re.sub(r"[^\d]", "", str(text))
-
     if not cifre:
         return None
-
     cena = int(cifre)
-
     if 1000 <= cena <= 500000:
         return cena
-
     return None
 
 
 def izvuci_data_layer(html):
-    """
-    Izvlači dataLayer JSON sa strukturiranim podacima oglasa.
-    Polovniautomobili ubacuje dataLayer.push({...}) sa svim podacima:
-    object_price, object_production_year, object_mileage, object_damage,
-    object_prvi_vlasnik, object_servisna_knjizica, object_garancija itd.
-    """
+    """Izvlači dataLayer JSON sa strukturiranim podacima."""
     pattern = r'dataLayer\.push\((\{[^;]*?"object_uid"[^;]*?\})\);'
     match = re.search(pattern, html)
-
     if not match:
         return {}
-
     try:
         return json.loads(match.group(1))
-    except (json.JSONDecodeError, ValueError) as e:
-        print(f"  Ne mogu da parsiram dataLayer JSON: {e}")
+    except (json.JSONDecodeError, ValueError):
         return {}
 
 
 def izvuci_cenu(soup, data_layer=None):
-    # Primarni izvor: dataLayer JSON (najpouzdaniji)
     if data_layer and data_layer.get("object_price"):
         cena = parsiraj_broj(data_layer.get("object_price"))
         if cena:
             return cena
 
-    # Fallback 1: classic span
     el = soup.find("span", class_="priceClassified")
     if el:
         cena = parsiraj_broj(el.get_text(" ", strip=True))
@@ -88,14 +64,12 @@ def izvuci_cenu(soup, data_layer=None):
         if cena:
             return cena
 
-    # Fallback 2: meta tag
     meta = soup.find("meta", attrs={"property": "product:price:amount"})
     if meta and meta.get("content"):
         cena = parsiraj_broj(meta.get("content"))
         if cena:
             return cena
 
-    # Fallback 3: data-title atribut (format "Naziv - 34.990 €")
     el = soup.find(attrs={"data-title": True})
     if el:
         title = el.get("data-title", "")
@@ -110,10 +84,8 @@ def izvuci_cenu(soup, data_layer=None):
 
 def izvuci_sliku(soup):
     meta = soup.find("meta", property="og:image")
-
     if meta and meta.get("content"):
         return meta.get("content")
-
     return None
 
 
@@ -137,56 +109,31 @@ def izvuci_naziv(soup, data_layer=None):
 def extract_model(url):
     if not url:
         return "unknown"
-
     match = re.search(r"/auto-oglasi/\d+/([^/?#]+)", url)
-
     if not match:
         return "unknown"
-
     slug = match.group(1).lower()
-
     delovi = slug.split("-")
-
     if len(delovi) >= 2:
         return delovi[0] + "-" + delovi[1]
-
     if len(delovi) == 1:
         return delovi[0]
-
     return "unknown"
 
 
 def market_average(model, baza):
-    cene = []
-
-    for _, data in baza.items():
-        if data.get("model") == model and data.get("cena"):
-            cene.append(data["cena"])
-
+    cene = [d["cena"] for _, d in baza.items() if d.get("model") == model and d.get("cena")]
     if not cene:
         return None
-
     return sum(cene) / len(cene)
 
 
-def calculate_score(
-    label,
-    html,
-    cena,
-    market_avg,
-    prva_cena,
-    najmanja_cena,
-    ukupno_snizenje,
-    promena_tip,
-    data_layer=None,
-):
+def calculate_score(label, html, cena, market_avg, ukupno_snizenje, promena_tip, data_layer=None):
     text = ((label or "") + " " + (html or "")).lower()
-
     score = 50
 
     if market_avg and cena:
         diff_percent = ((market_avg - cena) / market_avg) * 100
-
         if diff_percent >= 15:
             score += 20
         elif diff_percent >= 10:
@@ -199,28 +146,15 @@ def calculate_score(
             score -= 10
 
     plus_keywords = {
-        "awd": 5,
-        "4x4": 5,
-        "r-design": 5,
-        "inscription": 5,
-        "momentum": 3,
-        "sport": 4,
-        "pano": 5,
-        "panorama": 5,
-        "kamera": 3,
-        "hud": 4,
-        "webasto": 4,
-        "led": 3,
-        "matrix": 4,
-        "harman": 3,
-        "bowers": 4,
+        "awd": 5, "4x4": 5, "r-design": 5, "inscription": 5,
+        "momentum": 3, "sport": 4, "pano": 5, "panorama": 5,
+        "kamera": 3, "hud": 4, "webasto": 4, "led": 3,
+        "matrix": 4, "harman": 3, "bowers": 4,
     }
-
     for keyword, points in plus_keywords.items():
         if keyword in text:
             score += points
 
-    # Strukturirane signale - iz dataLayer (pouzdanije od HTML pretrage)
     if data_layer:
         if data_layer.get("object_prvi_vlasnik") == "yes":
             score += 10
@@ -239,33 +173,7 @@ def calculate_score(
 
         if data_layer.get("object_taxi") == "yes":
             score -= 15
-    else:
-        # Fallback na keywords pretragu HTML-a
-        stanje_plus = {
-            "prvi vlasnik": 10,
-            "1 vlasnik": 10,
-            "servisna": 6,
-            "servisna knjiga": 8,
-            "bez ulaganja": 8,
-            "kupljen u srbiji": 6,
-            "garaziran": 5,
-        }
 
-        for keyword, points in stanje_plus.items():
-            if keyword in text:
-                score += points
-
-        stanje_minus = {
-            "udaren": -25,
-            "ostecen": -20,
-            "oštećen": -20,
-        }
-
-        for keyword, points in stanje_minus.items():
-            if keyword in text:
-                score += points
-
-    # Negativni signali iz teksta (uvek se gledaju)
     if "hitno" in text:
         score -= 5
     if "zamena" in text:
@@ -284,33 +192,21 @@ def calculate_score(
 
     if promena_tip == "snizenje":
         score += 5
-
     if promena_tip == "poskupljenje":
         score -= 8
 
-    if score > 100:
-        score = 100
-
-    if score < 0:
-        score = 0
-
-    return round(score)
+    return max(0, min(100, round(score)))
 
 
 def proveri_oglas(url):
     try:
         response = requests.get(url, impersonate="chrome", timeout=20)
         response.raise_for_status()
-
-        # FIX: prisilno postavi UTF-8 jer requests pogađa Latin-1 i to lomi naše š/č/ć/ž
         response.encoding = "utf-8"
-
     except Exception as e:
         print("Greška:", e)
         return None, None, None, "", {}, False
 
-    # Detekcija obrisanog oglasa: polovniautomobili redirektuje na search stranicu
-    # sa ?redirect_message=1 parametrom
     final_url = response.url
     if "redirect_message" in final_url or "/auto-oglasi/pretraga" in final_url:
         print(f"  OGLAS OBRISAN (redirect na: {final_url})")
@@ -326,59 +222,81 @@ def proveri_oglas(url):
     return cena, slika, naziv, response.text, data_layer, True
 
 
-def main():
-    oglasi = ucitaj_oglase()
-    baza = ucitaj_bazu()
+def fetch_all_oglasi():
+    """Vraca {email: [oglasi]} mapu iz worker-a."""
+    url = f"{API_URL}/admin/all-oglasi?key={SCRAPER_SECRET}"
+    print(f"GET {url[:60]}...")
+    res = requests.get(url, timeout=30)
+    res.raise_for_status()
+    data = res.json()
+    return data.get("users", {})
+
+
+def save_cene_for_user(email, cene):
+    """Salje cene za jednog korisnika u worker."""
+    url = f"{API_URL}/admin/save-cene?key={SCRAPER_SECRET}"
+    res = requests.post(
+        url,
+        json={"user_email": email, "cene": cene},
+        timeout=30
+    )
+    res.raise_for_status()
+    return res.json()
+
+
+def fetch_user_cene(email):
+    """Trenutne cene za usera (da bismo imali prethodno stanje za diff)."""
+    # Worker nema endpoint za ovo (samo /data zahteva auth)
+    # Workaround: koristimo cene koje smo upravo skrejpovali i merge na worker strani
+    return {}
+
+
+def scrape_for_user(email, oglasi):
+    """Scrape sve oglase jednog korisnika i vrati cene mapu."""
+    print(f"\n{'=' * 70}")
+    print(f"USER: {email} | {len(oglasi)} oglasa")
+    print(f"{'=' * 70}")
 
     now = datetime.now().strftime("%d.%m.%Y %H:%M")
+    now_iso = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+    # Trenutne cene iz worker-a (ne mozemo direktno - workflow nema user JWT)
+    # Resenje: worker /admin/save-cene merge-uje sa postojecima, pa nije problem
+    baza_nova = {}
 
     for oglas in oglasi:
         url = oglas["url"]
-
-        print("\nPROVERA:", url)
+        print(f"\nPROVERA: {url}")
 
         cena, slika, naziv, html, data_layer, aktivan = proveri_oglas(url)
 
-        stara = baza.get(url, {})
-
-        label = (
-            oglas.get("label")
-            or naziv
-            or stara.get("label")
-            or "Oglas"
-        )
-
+        label = oglas.get("label") or naziv or "Oglas"
         model = extract_model(url)
 
         if not aktivan:
-            baza[url] = {
-                **stara,
+            baza_nova[url] = {
                 "label": label,
                 "model": model,
                 "aktivan": False,
                 "problem_cena": True,
                 "poslednja_provera": now,
             }
-
             continue
 
         if cena is None:
-            print("UPOZORENJE: Stranica učitana ali cena nije pronađena")
-
-            baza[url] = {
-                **stara,
+            print("UPOZORENJE: cena nije pronađena")
+            baza_nova[url] = {
                 "label": label,
                 "model": model,
-                "slika": slika or stara.get("slika"),
+                "slika": slika,
                 "problem_cena": True,
                 "aktivan": True,
                 "poslednja_provera": now,
             }
-
             time.sleep(PAUZA)
             continue
 
-        # Izvlačenje strukturiranih podataka iz dataLayer
+        # Strukturisani podaci iz dataLayer
         godiste = None
         kilometraza = None
         gorivo = None
@@ -400,70 +318,20 @@ def main():
             karoserija = data_layer.get("object_chassis")
             last_renewed_date = data_layer.get("object_last_renewed_date")
 
-        # Fallback na staro stanje ako dataLayer nema podatke
-        godiste = godiste or stara.get("godiste")
-        kilometraza = kilometraza or stara.get("kilometraza")
-        gorivo = gorivo or stara.get("gorivo")
-        karoserija = karoserija or stara.get("karoserija")
-
-        prethodna_cena = stara.get("cena")
-
-        prva_cena = stara.get("prva_cena") or cena
-        najmanja_cena = stara.get("najmanja_cena") or cena
-
-        promena = 0
-        promena_tip = "bez_promene"
-
-        ukupno_snizenje = stara.get("ukupno_snizenje", 0)
-        broj_promena = stara.get("broj_promena", 0)
-
-        if prethodna_cena:
-            if cena != prethodna_cena:
-                promena = cena - prethodna_cena
-                broj_promena += 1
-
-                if promena < 0:
-                    promena_tip = "snizenje"
-                    ukupno_snizenje += abs(promena)
-                else:
-                    promena_tip = "poskupljenje"
-
-        najmanja_cena = min(cena, najmanja_cena)
-
-        market_avg = market_average(model, baza)
-
+        market_avg = market_average(model, baza_nova)
         score = calculate_score(
             label=label,
             html=html,
             cena=cena,
             market_avg=market_avg,
-            prva_cena=prva_cena,
-            najmanja_cena=najmanja_cena,
-            ukupno_snizenje=ukupno_snizenje,
-            promena_tip=promena_tip,
+            ukupno_snizenje=0,
+            promena_tip="bez_promene",
             data_layer=data_layer,
         )
 
-        print("MODEL:", model)
-        print("MARKET AVG:", market_avg)
-        print("CENA:", cena)
-        print("GODIŠTE:", godiste, "KM:", kilometraza)
-        if data_layer:
-            indicators = []
-            if data_layer.get("object_prvi_vlasnik") == "yes":
-                indicators.append("prvi vlasnik")
-            if data_layer.get("object_servisna_knjizica") == "yes":
-                indicators.append("servisna")
-            if data_layer.get("object_garancija") == "yes":
-                indicators.append("garancija")
-            if data_layer.get("object_kupljen_nov_u_srbiji") == "yes":
-                indicators.append("kupljen u SRB")
-            if indicators:
-                print("INDIKATORI:", ", ".join(indicators))
-        print("SCORE:", score)
-        print("LABEL:", label)
+        print(f"MODEL: {model} | CENA: {cena} | GODIŠTE: {godiste} | KM: {kilometraza} | SCORE: {score}")
 
-        baza[url] = {
+        baza_nova[url] = {
             "label": label,
             "model": model,
             "cena": cena,
@@ -471,15 +339,14 @@ def main():
             "kilometraza": kilometraza,
             "gorivo": gorivo,
             "karoserija": karoserija,
-            "prva_cena": prva_cena,
-            "najmanja_cena": najmanja_cena,
-            "broj_promena": broj_promena,
-            "ukupno_snizenje": ukupno_snizenje,
-            "slika": slika or stara.get("slika"),
-            "prethodna_cena": prethodna_cena,
-            "promena": promena,
-            "promena_tip": promena_tip,
-            "datum_promene": now if promena != 0 else stara.get("datum_promene"),
+            "prva_cena": cena,
+            "najmanja_cena": cena,
+            "broj_promena": 0,
+            "ukupno_snizenje": 0,
+            "slika": slika,
+            "prethodna_cena": cena,
+            "promena": 0,
+            "promena_tip": "bez_promene",
             "aktivan": True,
             "problem_cena": False,
             "poslednja_provera": now,
@@ -495,7 +362,31 @@ def main():
 
         time.sleep(PAUZA)
 
-    sacuvaj_bazu(baza)
+    return baza_nova
+
+
+def main():
+    if not SCRAPER_SECRET:
+        print("GREŠKA: SCRAPER_SECRET nije postavljen")
+        return
+
+    print(f"API: {API_URL}")
+    users_oglasi = fetch_all_oglasi()
+    print(f"\nPronađeno {len(users_oglasi)} korisnika sa oglasima")
+
+    for email, oglasi in users_oglasi.items():
+        if not oglasi:
+            print(f"\n{email}: nema oglasa, preskačem")
+            continue
+
+        try:
+            cene = scrape_for_user(email, oglasi)
+            print(f"\n>>> Šaljem {len(cene)} cena za {email}...")
+            result = save_cene_for_user(email, cene)
+            print(f">>> Uspešno: {result}")
+        except Exception as e:
+            print(f"GREŠKA za {email}: {e}")
+            continue
 
     print("\nGOTOVO")
 
