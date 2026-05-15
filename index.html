@@ -2012,7 +2012,7 @@ function passesFilter(c, filterName){
     if(filterName === "active") return c.aktivan !== false;
     if(filterName === "inactive") return c.aktivan === false;
     if(filterName === "changes") return c.broj_promena && c.broj_promena > 0;
-    if(filterName === "problem") return c.problem_cena === true;
+    if(filterName === "problem") return c.problem_cena === true && c.aktivan !== false;
     return true;
 }
 
