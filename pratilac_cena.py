@@ -228,42 +228,194 @@ def _avg(arr):
     return sum(arr) / len(arr) if arr else None
 
 
-def market_stats(model, karoserija, baza, min_sample=3):
-    same_model = [d for d in baza.values() if d.get("model") == model and d.get("cena")]
+def linear_regression(samples):
+    """
+    Linearna regresija: cena = a + b*godiste + c*km
 
-    if len(same_model) >= min_sample:
-        scope = "model"
-        items = same_model
-    else:
-        brand = extract_brand(model)
-        if brand and karoserija:
-            wider = [
-                d for d in baza.values()
-                if extract_brand(d.get("model") or "") == brand
-                and d.get("karoserija") == karoserija
-                and d.get("cena")
-            ]
-            if len(wider) >= min_sample:
-                scope = "brand+chassis"
-                items = wider
-            else:
-                scope = "model"
-                items = same_model
-        else:
-            scope = "model"
-            items = same_model
+    samples: list of dicts sa kljucevima 'cena', 'godiste', 'kilometraza'
 
-    cene = [d["cena"] for d in items if d.get("cena")]
-    kms = [d["kilometraza"] for d in items if d.get("kilometraza")]
-    godine = [d["godiste"] for d in items if d.get("godiste")]
+    Vraca dict sa:
+        - coefs: (a, b, c) ili None ako matematicki nije moguce
+        - r_squared: kvalitet fit-a (0-1)
+        - predict(godiste, km): funkcija
+    Vraca None ako nedovoljno podataka.
+    """
+    # Filtriraj samples - mora imati sve 3 vrednosti
+    pts = [
+        (s["cena"], s["godiste"], s["kilometraza"])
+        for s in samples
+        if s.get("cena") and s.get("godiste") and s.get("kilometraza")
+    ]
+
+    n = len(pts)
+    if n < 5:
+        return None
+
+    # OLS regresija sa 2 prediktora (godiste, km)
+    # Sistem: y = a + b*x1 + c*x2
+    # Resava se: [n   sum(x1)  sum(x2)  ] [a]   [sum(y)]
+    #            [sum(x1) sum(x1^2) sum(x1*x2)] [b] = [sum(y*x1)]
+    #            [sum(x2) sum(x1*x2) sum(x2^2)] [c]   [sum(y*x2)]
+
+    y = [p[0] for p in pts]
+    x1 = [p[1] for p in pts]
+    x2 = [p[2] for p in pts]
+
+    sum_y = sum(y)
+    sum_x1 = sum(x1)
+    sum_x2 = sum(x2)
+    sum_x1x1 = sum(v * v for v in x1)
+    sum_x2x2 = sum(v * v for v in x2)
+    sum_x1x2 = sum(x1[i] * x2[i] for i in range(n))
+    sum_yx1 = sum(y[i] * x1[i] for i in range(n))
+    sum_yx2 = sum(y[i] * x2[i] for i in range(n))
+
+    # 3x3 matrica
+    A = [
+        [n,      sum_x1,   sum_x2],
+        [sum_x1, sum_x1x1, sum_x1x2],
+        [sum_x2, sum_x1x2, sum_x2x2],
+    ]
+    B = [sum_y, sum_yx1, sum_yx2]
+
+    # Resi Ax = B Gaussovom eliminacijom
+    try:
+        coefs = _solve_3x3(A, B)
+    except (ValueError, ZeroDivisionError):
+        return None
+
+    a, b, c = coefs
+
+    # R-squared
+    mean_y = sum_y / n
+    ss_tot = sum((yi - mean_y) ** 2 for yi in y)
+    ss_res = sum((y[i] - (a + b * x1[i] + c * x2[i])) ** 2 for i in range(n))
+    r_squared = 1 - (ss_res / ss_tot) if ss_tot > 0 else 0
+
+    def predict(godiste, km):
+        return a + b * godiste + c * km
 
     return {
-        "scope": scope,
-        "sample_size": len(items),
-        "avg_cena": _avg(cene),
-        "avg_km": _avg(kms),
-        "avg_godiste": _avg(godine),
+        "coefs": (a, b, c),
+        "r_squared": r_squared,
+        "predict": predict,
+        "n_samples": n,
     }
+
+
+def _solve_3x3(A, B):
+    """Resi 3x3 linearni sistem Gaussovom eliminacijom."""
+    # Kopiraj da ne menjamo original
+    M = [row[:] + [B[i]] for i, row in enumerate(A)]
+
+    # Forward elimination sa partial pivoting
+    for i in range(3):
+        # Nadji najveci pivot u koloni
+        max_row = i
+        for k in range(i + 1, 3):
+            if abs(M[k][i]) > abs(M[max_row][i]):
+                max_row = k
+        M[i], M[max_row] = M[max_row], M[i]
+
+        if abs(M[i][i]) < 1e-10:
+            raise ValueError("Singular matrix")
+
+        # Eliminisi
+        for k in range(i + 1, 3):
+            factor = M[k][i] / M[i][i]
+            for j in range(i, 4):
+                M[k][j] -= factor * M[i][j]
+
+    # Back substitution
+    x = [0, 0, 0]
+    for i in range(2, -1, -1):
+        x[i] = M[i][3]
+        for j in range(i + 1, 3):
+            x[i] -= M[i][j] * x[j]
+        x[i] /= M[i][i]
+
+    return x
+
+
+def expected_price(model, karoserija, godiste, km, baza, reference_data=None, min_sample=5):
+    """
+    Vraca ocekivanu cenu za auto. Pokusava redom:
+    1. Linearna regresija na model (sopstveni oglasi + reference set)
+    2. Prosek za model
+    3. Prosek za brand+karoserija
+    """
+    # Sopstveni oglasi istog modela
+    same_model = [d for d in baza.values() if d.get("model") == model]
+    same_model_full = [
+        {"cena": d["cena"], "godiste": d["godiste"], "kilometraza": d["kilometraza"]}
+        for d in same_model
+        if d.get("cena") and d.get("godiste") and d.get("kilometraza")
+    ]
+
+    # Augmentacija sa reference set-om
+    augmented = list(same_model_full)
+    used_reference = False
+    if reference_data and len(same_model_full) < min_sample:
+        brand = extract_brand(model)
+        model_part = "-".join(model.split("-")[1:]) if "-" in model else None
+        if brand and model_part:
+            key = (brand, model_part, karoserija)
+            refs = reference_data.get(key, [])
+            augmented.extend(refs)
+            if refs:
+                used_reference = True
+
+    # Pokusaj 1: linearna regresija
+    reg = linear_regression(augmented) if len(augmented) >= min_sample else None
+
+    if reg and godiste and km:
+        scope = "regression+ref" if used_reference else "regression"
+        return {
+            "expected": reg["predict"](godiste, km),
+            "scope": scope,
+            "sample_size": reg["n_samples"],
+            "user_samples": len(same_model_full),
+            "confidence": reg["r_squared"],
+            "avg_cena": _avg([d["cena"] for d in augmented]),
+            "avg_km": _avg([d["kilometraza"] for d in augmented]),
+            "avg_godiste": _avg([d["godiste"] for d in augmented]),
+        }
+
+    # Pokusaj 2: prosek istog modela
+    if len(augmented) >= 3:
+        return {
+            "expected": _avg([d["cena"] for d in augmented]),
+            "scope": "model_avg+ref" if used_reference else "model_avg",
+            "sample_size": len(augmented),
+            "user_samples": len(same_model_full),
+            "confidence": 0.4,
+            "avg_cena": _avg([d["cena"] for d in augmented]),
+            "avg_km": _avg([d["kilometraza"] for d in augmented]),
+            "avg_godiste": _avg([d["godiste"] for d in augmented]),
+        }
+
+    # Pokusaj 3: brand+karoserija prosek
+    brand = extract_brand(model)
+    if brand and karoserija:
+        wider = [
+            d for d in baza.values()
+            if extract_brand(d.get("model") or "") == brand
+            and d.get("karoserija") == karoserija
+            and d.get("cena")
+        ]
+        if len(wider) >= 3:
+            return {
+                "expected": _avg([d["cena"] for d in wider]),
+                "scope": "brand+chassis_avg",
+                "sample_size": len(wider),
+                "user_samples": len(same_model_full),
+                "confidence": 0.3,
+                "avg_cena": _avg([d["cena"] for d in wider]),
+                "avg_km": _avg([d["kilometraza"] for d in wider if d.get("kilometraza")]),
+                "avg_godiste": _avg([d["godiste"] for d in wider if d.get("godiste")]),
+            }
+
+    return None
 
 
 def days_since(date_str):
@@ -336,28 +488,36 @@ def calculate_score_v3(
     last_renewed_date, promena_tip, ukupno_snizenje, model,
 ):
     breakdown = []
-    market_cena = market_stats_data.get("avg_cena") if market_stats_data else None
+    expected = market_stats_data.get("expected") if market_stats_data else None
+    scope = market_stats_data.get("scope") if market_stats_data else None
     market_km = market_stats_data.get("avg_km") if market_stats_data else None
     market_god = market_stats_data.get("avg_godiste") if market_stats_data else None
 
     naslov_lower = (naslov or "").lower()
     brand = extract_brand(model) if model else None
 
-    # CENA (max ~30)
-    if market_cena and cena:
-        diff = ((market_cena - cena) / market_cena) * 100
+    # CENA - porediti sa OCEKIVANOM cenom (linearna regresija) umesto sa avg
+    if expected and cena:
+        diff = ((expected - cena) / expected) * 100
+
+        # Label menja se zavisno od scope-a
+        if scope == "regression":
+            label_prefix = "Cena"  # ocekivana - prilagodjena godistu i km
+        else:
+            label_prefix = "Cena vs prosek"  # samo prosek (fallback)
+
         if diff >= 20:
-            breakdown.append({"label": f"Cena {diff:.0f}% niža od proseka", "value": 30, "category": "cena"})
+            breakdown.append({"label": f"{label_prefix} {diff:.0f}% niža od očekivane", "value": 30, "category": "cena"})
         elif diff >= 15:
-            breakdown.append({"label": f"Cena {diff:.0f}% niža od proseka", "value": 25, "category": "cena"})
+            breakdown.append({"label": f"{label_prefix} {diff:.0f}% niža od očekivane", "value": 25, "category": "cena"})
         elif diff >= 10:
-            breakdown.append({"label": f"Cena {diff:.0f}% niža od proseka", "value": 20, "category": "cena"})
+            breakdown.append({"label": f"{label_prefix} {diff:.0f}% niža od očekivane", "value": 20, "category": "cena"})
         elif diff >= 5:
-            breakdown.append({"label": f"Cena {diff:.0f}% niža od proseka", "value": 12, "category": "cena"})
+            breakdown.append({"label": f"{label_prefix} {diff:.0f}% niža od očekivane", "value": 12, "category": "cena"})
         elif diff <= -10:
-            breakdown.append({"label": f"Cena {abs(diff):.0f}% viša od proseka", "value": -15, "category": "cena"})
+            breakdown.append({"label": f"{label_prefix} {abs(diff):.0f}% viša od očekivane", "value": -15, "category": "cena"})
         elif diff <= -5:
-            breakdown.append({"label": f"Cena {abs(diff):.0f}% viša od proseka", "value": -5, "category": "cena"})
+            breakdown.append({"label": f"{label_prefix} {abs(diff):.0f}% viša od očekivane", "value": -5, "category": "cena"})
 
     if ukupno_snizenje and ukupno_snizenje >= 2000:
         breakdown.append({"label": f"Pad cene ukupno {ukupno_snizenje}€", "value": 5, "category": "cena"})
@@ -505,8 +665,8 @@ def calculate_score_v3(
 
     # OUTLIER
     outlier = False
-    if market_cena and cena:
-        diff = ((market_cena - cena) / market_cena) * 100
+    if expected and cena:
+        diff = ((expected - cena) / expected) * 100
         if diff >= 25:
             neg_signals = 0
             if has_damage:
@@ -586,6 +746,91 @@ def save_cene_for_user(email, cene):
     res = requests.post(url, json={"user_email": email, "cene": cene}, timeout=30)
     res.raise_for_status()
     return res.json()
+
+
+def fetch_reference_set(brand, model, chassis=None):
+    """
+    Dohvata oglase istog brand+model (i opcionalno karoserija) sa worker
+    /admin/reference-search endpoint-a. Vraca listu sa cena/godiste/kilometraza
+    za augmentaciju regresije.
+    """
+    try:
+        params = {"key": SCRAPER_SECRET, "brand": brand, "model": model}
+        if chassis:
+            params["chassis"] = chassis
+
+        # Build query string
+        qs = "&".join(f"{k}={v}" for k, v in params.items())
+        url = f"{API_URL}/admin/reference-search?{qs}"
+        res = requests.get(url, timeout=60, impersonate="chrome")
+        res.raise_for_status()
+        data = res.json()
+        results = data.get("results", [])
+        cached = data.get("cached")
+        return results, cached
+    except Exception as e:
+        print(f"  Reference fetch greška za {brand}/{model}: {e}")
+        return [], False
+
+
+def build_augmented_baza(baza_nova):
+    """
+    Za svaki model+karoserija koji ima <5 oglasa u user bazi, dohvati
+    reference set sa polovniautomobili search-a i dodaj u memoriji.
+    Vraca {(brand, model_part, karoserija): [reference dicts]}.
+    """
+    # Grupisi user oglase po (brand, model_part, karoserija)
+    grupe = {}
+    for url, c in baza_nova.items():
+        if not c.get("cena") or not c.get("godiste") or not c.get("kilometraza"):
+            continue
+        model = c.get("model") or ""
+        if not model or model == "unknown":
+            continue
+        delovi = model.split("-")
+        if len(delovi) < 2:
+            continue
+        brand = delovi[0]
+        model_part = "-".join(delovi[1:])
+        karoserija = c.get("karoserija")
+        key = (brand, model_part, karoserija)
+        grupe.setdefault(key, []).append(c)
+
+    reference_data = {}
+    for key, oglasi in grupe.items():
+        brand, model_part, karoserija = key
+
+        if len(oglasi) >= 5:
+            continue  # imamo dovoljno user podataka
+
+        print(f"\n  Dohvaćam reference za {brand}/{model_part} ({len(oglasi)} user oglasa)...")
+        chassis_id = _chassis_to_id(karoserija)
+        refs, cached = fetch_reference_set(brand, model_part, chassis=chassis_id)
+        cache_tag = "(cache)" if cached else "(fresh)"
+        print(f"    Dobio {len(refs)} referentnih oglasa {cache_tag}")
+        reference_data[key] = refs
+
+    return reference_data
+
+
+# Mapa karoserija label -> ID koji search endpoint ocekuje
+CHASSIS_MAP = {
+    "Džip/SUV": "2632",
+    "Limuzina": "2631",
+    "Karavan": "2633",
+    "Hečbek": "2630",
+    "Hatchback": "2630",
+    "Kupe": "2634",
+    "Kabriolet": "2635",
+    "Monovolumen (MiniVan)": "2636",
+    "Pickup": "2637",
+}
+
+
+def _chassis_to_id(karoserija):
+    if not karoserija:
+        return None
+    return CHASSIS_MAP.get(karoserija)
 
 
 # ========================================================================
@@ -723,13 +968,24 @@ def scrape_for_user(email, oglasi):
 
         time.sleep(PAUZA)
 
-    # PROLAZ 2: scoring
+    # PROLAZ 2: scoring sa augmentacijom
+    print(f"\n--- Pripremam reference podatke ---")
+    reference_data = build_augmented_baza(baza_nova)
+
     print(f"\n--- Izračunavam score ---")
     for url, c in list(baza_nova.items()):
         if c.get("problem_cena") or not c.get("cena"):
             continue
 
-        stats = market_stats(c["model"], c.get("karoserija"), baza_nova, min_sample=3)
+        stats = expected_price(
+            model=c["model"],
+            karoserija=c.get("karoserija"),
+            godiste=c.get("godiste"),
+            km=c.get("kilometraza"),
+            baza=baza_nova,
+            reference_data=reference_data,
+            min_sample=5,
+        )
 
         score_result = calculate_score_v3(
             cena=c["cena"],
@@ -750,6 +1006,8 @@ def scrape_for_user(email, oglasi):
         c["score_breakdown"] = score_result["breakdown"]
         c["score_scope"] = score_result["scope"]
         c["score_sample_size"] = score_result["sample_size"]
+        c["expected_cena"] = round(stats["expected"]) if stats and stats.get("expected") else None
+        c["expected_confidence"] = round(stats["confidence"] * 100) if stats and stats.get("confidence") is not None else None
 
         # Cleanup privremenih polja
         c.pop("_data_layer", None)
@@ -757,7 +1015,9 @@ def scrape_for_user(email, oglasi):
         c.pop("_extra_info", None)
 
         sign = "🔥" if c["score"] >= 80 else ("🟢" if c["score"] >= 60 else ("🟡" if c["score"] >= 40 else "🔴"))
-        print(f"  {sign} {c['score']:>3} | {c['label'][:50]:<50}")
+        scope_label = score_result["scope"] or "no-stats"
+        sample_info = f"n={score_result['sample_size']}"
+        print(f"  {sign} {c['score']:>3} | {c['label'][:45]:<45} | {scope_label} ({sample_info})")
 
     return baza_nova
 
