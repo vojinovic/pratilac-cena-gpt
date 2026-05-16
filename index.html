@@ -1285,7 +1285,7 @@ input::placeholder { color: var(--color-text-subtle); }
 
 
 <script>
-const API = "https://api.autodrukara.com";
+const API = "https://pratilac-cena-api.vojinovic82.workers.dev";
 
 // Sve fetch pozive ide sa credentials: "include" da bi cookie sesija radila
 function apiFetch(path, options = {}){
@@ -1607,10 +1607,7 @@ function daysFromIsoDate(isoDate){
 
 function buildSparkline(istorija){
     if(!istorija || istorija.length < 2){
-        const wrap = document.createElement("div");
-        wrap.className = "sparkline-wrap";
-        wrap.style.opacity = "0";
-        return wrap;
+        return null;
     }
 
     const cene = istorija.map(p => p.cena);
@@ -2011,7 +2008,7 @@ function passesFilter(c, filterName){
     if(filterName === "top") return (c.score || 0) >= 80;
     if(filterName === "active") return c.aktivan !== false;
     if(filterName === "inactive") return c.aktivan === false;
-    if(filterName === "changes") return c.broj_promena && c.broj_promena > 0;
+    if(filterName === "changes") return c.broj_promena && c.broj_promena > 0 && c.aktivan !== false;
     if(filterName === "problem") return c.problem_cena === true && c.aktivan !== false;
     return true;
 }
@@ -2136,7 +2133,7 @@ function buildTrackedCard(o, c, showBestDealTag){
     body.appendChild(price);
 
     const sparkline = buildSparkline(c.istorija_cena);
-    body.appendChild(sparkline);
+    if(sparkline) body.appendChild(sparkline);
 
     // Top 3 razloga za score (iz score_breakdown koje racuna pratilac_cena.py)
     if(c.score_breakdown && c.score_breakdown.length > 0){
