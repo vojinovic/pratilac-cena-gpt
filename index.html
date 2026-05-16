@@ -882,7 +882,49 @@ input::placeholder { color: var(--color-text-subtle); }
     max-width: 720px;
 }
 
+.add-box-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 14px;
+}
+
+.add-box-header h3 {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--color-text);
+    margin: 0;
+}
+
+.add-box-header-icon {
+    width: 28px;
+    height: 28px;
+    background: #f4f4f5;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+}
+
 .add-box input { margin-bottom: 10px; }
+
+.add-box-hint {
+    font-size: 12px;
+    color: var(--color-text-subtle);
+    margin-top: 4px;
+    margin-bottom: 14px;
+    line-height: 1.5;
+}
+
+.add-box-hint code {
+    background: #f4f4f5;
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-family: ui-monospace, "SF Mono", monospace;
+    font-size: 11px;
+    color: #52525b;
+}
 
 .add-btn {
     background: var(--color-text); color: white;
@@ -891,6 +933,9 @@ input::placeholder { color: var(--color-text-subtle); }
     font-size: 14px; font-weight: 600;
     cursor: pointer; font-family: inherit;
     transition: background 0.15s;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
 }
 
 .add-btn:hover { background: #27272a; }
@@ -936,6 +981,7 @@ input::placeholder { color: var(--color-text-subtle); }
     color: var(--color-text-muted);
 }
 
+/* EMPTY STATE - onboarding */
 .empty-state {
     background: white;
     border: 1px dashed var(--color-border);
@@ -944,6 +990,115 @@ input::placeholder { color: var(--color-text-subtle); }
     text-align: center;
     color: var(--color-text-muted);
     font-size: 14px;
+}
+
+.empty-onboard {
+    background: linear-gradient(180deg, #fafafa 0%, white 100%);
+    border: 1px solid var(--color-border);
+    border-radius: 14px;
+    padding: 48px 32px;
+    text-align: center;
+    max-width: 720px;
+    margin: 0 auto;
+}
+
+.empty-onboard-icon {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: white;
+    border: 1px solid var(--color-border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 18px;
+    font-size: 28px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+
+.empty-onboard h2 {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--color-text);
+    margin: 0 0 8px;
+}
+
+.empty-onboard-sub {
+    font-size: 14px;
+    color: var(--color-text-muted);
+    margin-bottom: 28px;
+    line-height: 1.55;
+}
+
+.empty-onboard-steps {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+    margin: 28px 0;
+    text-align: left;
+}
+
+.empty-onboard-step {
+    background: white;
+    border: 1px solid var(--color-border);
+    border-radius: 10px;
+    padding: 16px 14px;
+}
+
+.empty-onboard-num {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: var(--color-text);
+    color: white;
+    font-weight: 700;
+    font-size: 12px;
+    margin-bottom: 10px;
+}
+
+.empty-onboard-step h4 {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--color-text);
+    margin: 0 0 4px;
+}
+
+.empty-onboard-step p {
+    font-size: 12px;
+    color: var(--color-text-muted);
+    margin: 0;
+    line-height: 1.5;
+}
+
+.empty-onboard-example {
+    background: #f4f4f5;
+    border-radius: 8px;
+    padding: 12px 16px;
+    font-family: ui-monospace, "SF Mono", monospace;
+    font-size: 12px;
+    color: #52525b;
+    word-break: break-all;
+    margin-top: 18px;
+    text-align: left;
+    user-select: all;
+}
+
+.empty-onboard-example-label {
+    font-size: 11px;
+    font-family: inherit;
+    color: var(--color-text-subtle);
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    font-weight: 600;
+}
+
+@media (max-width: 640px) {
+    .empty-onboard { padding: 32px 20px; }
+    .empty-onboard-steps { grid-template-columns: 1fr; }
 }
 
 #list {
@@ -2046,18 +2201,27 @@ input::placeholder { color: var(--color-text-subtle); }
     <div id="section-tracked" class="section active">
 
         <div class="add-box">
+            <div class="add-box-header">
+                <div class="add-box-header-icon">➕</div>
+                <h3>Dodaj auto koji pratiš</h3>
+            </div>
             <input id="urlInput" placeholder="URL oglasa sa polovniautomobili.com">
-            <input id="labelInput" placeholder="Naziv (opciono)">
-            <button class="add-btn" onclick="addOglas()">Dodaj oglas</button>
+            <input id="labelInput" placeholder="Naziv (opciono - npr. 'Volvo XC60 za Nikolu')">
+            <div class="add-box-hint">
+                Otvori oglas na <code>polovniautomobili.com</code>, kopiraj URL i nalepi ga ovde. Pratićemo cenu na svaki sat.
+            </div>
+            <button class="add-btn" onclick="addOglas()">
+                <span>Dodaj oglas</span>
+            </button>
         </div>
 
         <div class="filters" id="filtersContainer">
             <button class="filter-btn active" onclick="setFilter('all', event)">Svi <span class="filter-count" id="count-all">0</span></button>
             <button class="filter-btn" onclick="setFilter('top', event)">🔥 Top ponude <span class="filter-count" id="count-top">0</span></button>
-            <button class="filter-btn" onclick="setFilter('active', event)">Aktivni <span class="filter-count" id="count-active">0</span></button>
-            <button class="filter-btn" onclick="setFilter('changes', event)">Sa promenom <span class="filter-count" id="count-changes">0</span></button>
-            <button class="filter-btn" onclick="setFilter('inactive', event)">Nestali <span class="filter-count" id="count-inactive">0</span></button>
-            <button class="filter-btn" onclick="setFilter('problem', event)">Problem <span class="filter-count" id="count-problem">0</span></button>
+            <button class="filter-btn" onclick="setFilter('active', event)">✅ Aktivni <span class="filter-count" id="count-active">0</span></button>
+            <button class="filter-btn" onclick="setFilter('changes', event)">📈 Sa promenom <span class="filter-count" id="count-changes">0</span></button>
+            <button class="filter-btn" onclick="setFilter('inactive', event)">👻 Nestali <span class="filter-count" id="count-inactive">0</span></button>
+            <button class="filter-btn" onclick="setFilter('problem', event)">⚠️ Problem <span class="filter-count" id="count-problem">0</span></button>
         </div>
 
         <div id="list"></div>
@@ -2125,6 +2289,12 @@ input::placeholder { color: var(--color-text-subtle); }
         </div>
 
         <div id="searchResults"></div>
+
+        <div id="searchEmptyHint" class="empty-onboard" style="margin-top: 20px;">
+            <div class="empty-onboard-icon">🔍</div>
+            <h2>Pretraži oglase sa pametnim score-om</h2>
+            <p class="empty-onboard-sub">Izaberi brend (i opciono model) iznad pa klikni Pretraži. Svaki rezultat dobija ocenu 0-100 na osnovu cene, kilometraže, godišta i opreme. Najbolje ponude (🔥 75+) idu na vrh.</p>
+        </div>
 
         <div id="searchPagination" class="pagination"></div>
     </div>
@@ -3167,6 +3337,39 @@ function render(){
     if(list.length === 0){
         container.style.display = "none";
         emptyState.style.display = "block";
+
+        // Korisnik nema NIJEDAN oglas - prikazi onboarding
+        if(oglasi.length === 0){
+            emptyState.className = "empty-onboard";
+            emptyState.innerHTML = `
+                <div class="empty-onboard-icon">🚗</div>
+                <h2>Hajde da dodamo prvi auto</h2>
+                <p class="empty-onboard-sub">Auto Drukara prati cene za tebe na svaki sat. Evo kako se počinje:</p>
+                <div class="empty-onboard-steps">
+                    <div class="empty-onboard-step">
+                        <div class="empty-onboard-num">1</div>
+                        <h4>Otvori polovniautomobili.com</h4>
+                        <p>Pretraži auto koji te zanima i otvori oglas.</p>
+                    </div>
+                    <div class="empty-onboard-step">
+                        <div class="empty-onboard-num">2</div>
+                        <h4>Kopiraj URL</h4>
+                        <p>Iz adresne trake ili sa Share dugmeta.</p>
+                    </div>
+                    <div class="empty-onboard-step">
+                        <div class="empty-onboard-num">3</div>
+                        <h4>Nalepi gore</h4>
+                        <p>Mi automatski hvatamo sve podatke i počinjemo praćenje.</p>
+                    </div>
+                </div>
+                <div class="empty-onboard-example-label">PRIMER URL-A</div>
+                <div class="empty-onboard-example">https://www.polovniautomobili.com/auto-oglasi/12345678/volvo-xc60-b4-awd</div>
+            `;
+        } else {
+            // Imaju oglase ali filter je prazan
+            emptyState.className = "empty-state";
+            emptyState.textContent = "Nema oglasa u ovoj kategoriji. Probaj drugi filter.";
+        }
         return;
     }
 
@@ -3763,6 +3966,10 @@ function buildSearchCard(r){
 
 function renderSearch(){
     if(!SEARCH_DATA) return;
+
+    // Sakri empty hint kad imamo rezultate
+    const hint = document.getElementById("searchEmptyHint");
+    if(hint) hint.style.display = "none";
 
     const data = SEARCH_DATA;
     const info = document.getElementById("searchInfo");
