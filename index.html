@@ -2157,7 +2157,7 @@ async function deleteOglas(url){
 
 function passesFilter(c, filterName){
     if(filterName === "all") return true;
-    if(filterName === "top") return (c.score || 0) >= 80;
+    if(filterName === "top") return (c.score || 0) >= 75;
     if(filterName === "active") return c.aktivan !== false;
     if(filterName === "inactive") return c.aktivan === false;
     if(filterName === "changes") return c.broj_promena && c.broj_promena > 0 && c.aktivan !== false;
@@ -2185,7 +2185,7 @@ function buildTrackedCard(o, c, showBestDealTag){
 
     const score = c.score || 0;
     let badge = "🔴";
-    if(score >= 80) badge = "🔥";
+    if(score >= 75) badge = "🔥";
     else if(score >= 60) badge = "🟢";
     else if(score >= 40) badge = "🟡";
 
@@ -2810,12 +2810,12 @@ function buildSearchCard(r){
     const hasScore = score !== null && score !== undefined;
 
     let scoreEmoji = "🔴";
-    if(score >= 80) scoreEmoji = "🔥";
+    if(score >= 75) scoreEmoji = "🔥";
     else if(score >= 60) scoreEmoji = "🟢";
     else if(score >= 40) scoreEmoji = "🟡";
 
     const card = document.createElement("div");
-    card.className = "search-card" + (tracked ? " tracked" : "") + (hasScore && score >= 80 ? " score-fire" : "");
+    card.className = "search-card" + (tracked ? " tracked" : "") + (hasScore && score >= 75 ? " score-fire" : "");
 
     const thumb = document.createElement("div");
     thumb.className = "thumb";
@@ -3059,6 +3059,13 @@ function showInfoModal(c, o){
     };
 
     addRow("Cena", c.cena ? c.cena.toLocaleString("sr-RS") + " €" : "");
+    if(c.expected_cena){
+        const diff = c.cena - c.expected_cena;
+        const diffPct = ((diff / c.expected_cena) * 100).toFixed(0);
+        const sign = diff > 0 ? "+" : "";
+        const conf = c.expected_confidence ? ` (R²=${c.expected_confidence}%)` : "";
+        addRow("Očekivana cena", c.expected_cena.toLocaleString("sr-RS") + " € (" + sign + diffPct + "%)" + conf);
+    }
 
     // Koliko dugo pratimo ovaj oglas
     if(c.prvi_put_videno){
