@@ -618,6 +618,15 @@ input::placeholder { color: var(--color-text-subtle); }
     height: 36px;
 }
 
+.sparkline-placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #a1a1aa;
+    font-size: 12px;
+    font-weight: 400;
+}
+
 .sparkline-svg {
     display: block;
     width: 100%;
@@ -1607,7 +1616,25 @@ function daysFromIsoDate(isoDate){
 
 function buildSparkline(istorija){
     if(!istorija || istorija.length < 2){
-        return null;
+        // Placeholder: drzi visinu da grid ne skace, prikazi suptilno koliko dugo se prati
+        const wrap = document.createElement("div");
+        wrap.className = "sparkline-wrap sparkline-placeholder";
+
+        let dana = 0;
+        if(istorija && istorija.length === 1 && istorija[0].datum){
+            const start = new Date(istorija[0].datum.replace(" ", "T"));
+            const now = new Date();
+            dana = Math.floor((now - start) / (1000 * 60 * 60 * 24));
+        }
+
+        let label;
+        if(dana <= 0) label = "Praćeno od danas";
+        else if(dana === 1) label = "Praćeno 1 dan";
+        else if(dana < 5) label = `Praćeno ${dana} dana`;
+        else label = `Praćeno ${dana} dana`;
+
+        wrap.textContent = label;
+        return wrap;
     }
 
     const cene = istorija.map(p => p.cena);
@@ -2133,7 +2160,7 @@ function buildTrackedCard(o, c, showBestDealTag){
     body.appendChild(price);
 
     const sparkline = buildSparkline(c.istorija_cena);
-    if(sparkline) body.appendChild(sparkline);
+    body.appendChild(sparkline);
 
     // Top 3 razloga za score (iz score_breakdown koje racuna pratilac_cena.py)
     if(c.score_breakdown && c.score_breakdown.length > 0){
