@@ -336,20 +336,25 @@ def calculate_score_v2(
                 has_damage = True
                 break
 
-    # KATEGORIJA 3: KILOMETRAZA po godini (max ~20)
+    # KATEGORIJA 3: KILOMETRAZA po godini (max ~18)
     if kilometraza and godiste:
         current_year = datetime.now().year
         years_old = max(current_year - godiste, 1)
         km_per_year = kilometraza / years_old
 
         if km_per_year <= 8000:
-            breakdown.append({"label": f"Vrlo malo vožen ({km_per_year:.0f} km/god)", "value": 20, "category": "kilometraza"})
+            breakdown.append({"label": f"Vrlo malo vožen ({km_per_year:.0f} km/god)", "value": 18, "category": "kilometraza"})
         elif km_per_year <= 12000:
-            breakdown.append({"label": f"Manje vožen ({km_per_year:.0f} km/god)", "value": 12, "category": "kilometraza"})
-        elif km_per_year >= 25000:
-            breakdown.append({"label": f"Mnogo vožen ({km_per_year:.0f} km/god)", "value": -12, "category": "kilometraza"})
-        elif km_per_year >= 18000:
-            breakdown.append({"label": f"Iznad proseka ({km_per_year:.0f} km/god)", "value": -5, "category": "kilometraza"})
+            breakdown.append({"label": f"Manje vožen ({km_per_year:.0f} km/god)", "value": 10, "category": "kilometraza"})
+        elif km_per_year <= 18000:
+            # Neutralna zona - ne dodajemo nista
+            pass
+        elif km_per_year <= 25000:
+            breakdown.append({"label": f"Iznad proseka ({km_per_year:.0f} km/god)", "value": -3, "category": "kilometraza"})
+        elif km_per_year <= 35000:
+            breakdown.append({"label": f"Mnogo vožen ({km_per_year:.0f} km/god)", "value": -8, "category": "kilometraza"})
+        else:
+            breakdown.append({"label": f"Ekstremno vožen ({km_per_year:.0f} km/god)", "value": -12, "category": "kilometraza"})
 
     # KATEGORIJA 4: GODISTE + PAKET (max ~15)
     if market_god and godiste:
