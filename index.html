@@ -3059,6 +3059,19 @@ function showInfoModal(c, o){
     };
 
     addRow("Cena", c.cena ? c.cena.toLocaleString("sr-RS") + " €" : "");
+
+    // Koliko dugo pratimo ovaj oglas
+    if(c.prvi_put_videno){
+        try {
+            const start = new Date(c.prvi_put_videno.replace(" ", "T"));
+            const now = new Date();
+            const dana = Math.floor((now - start) / (1000 * 60 * 60 * 24));
+            if(dana <= 0) addRow("Praćen", "od danas");
+            else if(dana === 1) addRow("Praćen", "1 dan");
+            else addRow("Praćen", dana + " dana");
+        } catch(e) {}
+    }
+
     addRow("Snaga", c.snaga ? c.snaga + " KS" : "");
     addRow("Kubikaža", c.kubikaza ? c.kubikaza + " cm³" : "");
     addRow("Menjač", c.menjac);
