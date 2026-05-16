@@ -1096,6 +1096,26 @@ input::placeholder { color: var(--color-text-subtle); }
     font-weight: 600;
 }
 
+.empty-onboard-alt {
+    margin-top: 24px;
+    padding-top: 20px;
+    border-top: 1px solid #f4f4f5;
+    font-size: 13px;
+    color: var(--color-text-muted);
+    line-height: 1.55;
+}
+
+.empty-onboard-alt a {
+    color: var(--color-text);
+    font-weight: 600;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
+.empty-onboard-alt a:hover {
+    text-decoration: none;
+}
+
 @media (max-width: 640px) {
     .empty-onboard { padding: 32px 20px; }
     .empty-onboard-steps { grid-template-columns: 1fr; }
@@ -3364,6 +3384,9 @@ function render(){
                 </div>
                 <div class="empty-onboard-example-label">PRIMER URL-A</div>
                 <div class="empty-onboard-example">https://www.polovniautomobili.com/auto-oglasi/12345678/volvo-xc60-b4-awd</div>
+                <div class="empty-onboard-alt">
+                    ili koristi <a href="#" onclick="showSection('search', event); return false;">našu pretragu</a> da nađeš auto sa pametnim score-om i dodaš ga direktno odatle
+                </div>
             `;
         } else {
             // Imaju oglase ali filter je prazan
