@@ -974,6 +974,131 @@ input::placeholder { color: var(--color-text-subtle); }
 
 .card-actions { display: flex; gap: 8px; margin-top: 14px; }
 
+.btn-info-icon {
+    flex: 0 0 auto;
+    width: 38px;
+    padding: 9px 0;
+    border-radius: 8px;
+    font-size: 16px;
+    border: 1px solid var(--color-border);
+    background: white;
+    color: var(--color-text);
+    cursor: pointer;
+    transition: background 0.15s;
+}
+
+.btn-info-icon:hover {
+    background: #f4f4f5;
+}
+
+.info-modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s;
+}
+
+.info-modal-backdrop.open {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.info-modal {
+    background: white;
+    border-radius: 14px;
+    max-width: 640px;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+    padding: 24px;
+    position: relative;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+}
+
+.info-modal-close {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: none;
+    background: #f4f4f5;
+    cursor: pointer;
+    font-size: 16px;
+    color: #71717a;
+}
+
+.info-modal-close:hover {
+    background: #e4e4e7;
+}
+
+.info-modal h3 {
+    margin: 0 0 4px 0;
+    padding-right: 40px;
+    font-size: 18px;
+}
+
+.info-modal .info-sub {
+    color: #71717a;
+    font-size: 13px;
+    margin-bottom: 18px;
+}
+
+.info-modal .info-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px 16px;
+    margin-bottom: 20px;
+    font-size: 13px;
+}
+
+.info-modal .info-grid > div { display: flex; justify-content: space-between; border-bottom: 1px solid #f4f4f5; padding: 6px 0; }
+.info-modal .info-grid > div > span:first-child { color: #71717a; }
+.info-modal .info-grid > div > span:last-child { color: var(--color-text); font-weight: 500; text-align: right; }
+
+.info-modal h4 {
+    margin: 18px 0 8px;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.info-modal .opis-tekst {
+    white-space: pre-wrap;
+    font-size: 13px;
+    color: #3f3f46;
+    line-height: 1.5;
+    background: #fafafa;
+    padding: 12px;
+    border-radius: 8px;
+    border: 1px solid #f4f4f5;
+}
+
+.info-modal .oprema-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.info-modal .oprema-tag {
+    background: #f4f4f5;
+    padding: 4px 10px;
+    border-radius: 100px;
+    font-size: 12px;
+    color: #3f3f46;
+}
+
+@media (max-width: 600px) {
+    .info-modal .info-grid { grid-template-columns: 1fr; }
+}
+
 .btn {
     flex: 1;
     padding: 9px 12px;
@@ -1294,7 +1419,7 @@ input::placeholder { color: var(--color-text-subtle); }
 
 
 <script>
-const API = "https://api.autodrukara.com";
+const API = "https://pratilac-cena-api.vojinovic82.workers.dev";
 
 // Sve fetch pozive ide sa credentials: "include" da bi cookie sesija radila
 function apiFetch(path, options = {}){
@@ -2268,6 +2393,14 @@ function buildTrackedCard(o, c, showBestDealTag){
     openBtn.textContent = "Otvori";
     actions.appendChild(openBtn);
 
+    // Info dugme - prikazuje sve podatke + opis u modal
+    const infoBtn = document.createElement("button");
+    infoBtn.className = "btn-info-icon";
+    infoBtn.textContent = "ℹ";
+    infoBtn.title = "Više informacija";
+    infoBtn.onclick = () => showInfoModal(c, o);
+    actions.appendChild(infoBtn);
+
     const delBtn = document.createElement("button");
     delBtn.className = "btn btn-danger";
     delBtn.textContent = "Obriši";
@@ -2876,6 +3009,128 @@ async function init(){
     setupChips("fuelChips", SELECTED_FUEL);
     setupChips("chassisChips", SELECTED_CHASSIS);
     await load();
+}
+
+function showInfoModal(c, o){
+    // Ako modal vec postoji, ukloni ga
+    const existing = document.getElementById("info-modal-backdrop");
+    if(existing) existing.remove();
+
+    const backdrop = document.createElement("div");
+    backdrop.id = "info-modal-backdrop";
+    backdrop.className = "info-modal-backdrop";
+
+    const modal = document.createElement("div");
+    modal.className = "info-modal";
+    modal.onclick = e => e.stopPropagation();
+
+    const closeBtn = document.createElement("button");
+    closeBtn.className = "info-modal-close";
+    closeBtn.textContent = "✕";
+    closeBtn.onclick = () => closeInfoModal();
+    modal.appendChild(closeBtn);
+
+    // Naslov
+    const title = document.createElement("h3");
+    title.textContent = c.label || "Oglas";
+    modal.appendChild(title);
+
+    const sub = document.createElement("div");
+    sub.className = "info-sub";
+    const subBits = [];
+    if(c.godiste) subBits.push(c.godiste + ".");
+    if(c.kilometraza) subBits.push(c.kilometraza.toLocaleString("sr-RS") + " km");
+    if(c.gorivo) subBits.push(c.gorivo);
+    if(c.karoserija) subBits.push(c.karoserija);
+    sub.textContent = subBits.join(" · ");
+    modal.appendChild(sub);
+
+    // Tehnicki detalji
+    const techGrid = document.createElement("div");
+    techGrid.className = "info-grid";
+
+    const addRow = (label, value) => {
+        if(!value && value !== 0) return;
+        const row = document.createElement("div");
+        const l = document.createElement("span"); l.textContent = label;
+        const v = document.createElement("span"); v.textContent = value;
+        row.appendChild(l); row.appendChild(v);
+        techGrid.appendChild(row);
+    };
+
+    addRow("Cena", c.cena ? c.cena.toLocaleString("sr-RS") + " €" : "");
+    addRow("Snaga", c.snaga ? c.snaga + " KS" : "");
+    addRow("Kubikaža", c.kubikaza ? c.kubikaza + " cm³" : "");
+    addRow("Menjač", c.menjac);
+    addRow("Pogon", c.pogon);
+    addRow("Klima", c.klima);
+    addRow("Emisiona klasa", c.emisiona_klasa);
+    addRow("Broj vrata", c.broj_vrata);
+    addRow("Boja", c.boja);
+    addRow("Enterijer", c.enterijer_materijal);
+    addRow("Boja enterijera", c.boja_enterijera);
+    addRow("Zemlja uvoza", c.zemlja_uvoza);
+    addRow("Poreklo", c.poreklo);
+    if(c.vin) addRow("VIN", c.vin);
+    if(c.owner_name) addRow("Prodavac", c.owner_name + (c.owner_rating ? " (" + c.owner_rating + "⭐)" : ""));
+
+    if(techGrid.children.length > 0){
+        const techTitle = document.createElement("h4");
+        techTitle.textContent = "Detalji";
+        modal.appendChild(techTitle);
+        modal.appendChild(techGrid);
+    }
+
+    // Opis
+    if(c.opis){
+        const opisTitle = document.createElement("h4");
+        opisTitle.textContent = "Opis prodavca";
+        modal.appendChild(opisTitle);
+
+        const opis = document.createElement("div");
+        opis.className = "opis-tekst";
+        opis.textContent = c.opis;
+        modal.appendChild(opis);
+    }
+
+    // Oprema
+    if(c.oprema && c.oprema.length > 0){
+        const opTitle = document.createElement("h4");
+        opTitle.textContent = "Oprema (" + c.oprema.length + ")";
+        modal.appendChild(opTitle);
+
+        const opList = document.createElement("div");
+        opList.className = "oprema-list";
+        c.oprema.forEach(item => {
+            const tag = document.createElement("span");
+            tag.className = "oprema-tag";
+            tag.textContent = item;
+            opList.appendChild(tag);
+        });
+        modal.appendChild(opList);
+    }
+
+    backdrop.appendChild(modal);
+    backdrop.onclick = () => closeInfoModal();
+    document.body.appendChild(backdrop);
+
+    // Animacija
+    requestAnimationFrame(() => backdrop.classList.add("open"));
+
+    // Escape key
+    document.addEventListener("keydown", handleEscModal);
+}
+
+function handleEscModal(e){
+    if(e.key === "Escape") closeInfoModal();
+}
+
+function closeInfoModal(){
+    const backdrop = document.getElementById("info-modal-backdrop");
+    if(!backdrop) return;
+    backdrop.classList.remove("open");
+    setTimeout(() => backdrop.remove(), 200);
+    document.removeEventListener("keydown", handleEscModal);
 }
 
 init();
