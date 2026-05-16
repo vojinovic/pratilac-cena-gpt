@@ -2520,43 +2520,122 @@ const NEG_TITLE_KEYWORDS = {
     "zamena": -3
 };
 
-function buildBrandModelStats(searchResults, brandValue, modelValue, chassisHint){
-    // Imitacija "wider segment" pristupa iz pratilac_cena.py.
-    // Prvi izbor: isti model. Fallback: brand+karoserija.
-    const cene = [], kms = [], godine = [];
-    let scope = "model";
+function solveLinearSystem3x3(A, B){
+    // Resi 3x3 linearni sistem Gaussovom eliminacijom
+    const M = A.map((row, i) => [...row, B[i]]);
 
-    function addItem(c){
-        if(c.cena) cene.push(c.cena);
-        if(c.kilometraza) kms.push(c.kilometraza);
-        if(c.godiste || c.godina) godine.push(c.godiste || c.godina);
+    for(let i = 0; i < 3; i++){
+        // Partial pivoting
+        let maxRow = i;
+        for(let k = i + 1; k < 3; k++){
+            if(Math.abs(M[k][i]) > Math.abs(M[maxRow][i])) maxRow = k;
+        }
+        [M[i], M[maxRow]] = [M[maxRow], M[i]];
+
+        if(Math.abs(M[i][i]) < 1e-10) return null;
+
+        for(let k = i + 1; k < 3; k++){
+            const factor = M[k][i] / M[i][i];
+            for(let j = i; j < 4; j++){
+                M[k][j] -= factor * M[i][j];
+            }
+        }
     }
 
-    // Iz search rezultata - sve sa istim brendom (vec su filtrirani)
+    const x = [0, 0, 0];
+    for(let i = 2; i >= 0; i--){
+        x[i] = M[i][3];
+        for(let j = i + 1; j < 3; j++) x[i] -= M[i][j] * x[j];
+        x[i] /= M[i][i];
+    }
+    return x;
+}
+
+function linearRegression(samples){
+    // samples: [{cena, godiste, kilometraza}, ...]
+    const pts = samples.filter(s => s.cena && s.godiste && s.kilometraza);
+    const n = pts.length;
+    if(n < 5) return null;
+
+    const y = pts.map(p => p.cena);
+    const x1 = pts.map(p => p.godiste);
+    const x2 = pts.map(p => p.kilometraza);
+
+    const sum = arr => arr.reduce((a, b) => a + b, 0);
+    const sumProd = (a, b) => a.reduce((acc, _, i) => acc + a[i] * b[i], 0);
+
+    const sumY = sum(y);
+    const sumX1 = sum(x1);
+    const sumX2 = sum(x2);
+    const A = [
+        [n,      sumX1,            sumX2],
+        [sumX1,  sumProd(x1, x1),  sumProd(x1, x2)],
+        [sumX2,  sumProd(x1, x2),  sumProd(x2, x2)],
+    ];
+    const B = [sumY, sumProd(y, x1), sumProd(y, x2)];
+
+    const coefs = solveLinearSystem3x3(A, B);
+    if(!coefs) return null;
+
+    const [a, b, c] = coefs;
+
+    // R-squared
+    const meanY = sumY / n;
+    let ssTot = 0, ssRes = 0;
+    for(let i = 0; i < n; i++){
+        ssTot += (y[i] - meanY) ** 2;
+        ssRes += (y[i] - (a + b * x1[i] + c * x2[i])) ** 2;
+    }
+    const rSquared = ssTot > 0 ? 1 - ssRes / ssTot : 0;
+
+    return {
+        predict: (godiste, km) => a + b * godiste + c * km,
+        nSamples: n,
+        rSquared: rSquared,
+    };
+}
+
+function buildBrandModelStats(searchResults, brandValue, modelValue, chassisHint){
+    // Skupljamo sample iz: search rezultata + tracked baze (isti model)
+    const samples = [];
+
     searchResults.forEach(r => {
-        if(r.cena) cene.push(r.cena);
-        if(r.kilometraza) kms.push(r.kilometraza);
-        if(r.godina) godine.push(r.godina);
+        if(r.cena) samples.push({
+            cena: r.cena,
+            godiste: r.godina,
+            kilometraza: r.kilometraza,
+        });
     });
 
-    // Iz tracked baze - po modelu
     if(brandValue && modelValue && DATA?.cene){
         const targetModel = brandValue + "-" + modelValue;
         Object.values(DATA.cene).forEach(c => {
-            if(c.model === targetModel){
-                addItem(c);
+            if(c.model === targetModel && c.cena){
+                samples.push({
+                    cena: c.cena,
+                    godiste: c.godiste,
+                    kilometraza: c.kilometraza,
+                });
             }
         });
     }
 
+    // Pokusaj linearnu regresiju
+    const reg = linearRegression(samples);
+
     const avg = arr => arr.length > 0 ? arr.reduce((a,b)=>a+b,0) / arr.length : null;
+    const cene = samples.map(s => s.cena).filter(Boolean);
+    const kms = samples.map(s => s.kilometraza).filter(Boolean);
+    const godine = samples.map(s => s.godiste).filter(Boolean);
 
     return {
-        scope: scope,
+        scope: reg ? "regression" : "avg",
+        regression: reg,
         avgCena: avg(cene),
         avgKm: avg(kms),
         avgGod: avg(godine),
-        sampleSize: cene.length
+        sampleSize: samples.length,
+        confidence: reg ? reg.rSquared : 0.4,
     };
 }
 
@@ -2566,21 +2645,31 @@ function calculateSearchScore(result, stats){
 
     let hasDamage = false;
 
-    // KATEGORIJA 1: CENA
-    if(stats.avgCena && result.cena){
-        const diff = ((stats.avgCena - result.cena) / stats.avgCena) * 100;
-        if(diff >= 20) breakdown.push({label:`Cena ${diff.toFixed(0)}% niža`, value:30, category:"cena"});
-        else if(diff >= 15) breakdown.push({label:`Cena ${diff.toFixed(0)}% niža`, value:25, category:"cena"});
-        else if(diff >= 10) breakdown.push({label:`Cena ${diff.toFixed(0)}% niža`, value:20, category:"cena"});
-        else if(diff >= 5) breakdown.push({label:`Cena ${diff.toFixed(0)}% niža`, value:12, category:"cena"});
-        else if(diff <= -10) breakdown.push({label:`Cena ${Math.abs(diff).toFixed(0)}% viša`, value:-15, category:"cena"});
-        else if(diff <= -5) breakdown.push({label:`Cena ${Math.abs(diff).toFixed(0)}% viša`, value:-5, category:"cena"});
+    // CENA - poredi sa ocekivanom (regresija) ili sa prosekom (fallback)
+    let expectedPrice = null;
+    if(stats.regression && result.godina && result.kilometraza){
+        expectedPrice = stats.regression.predict(result.godina, result.kilometraza);
+    } else if(stats.avgCena){
+        expectedPrice = stats.avgCena;
     }
 
-    // KATEGORIJA 2: STANJE - search nema strukturirane podatke, samo title keywords
+    if(expectedPrice && result.cena){
+        const diff = ((expectedPrice - result.cena) / expectedPrice) * 100;
+        const labelPrefix = stats.regression ? "Cena" : "Cena vs prosek";
+        const suffix = stats.regression ? "niža od očekivane" : "niža";
+        const suffixHi = stats.regression ? "viša od očekivane" : "viša";
+
+        if(diff >= 20) breakdown.push({label:`${labelPrefix} ${diff.toFixed(0)}% ${suffix}`, value:30, category:"cena"});
+        else if(diff >= 15) breakdown.push({label:`${labelPrefix} ${diff.toFixed(0)}% ${suffix}`, value:25, category:"cena"});
+        else if(diff >= 10) breakdown.push({label:`${labelPrefix} ${diff.toFixed(0)}% ${suffix}`, value:20, category:"cena"});
+        else if(diff >= 5) breakdown.push({label:`${labelPrefix} ${diff.toFixed(0)}% ${suffix}`, value:12, category:"cena"});
+        else if(diff <= -10) breakdown.push({label:`${labelPrefix} ${Math.abs(diff).toFixed(0)}% ${suffixHi}`, value:-15, category:"cena"});
+        else if(diff <= -5) breakdown.push({label:`${labelPrefix} ${Math.abs(diff).toFixed(0)}% ${suffixHi}`, value:-5, category:"cena"});
+    }
+
+    // STANJE - search nema strukturirane podatke, samo title keywords
     for(const [kw, val] of Object.entries(NEG_TITLE_KEYWORDS)){
         if(naslov.includes(kw)){
-            // skip "nije ostecen"
             if((kw === "ostecen" || kw === "oštećen") && naslov.includes("nije")) continue;
             breakdown.push({label:`Naslov: "${kw}"`, value:val, category:"stanje"});
             hasDamage = true;
@@ -2588,17 +2677,19 @@ function calculateSearchScore(result, stats){
         }
     }
 
-    // KATEGORIJA 3: KILOMETRAŽA po godini
+    // KILOMETRAZA po godini - usklađena skala sa Python-om
     if(result.kilometraza && result.godina){
         const yearsOld = Math.max(new Date().getFullYear() - result.godina, 1);
         const kmPerYear = result.kilometraza / yearsOld;
-        if(kmPerYear <= 8000) breakdown.push({label:`Vrlo malo vožen (${Math.round(kmPerYear)} km/god)`, value:20, category:"kilometraza"});
-        else if(kmPerYear <= 12000) breakdown.push({label:`Manje vožen (${Math.round(kmPerYear)} km/god)`, value:12, category:"kilometraza"});
-        else if(kmPerYear >= 25000) breakdown.push({label:`Mnogo vožen (${Math.round(kmPerYear)} km/god)`, value:-12, category:"kilometraza"});
-        else if(kmPerYear >= 18000) breakdown.push({label:`Iznad proseka (${Math.round(kmPerYear)} km/god)`, value:-5, category:"kilometraza"});
+        if(kmPerYear <= 8000) breakdown.push({label:`Vrlo malo vožen (${Math.round(kmPerYear)} km/god)`, value:18, category:"kilometraza"});
+        else if(kmPerYear <= 12000) breakdown.push({label:`Manje vožen (${Math.round(kmPerYear)} km/god)`, value:10, category:"kilometraza"});
+        else if(kmPerYear <= 18000) {} // neutralno
+        else if(kmPerYear <= 25000) breakdown.push({label:`Iznad proseka (${Math.round(kmPerYear)} km/god)`, value:-3, category:"kilometraza"});
+        else if(kmPerYear <= 35000) breakdown.push({label:`Mnogo vožen (${Math.round(kmPerYear)} km/god)`, value:-8, category:"kilometraza"});
+        else breakdown.push({label:`Ekstremno vožen (${Math.round(kmPerYear)} km/god)`, value:-12, category:"kilometraza"});
     }
 
-    // KATEGORIJA 4: GODISTE vs prosek
+    // GODISTE vs prosek
     if(stats.avgGod && result.godina){
         const diff = result.godina - stats.avgGod;
         if(diff >= 2) breakdown.push({label:`Mlađi od proseka (${result.godina}.)`, value:8, category:"godiste"});
@@ -2636,7 +2727,7 @@ function calculateSearchScore(result, stats){
         }
     }
 
-    // KATEGORIJA 5: SVEZINA
+    // SVEZINA
     const days = daysSinceRenew(result.renewdate);
     let ageStatus = null;
     if(days !== null){
