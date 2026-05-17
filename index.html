@@ -788,6 +788,22 @@ body {
     color: var(--color-text-subtle);
 }
 
+.lp-footer-links {
+    margin: 12px 0 !important;
+    font-size: 13px;
+}
+
+.lp-footer-links a {
+    color: var(--color-text-muted);
+    text-decoration: none;
+    margin: 0 6px;
+    border-bottom: 1px dotted var(--color-text-subtle);
+}
+
+.lp-footer-links a:hover {
+    color: var(--color-text);
+}
+
 .lp-footer-disclaimer {
     max-width: 720px;
     margin: 16px auto 0 !important;
@@ -2351,8 +2367,53 @@ input::placeholder { color: var(--color-text-subtle); }
             <p class="lp-foot-note">Tvoji oglasi su privatni. Bez reklama.</p>
         </section>
 
+        <!-- O NAMA / PRIVACY -->
+        <section class="lp-section lp-legal" id="o-nama">
+            <h2>O nama i pravila korišćenja</h2>
+            <p class="lp-section-sub">Transparentno govorimo kako sajt radi i šta radimo sa podacima.</p>
+
+            <details class="lp-faq-item" id="about">
+                <summary>O Auto Drukara</summary>
+                <p>Auto Drukara je nezavisan, besplatan, ne-komercijalan alat za praćenje cena polovnih automobila. Pravi ga jedna osoba u slobodno vreme i nije povezan sa polovniautomobili.com niti sa bilo kojim drugim sajtom čije podatke prikazuje. Sajt postoji da pomogne korisnicima da prepoznaju realne ponude na već javno dostupnim oglasima.</p>
+                <p>Kontakt: <a href="mailto:vojinovic82@gmail.com">vojinovic82@gmail.com</a></p>
+            </details>
+
+            <details class="lp-faq-item">
+                <summary>Kako koristimo podatke sa polovniautomobili.com</summary>
+                <p>Kada korisnik doda link oglasa, automatizovano čitamo javno dostupan oglas sa polovniautomobili.com i izvlačimo strukturirane podatke (cena, godište, kilometraža, oprema, lokacija). Ne ulazimo u zaštićene delove sajta, ne zaobilazimo login niti CAPTCHA. Šaljemo transparentan User-Agent header koji nas identifikuje i linkuje na ovu stranicu.</p>
+                <p>Provere cena radimo svakih 6 sati, što minimizira opterećenje source sajta. Klikom na "Otvori" korisnik odlazi direktno na originalni oglas. Vlasnici sadržaja su originalni sajtovi i oglašivači.</p>
+            </details>
+
+            <details class="lp-faq-item">
+                <summary>Zahtev za uklanjanje podataka</summary>
+                <p>Ako ste vlasnik sadržaja koji se prikazuje na ovom sajtu (oglas, slika, opis) i želite da uklonimo vaše podatke, pošaljite zahtev na <a href="mailto:vojinovic82@gmail.com">vojinovic82@gmail.com</a> sa linkom oglasa. Uklonićemo podatke u roku od 48 sati.</p>
+                <p>Ako ste predstavnik sajta koji ne želi da Auto Drukara koristi njegove podatke, kontaktirajte nas i prestaćemo sa preuzimanjem podataka odmah.</p>
+            </details>
+
+            <details class="lp-faq-item">
+                <summary>Politika privatnosti</summary>
+                <p><strong>Koje podatke prikupljamo</strong>: ime i email iz Google profila (za login), listu oglasa koje korisnik prati, i prijavne sesije (cookies).</p>
+                <p><strong>Šta NE prikupljamo</strong>: ne čuvamo lozinke (koristi se Google OAuth), ne tracking-ujemo van sajta, nemamo Google Analytics niti Facebook Pixel, ne delimo podatke sa trećim stranama, nemamo reklame.</p>
+                <p><strong>Kako koristimo</strong>: isključivo da pratimo oglase koje si dodao i da ti pokažemo rezultate. Ništa drugo.</p>
+                <p><strong>Brisanje naloga</strong>: pošalji email na <a href="mailto:vojinovic82@gmail.com">vojinovic82@gmail.com</a> i obrisaćemo sve tvoje podatke u roku od 48h.</p>
+                <p><strong>Sadržaj oglasa</strong>: opisi oglasa se automatski čiste od kontakt informacija (telefoni, emailovi, linkovi) pre čuvanja. Imena prodavaca se ne čuvaju, samo ocene.</p>
+                <p><strong>Cookies</strong>: koristimo samo sesijske kolačiće potrebne za login. Bez tracking ili oglašivačkih kolačića.</p>
+            </details>
+
+            <details class="lp-faq-item">
+                <summary>Odricanje od odgovornosti</summary>
+                <p>Auto Drukara prikazuje podatke i analize "kakvi jesu". Score-ovi i očekivane cene su preporuke zasnovane na statističkim modelima i mogu da budu netačni. Pre kupovine bilo kog automobila, fizički proveri vozilo, dokumenta, istoriju servisiranja i obavi odgovarajuće pravne procedure. Auto Drukara nije odgovoran za odluke korisnika na osnovu prikazanih podataka.</p>
+                <p>Sajt nije supstitut za pregled mehaničara, niti pravnu pomoć.</p>
+            </details>
+        </section>
+
         <footer class="lp-footer">
             <p>© 2026 Auto Drukara. Mi nađemo. Ti uštediš.</p>
+            <p class="lp-footer-links">
+                <a href="#o-nama">O nama</a> ·
+                <a href="#o-nama">Politika privatnosti</a> ·
+                <a href="mailto:vojinovic82@gmail.com">Kontakt</a>
+            </p>
             <p class="lp-footer-disclaimer">
                 Auto Drukara nije povezan sa polovniautomobili.com niti bilo kojim drugim sajtom čije podatke prikazuje. Podaci se koriste isključivo u informativne svrhe za naše korisnike. Sve cene, slike i opisi su vlasništvo originalnih sajtova i oglašivača. Klikom na "Otvori" odlaziš direktno na originalni oglas.
             </p>
@@ -2475,7 +2536,13 @@ input::placeholder { color: var(--color-text-subtle); }
         <p class="app-footer-disclaimer">
             Auto Drukara nije povezan sa polovniautomobili.com. Podaci se koriste isključivo informativno za naše korisnike. Sve cene, slike i opisi su vlasništvo originalnih sajtova i oglašivača.
         </p>
-        <p class="app-footer-meta">© 2026 Auto Drukara · <a href="#" onclick="logout(); return false;">Logout</a></p>
+        <p class="app-footer-meta">
+            © 2026 Auto Drukara ·
+            <a href="#" onclick="showAboutModal(); return false;">O nama</a> ·
+            <a href="#" onclick="showAboutModal(); return false;">Privatnost</a> ·
+            <a href="mailto:vojinovic82@gmail.com">Kontakt</a> ·
+            <a href="#" onclick="logout(); return false;">Logout</a>
+        </p>
     </footer>
 
 </div>
@@ -2625,6 +2692,53 @@ function toggleTheme(){
     try {
         localStorage.setItem("ad-theme", next);
     } catch(e) {}
+}
+
+function showAboutModal(){
+    const existing = document.getElementById("info-modal-backdrop");
+    if(existing) existing.remove();
+
+    const backdrop = document.createElement("div");
+    backdrop.id = "info-modal-backdrop";
+    backdrop.className = "info-modal-backdrop";
+
+    const modal = document.createElement("div");
+    modal.className = "info-modal";
+    modal.onclick = e => e.stopPropagation();
+
+    const closeBtn = document.createElement("button");
+    closeBtn.className = "info-modal-close";
+    closeBtn.textContent = "✕";
+    closeBtn.onclick = () => closeInfoModal();
+    modal.appendChild(closeBtn);
+
+    modal.innerHTML += `
+        <h3>O nama i pravila korišćenja</h3>
+        <div class="info-sub">Transparentno o tome kako sajt radi.</div>
+
+        <h4>O Auto Drukara</h4>
+        <p class="opis-tekst">Auto Drukara je nezavisan, besplatan, ne-komercijalan alat za praćenje cena polovnih automobila. Pravi ga jedna osoba u slobodno vreme i nije povezan sa polovniautomobili.com niti sa bilo kojim drugim sajtom čije podatke prikazuje.
+Kontakt: vojinovic82@gmail.com</p>
+
+        <h4>Politika privatnosti</h4>
+        <p class="opis-tekst">Šta prikupljamo: ime i email iz Google profila (za login), tvoja lista praćenih oglasa, prijavna sesija (cookies).
+Šta NE prikupljamo: lozinke (Google OAuth), tracking, Google Analytics, Facebook Pixel, reklame.
+Brisanje naloga: pošalji email na vojinovic82@gmail.com i obrisaćemo sve tvoje podatke u 48h.
+Cookies: samo sesijski, potrebni za login. Bez tracking ili oglašivačkih.
+Sadržaj oglasa: opisi se automatski čiste od telefona/emailova/linkova pre čuvanja. Imena prodavaca se ne čuvaju, samo ocene.</p>
+
+        <h4>Zahtev za uklanjanje podataka</h4>
+        <p class="opis-tekst">Ako ste vlasnik sadržaja koji se prikazuje (oglas, slika, opis) i želite uklanjanje, pošaljite zahtev na vojinovic82@gmail.com sa linkom oglasa. Uklonićemo podatke u 48h.</p>
+
+        <h4>Odricanje od odgovornosti</h4>
+        <p class="opis-tekst">Score-ovi i očekivane cene su statistička procena i mogu biti netačni. Pre kupovine fizički proveri vozilo, dokumenta i servisnu istoriju. Auto Drukara nije supstitut za pregled mehaničara niti pravnu pomoć.</p>
+    `;
+
+    backdrop.appendChild(modal);
+    backdrop.onclick = () => closeInfoModal();
+    document.body.appendChild(backdrop);
+    requestAnimationFrame(() => backdrop.classList.add("open"));
+    document.addEventListener("keydown", handleEscModal);
 }
 
 function showLoginScreen(){
@@ -4318,7 +4432,7 @@ function showInfoModal(c, o){
     addRow("Zemlja uvoza", c.zemlja_uvoza);
     addRow("Poreklo", c.poreklo);
     if(c.vin) addRow("VIN", c.vin);
-    if(c.owner_name) addRow("Prodavac", c.owner_name + (c.owner_rating ? " (" + c.owner_rating + "⭐)" : ""));
+    if(c.owner_rating) addRow("Ocena prodavca", c.owner_rating + "⭐");
 
     if(techGrid.children.length > 0){
         const techTitle = document.createElement("h4");
