@@ -3013,7 +3013,10 @@ function getExciseRate(powerKw){
 
 function parsePowerKw(powerStr){
     if(!powerStr) return null;
-    const match = powerStr.match(/(\d+)\s*kW/i);
+    // Ako je vec broj (npr. iz dataLayer-a)
+    if(typeof powerStr === "number") return powerStr;
+    // String "147 kW" ili slicno
+    const match = String(powerStr).match(/(\d+)\s*kW/i);
     return match ? parseInt(match[1]) : null;
 }
 
@@ -3714,9 +3717,9 @@ async function loadImportEstimate(container, c){
         const bcaPriceMid = Math.round(retailMedian * (1 - discountMid));
 
         // Landed cost računamo na osnovu BCA srednje cene
-        const powerKw = parsePowerKw(c.snaga);
-        const landedNoEur1 = calculateLandedCost(bcaPriceMid, "DE", powerKw, false);
-        const landedWithEur1 = calculateLandedCost(bcaPriceMid, "DE", powerKw, true);
+        // powerKw nije potreban jer je akciza 0 za polovne aute
+        const landedNoEur1 = calculateLandedCost(bcaPriceMid, "DE", null, false);
+        const landedWithEur1 = calculateLandedCost(bcaPriceMid, "DE", null, true);
 
         // Dodaj BCA proviziju + posrednika
         const bcaFee = Math.round(bcaPriceMid * BCA_FEE_RATE);
