@@ -738,7 +738,12 @@ def calculate_score_v3(
 
 def proveri_oglas(url):
     headers = {
-        "User-Agent": "AutoDrukara/1.0 (+https://autodrukara.com/o-nama; non-commercial price tracker)",
+        "User-Agent": "Mozilla/5.0 AutoDrukara/1.0 (+https://autodrukara.com/o-nama; non-commercial price tracker; contact: kontakt@autodrukara.com)",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
+        "Accept-Language": "sr-RS,sr;q=0.9,en-US;q=0.8,en;q=0.7",
+        "Accept-Encoding": "gzip, deflate, br",
+        "Connection": "keep-alive",
+        "Upgrade-Insecure-Requests": "1",
     }
     try:
         response = requests.get(url, headers=headers, timeout=20)
