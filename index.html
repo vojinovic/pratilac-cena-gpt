@@ -1935,6 +1935,51 @@ input::placeholder { color: var(--color-text-subtle); }
     margin-top: 4px;
 }
 
+.import-toggles {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin: 10px 0;
+    padding: 10px 12px;
+    background: var(--color-bg-soft);
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+}
+
+.import-toggle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: var(--color-text-muted);
+}
+
+.import-toggle input[type="checkbox"] {
+    width: auto;
+    margin: 0;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+.import-toggle label {
+    cursor: pointer;
+    user-select: none;
+    flex: 1;
+    color: var(--color-text);
+    font-weight: 500;
+}
+
+.import-toggle-info {
+    color: var(--color-text-subtle);
+    font-size: 10px;
+    font-weight: 400;
+}
+
+.import-bd-negative span:last-child {
+    color: var(--color-tag-pos) !important;
+    font-weight: 600;
+}
+
 .import-breakdown {
     background: var(--color-bg-card);
     border: 1px solid var(--color-border);
@@ -2997,8 +3042,8 @@ const IMPORT_COSTS = {
     amssUverenje: 100,
     customsDuty: { withEur1: 0, withoutEur1: 0.05 },
     vat: 0.20,
-    // Eko taksa - prosečna vrednost po vozilu (zavisi od mase + Euro standard)
-    ekoTaksa: 160,
+    // Eko taksa - prosečna vrednost po vozilu (~14 din/kg, prosečan SUV/auto ~1500-1800kg)
+    ekoTaksa: 200,
     // Akciza - za polovne aute STARIJE od godinu dana se NE plaća
     // (zakon o akcizama u Srbiji - akciza samo na nova vozila)
     // Za sigurnost, držimo na 0 - polovni auti iz EU oglasa su uvek stariji
@@ -3645,12 +3690,15 @@ function countryFlag(code){
     return map[code] || code;
 }
 
-// Procena uvoza preko BCA lizing aukcija
+// Procena uvoza preko BCA lizing aukcija ili dilera u EU
 // Statistički model: lizing povraćaji su 15-20% jeftiniji od retail mobile.de cena
 const BCA_DISCOUNT = { min: 0.15, max: 0.20 }; // 15-20% ispod retail
 const BCA_FEE_RATE = 0.06; // BCA provizija ~6% na cenu auta
 const AGENCY_FEE = 1500; // Posrednik/agencija u Srbiji
-const SR_VAT_REFUND = 0.16; // Povraćaj nemačkog PDV-a (~16% kod dilera)
+const DE_VAT_RATE = 0.19; // Nemački PDV
+const DE_VAT_REFUND_EFFECTIVE = 0.16; // Efektivni povraćaj (na bruto cenu, ne neto)
+const ECO_TAX_AVG = 200; // Eko taksa za prosečan SUV/auto (po masi ~14 din/kg)
+const DOCS_TRANSLATION = 75; // Prevodi i dokumentacija
 
 async function loadImportEstimate(container, c){
     container.innerHTML = '<div class="eu-loading">Računam procenu uvoza...</div>';
@@ -3704,11 +3752,10 @@ async function loadImportEstimate(container, c){
             return;
         }
 
-        // Statistike retail cene
+        // Statistike retail cene (bruto, sa nemačkim PDV-om)
         retailPrices.sort((a,b) => a - b);
         const retailMin = retailPrices[0];
         const retailMedian = retailPrices[Math.floor(retailPrices.length / 2)];
-        const retailAvg = Math.round(retailPrices.reduce((a,b) => a+b, 0) / retailPrices.length);
 
         // BCA cena = retail - 17.5% (sredina BCA_DISCOUNT)
         const discountMid = (BCA_DISCOUNT.min + BCA_DISCOUNT.max) / 2;
@@ -3716,24 +3763,6 @@ async function loadImportEstimate(container, c){
         const bcaPriceMax = Math.round(retailMedian * (1 - BCA_DISCOUNT.min));
         const bcaPriceMid = Math.round(retailMedian * (1 - discountMid));
 
-        // Landed cost računamo na osnovu BCA srednje cene
-        // powerKw nije potreban jer je akciza 0 za polovne aute
-        const landedNoEur1 = calculateLandedCost(bcaPriceMid, "DE", null, false);
-        const landedWithEur1 = calculateLandedCost(bcaPriceMid, "DE", null, true);
-
-        // Dodaj BCA proviziju + posrednika
-        const bcaFee = Math.round(bcaPriceMid * BCA_FEE_RATE);
-
-        // Total landed sa svim troškovima
-        const totalDIYNoEur1 = landedNoEur1.total + bcaFee;
-        const totalDIYWithEur1 = landedWithEur1.total + bcaFee;
-        const totalViaAgency = landedWithEur1.total + bcaFee + AGENCY_FEE;
-
-        // Razlika u odnosu na domaću cenu
-        const savingsDIY = c.cena - totalDIYWithEur1;
-        const savingsAgency = c.cena - totalViaAgency;
-
-        // Render rezultata
         container.innerHTML = "";
 
         const stats = document.createElement("div");
@@ -3742,7 +3771,7 @@ async function loadImportEstimate(container, c){
             Bazirano na <strong>${retailPrices.length}</strong> retail oglasa iz EU.
             Retail median: <strong>€${retailMedian.toLocaleString("en-US")}</strong>,
             opseg: €${retailMin.toLocaleString("en-US")} - €${retailPrices[retailPrices.length-1].toLocaleString("en-US")}
-            <div class="eu-match-hint">Procena se zasniva na javnim podacima — BCA cene nisu javne, koristimo statistički model (lizing povraćaji 15-20% ispod retail)</div>
+            <div class="eu-match-hint">Procena se zasniva na javnim retail oglasima. BCA cene nisu javne; koristimo statistički model (15-20% ispod retail).</div>
         `;
         container.appendChild(stats);
 
@@ -3758,73 +3787,148 @@ async function loadImportEstimate(container, c){
         `;
         container.appendChild(bcaBox);
 
-        // Total cost breakdown
+        // Toggles wrap
+        const togglesWrap = document.createElement("div");
+        togglesWrap.className = "import-toggles";
+
+        const eur1Id = "imp-eur1-" + Math.random().toString(36).slice(2, 8);
+        const vatId = "imp-vat-" + Math.random().toString(36).slice(2, 8);
+        const retailId = "imp-retail-" + Math.random().toString(36).slice(2, 8);
+
+        togglesWrap.innerHTML = `
+            <div class="import-toggle">
+                <input type="checkbox" id="${eur1Id}" checked>
+                <label for="${eur1Id}">EUR.1 sertifikat <span class="import-toggle-info">(carina 0% umesto 5%)</span></label>
+            </div>
+            <div class="import-toggle">
+                <input type="checkbox" id="${vatId}">
+                <label for="${vatId}">Povraćaj DE PDV-a <span class="import-toggle-info">(samo kod dilera sa "MwSt. ausweisbar", ušteda ~16%)</span></label>
+            </div>
+            <div class="import-toggle">
+                <input type="checkbox" id="${retailId}">
+                <label for="${retailId}">Računaj sa RETAIL cenom <span class="import-toggle-info">(umesto BCA aukcijske, ako kupuješ direktno od dilera)</span></label>
+            </div>
+        `;
+        container.appendChild(togglesWrap);
+
+        // Breakdown i compare box - sadržaj se popunjava dinamično
         const breakdownBox = document.createElement("div");
         breakdownBox.className = "import-breakdown";
-        breakdownBox.innerHTML = `
-            <h4 class="import-breakdown-title">Troškovnik (sa EUR.1):</h4>
-            ${landedWithEur1.breakdown.map(b => `
-                <div class="import-bd-row">
-                    <span>${b.label}</span>
-                    <span>€${b.value.toLocaleString("en-US")}</span>
-                </div>
-            `).join("")}
-            <div class="import-bd-row">
-                <span>BCA provizija (6%)</span>
-                <span>€${bcaFee.toLocaleString("en-US")}</span>
-            </div>
-            <div class="import-bd-row import-bd-total">
-                <span><strong>Ukupno (DIY)</strong></span>
-                <span><strong>€${totalDIYWithEur1.toLocaleString("en-US")}</strong></span>
-            </div>
-            <div class="import-bd-row">
-                <span>+ Posrednik/agencija</span>
-                <span>€${AGENCY_FEE.toLocaleString("en-US")}</span>
-            </div>
-            <div class="import-bd-row import-bd-total">
-                <span><strong>Ukupno (preko agencije)</strong></span>
-                <span><strong>€${totalViaAgency.toLocaleString("en-US")}</strong></span>
-            </div>
-        `;
         container.appendChild(breakdownBox);
 
-        // Compare with domestic
         const compareBox = document.createElement("div");
         compareBox.className = "import-compare";
-
-        let savingsLabel = "";
-        let savingsClass = "";
-
-        if(savingsAgency > 1500){
-            savingsClass = "savings";
-            savingsLabel = `💰 Uvoz se isplati: ušteda ~€${savingsAgency.toLocaleString("en-US")} preko agencije, ~€${savingsDIY.toLocaleString("en-US")} DIY`;
-        } else if(savingsDIY > 1500){
-            savingsClass = "marginal";
-            savingsLabel = `⚖️ Uvoz se isplati samo DIY: ušteda €${savingsDIY.toLocaleString("en-US")}. Preko agencije razlika ${savingsAgency > 0 ? "€" + savingsAgency : "negativna €" + Math.abs(savingsAgency)}`;
-        } else if(savingsDIY > 0){
-            savingsClass = "marginal";
-            savingsLabel = `⚖️ Mala ušteda DIY (€${savingsDIY.toLocaleString("en-US")}). Uvoz nije znatno isplativ.`;
-        } else {
-            savingsClass = "expensive";
-            savingsLabel = `❌ Uvoz nije isplativ. Bio bi €${Math.abs(savingsDIY).toLocaleString("en-US")} skuplji od domaće cene (DIY)`;
-        }
-
-        compareBox.classList.add(savingsClass);
-        compareBox.innerHTML = `
-            <div class="import-compare-prices">
-                <div>Domaća cena: <strong>€${c.cena.toLocaleString("en-US")}</strong></div>
-                <div>Landed (DIY): <strong>€${totalDIYWithEur1.toLocaleString("en-US")}</strong></div>
-                <div>Landed (agencija): <strong>€${totalViaAgency.toLocaleString("en-US")}</strong></div>
-            </div>
-            <div class="import-compare-verdict">${savingsLabel}</div>
-        `;
         container.appendChild(compareBox);
 
-        // Disclaimer
         const disclaimer = document.createElement("div");
         disclaimer.className = "import-disclaimer";
-        disclaimer.textContent = "⚠️ Procena! BCA prodaje samo firmama sa EU VAT brojem. Stvarne cene zavise od ponude na aukciji, stanja auta, i tržišnih okolnosti.";
+        disclaimer.textContent = "⚠️ Procena! BCA prodaje samo firmama sa EU VAT brojem. Stvarne cene zavise od ponude na aukciji, stanja auta, i tržišnih okolnosti. Eko taksa i transport mogu varirati.";
         container.appendChild(disclaimer);
+
+        function updateImportEstimate(){
+            const hasEur1 = document.getElementById(eur1Id).checked;
+            const hasVatRefund = document.getElementById(vatId).checked;
+            const useRetail = document.getElementById(retailId).checked;
+
+            // Baza cena: BCA ili retail
+            let basePrice = useRetail ? retailMedian : bcaPriceMid;
+
+            // Ako ima VAT povraćaj, oduzmi efektivni 16% od bruto cene
+            if(hasVatRefund){
+                basePrice = Math.round(basePrice * (1 - DE_VAT_REFUND_EFFECTIVE));
+            }
+
+            // Landed cost
+            const landed = calculateLandedCost(basePrice, "DE", null, hasEur1);
+
+            // Dodatne stavke
+            const bcaFee = useRetail ? 0 : Math.round(basePrice * BCA_FEE_RATE);
+            const docsTranslation = DOCS_TRANSLATION;
+
+            const totalDIY = landed.total + bcaFee + docsTranslation;
+            const totalViaAgency = totalDIY + AGENCY_FEE;
+
+            // Render breakdown
+            const breakdownRows = [
+                { label: useRetail ? "Cena (retail)" : "Cena (BCA procena)", value: useRetail ? retailMedian : bcaPriceMid },
+            ];
+            if(hasVatRefund){
+                breakdownRows.push({
+                    label: "− Povraćaj DE PDV-a (~16%)",
+                    value: -(Math.round((useRetail ? retailMedian : bcaPriceMid) * DE_VAT_REFUND_EFFECTIVE)),
+                    negative: true,
+                });
+            }
+            // Ubaci postojeće landed stavke (preskoči "Cena auta" pošto je već gore prikazano)
+            landed.breakdown.forEach(b => {
+                if(b.label !== "Cena auta") breakdownRows.push(b);
+            });
+            if(!useRetail){
+                breakdownRows.push({ label: "BCA provizija (6%)", value: bcaFee });
+            }
+            breakdownRows.push({ label: "Prevodi i dokumentacija", value: docsTranslation });
+
+            breakdownBox.innerHTML = `
+                <h4 class="import-breakdown-title">Troškovnik:</h4>
+                ${breakdownRows.map(b => `
+                    <div class="import-bd-row${b.negative ? " import-bd-negative" : ""}">
+                        <span>${b.label}</span>
+                        <span>${b.value < 0 ? "−" : ""}€${Math.abs(b.value).toLocaleString("en-US")}</span>
+                    </div>
+                `).join("")}
+                <div class="import-bd-row import-bd-total">
+                    <span><strong>Ukupno (DIY)</strong></span>
+                    <span><strong>€${totalDIY.toLocaleString("en-US")}</strong></span>
+                </div>
+                <div class="import-bd-row">
+                    <span>+ Posrednik/agencija</span>
+                    <span>€${AGENCY_FEE.toLocaleString("en-US")}</span>
+                </div>
+                <div class="import-bd-row import-bd-total">
+                    <span><strong>Ukupno (preko agencije)</strong></span>
+                    <span><strong>€${totalViaAgency.toLocaleString("en-US")}</strong></span>
+                </div>
+            `;
+
+            // Compare with domestic
+            const savingsDIY = c.cena - totalDIY;
+            const savingsAgency = c.cena - totalViaAgency;
+
+            let savingsLabel = "";
+            let savingsClass = "";
+
+            if(savingsAgency > 1500){
+                savingsClass = "savings";
+                savingsLabel = `💰 Uvoz se isplati: ušteda ~€${savingsAgency.toLocaleString("en-US")} preko agencije, ~€${savingsDIY.toLocaleString("en-US")} DIY`;
+            } else if(savingsDIY > 1500){
+                savingsClass = "marginal";
+                savingsLabel = `⚖️ Uvoz se isplati samo DIY: ušteda €${savingsDIY.toLocaleString("en-US")}. Preko agencije razlika ${savingsAgency > 0 ? "€" + savingsAgency : "−€" + Math.abs(savingsAgency)}`;
+            } else if(savingsDIY > 0){
+                savingsClass = "marginal";
+                savingsLabel = `⚖️ Mala ušteda DIY (€${savingsDIY.toLocaleString("en-US")}). Uvoz nije znatno isplativ.`;
+            } else {
+                savingsClass = "expensive";
+                savingsLabel = `❌ Uvoz nije isplativ. Bio bi €${Math.abs(savingsDIY).toLocaleString("en-US")} skuplji od domaće cene (DIY)`;
+            }
+
+            compareBox.className = "import-compare " + savingsClass;
+            compareBox.innerHTML = `
+                <div class="import-compare-prices">
+                    <div>Domaća cena: <strong>€${c.cena.toLocaleString("en-US")}</strong></div>
+                    <div>Landed (DIY): <strong>€${totalDIY.toLocaleString("en-US")}</strong></div>
+                    <div>Landed (agencija): <strong>€${totalViaAgency.toLocaleString("en-US")}</strong></div>
+                </div>
+                <div class="import-compare-verdict">${savingsLabel}</div>
+            `;
+        }
+
+        // Wire up event listeners
+        document.getElementById(eur1Id).addEventListener("change", updateImportEstimate);
+        document.getElementById(vatId).addEventListener("change", updateImportEstimate);
+        document.getElementById(retailId).addEventListener("change", updateImportEstimate);
+
+        // Initial render
+        updateImportEstimate();
 
     }catch(e){
         container.innerHTML = `<div class="eu-error">⚠️ Greška: ${e.message}</div>`;
