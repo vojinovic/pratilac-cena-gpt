@@ -1900,6 +1900,138 @@ input::placeholder { color: var(--color-text-subtle); }
     font-style: italic;
 }
 
+/* IMPORT ESTIMATE */
+.import-box {
+    background: var(--color-bg-soft);
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    padding: 12px;
+    margin: 10px 0;
+}
+
+.import-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+}
+
+.import-label {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--color-text);
+}
+
+.import-value {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--color-text);
+    letter-spacing: -0.01em;
+}
+
+.import-meta {
+    font-size: 11px;
+    color: var(--color-text-muted);
+    margin-top: 4px;
+}
+
+.import-breakdown {
+    background: var(--color-bg-card);
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    padding: 12px;
+    margin: 10px 0;
+}
+
+.import-breakdown-title {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--color-text-muted);
+    margin: 0 0 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.import-bd-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 4px 0;
+    font-size: 12px;
+    color: var(--color-text-muted);
+}
+
+.import-bd-row span:last-child {
+    color: var(--color-text);
+    font-weight: 500;
+}
+
+.import-bd-total {
+    border-top: 1px solid var(--color-border-soft);
+    padding-top: 6px;
+    margin-top: 4px;
+}
+
+.import-bd-total span {
+    color: var(--color-text) !important;
+    font-size: 13px;
+}
+
+.import-compare {
+    background: var(--color-bg-soft);
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    padding: 12px;
+    margin: 10px 0;
+}
+
+.import-compare.savings {
+    background: var(--color-green-light);
+    border-color: var(--color-green);
+}
+
+.import-compare.marginal {
+    background: var(--color-yellow-light);
+    border-color: var(--color-yellow);
+}
+
+.import-compare.expensive {
+    background: var(--color-red-light);
+    border-color: var(--color-red);
+}
+
+.import-compare-prices {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 12px;
+    color: var(--color-text-muted);
+    margin-bottom: 8px;
+}
+
+.import-compare-prices strong {
+    color: var(--color-text);
+    margin-left: 4px;
+}
+
+.import-compare-verdict {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--color-text);
+    padding-top: 8px;
+    border-top: 1px solid var(--color-border-soft);
+}
+
+.import-disclaimer {
+    font-size: 11px;
+    color: var(--color-text-subtle);
+    background: var(--color-bg-soft);
+    border-radius: 6px;
+    padding: 8px 10px;
+    margin-top: 10px;
+    line-height: 1.5;
+    font-style: italic;
+}
+
 .eu-comparison {
     background: var(--color-yellow-light);
     border: 1px solid var(--color-yellow);
@@ -3510,6 +3642,192 @@ function countryFlag(code){
     return map[code] || code;
 }
 
+// Procena uvoza preko BCA lizing aukcija
+// Statistički model: lizing povraćaji su 15-20% jeftiniji od retail mobile.de cena
+const BCA_DISCOUNT = { min: 0.15, max: 0.20 }; // 15-20% ispod retail
+const BCA_FEE_RATE = 0.06; // BCA provizija ~6% na cenu auta
+const AGENCY_FEE = 1500; // Posrednik/agencija u Srbiji
+const SR_VAT_REFUND = 0.16; // Povraćaj nemačkog PDV-a (~16% kod dilera)
+
+async function loadImportEstimate(container, c){
+    container.innerHTML = '<div class="eu-loading">Računam procenu uvoza...</div>';
+
+    if(!c.cena || !c.godiste){
+        container.innerHTML = '<div class="eu-error">Nedostaju podaci za procenu.</div>';
+        return;
+    }
+
+    const modelParts = (c.model || "").split("-");
+    if(modelParts.length < 2){
+        container.innerHTML = '<div class="eu-error">Ne mogu da odredim brand/model.</div>';
+        return;
+    }
+    const make = modelParts[0];
+    const model = modelParts.slice(1).join("-");
+
+    // Prvo pokreni EU search da dobijemo retail cene
+    const params = new URLSearchParams({ make, model });
+    if(c.godiste){
+        params.set("year_from", c.godiste);
+        params.set("year_to", c.godiste);
+    }
+    if(c.kilometraza){
+        params.set("km_min", Math.max(0, Math.floor(c.kilometraza * 0.8)));
+        params.set("km_max", Math.ceil(c.kilometraza * 1.2));
+    }
+
+    try{
+        const r = await apiFetch("/eu-search?" + params.toString());
+        const data = await r.json();
+
+        let retailPrices = data.results ? data.results.map(x => x.price).filter(p => p > 1000) : [];
+
+        // Ako premalo retail rezultata, proširi pretragu
+        if(retailPrices.length < 3 && c.godiste && c.kilometraza){
+            const widerParams = new URLSearchParams({ make, model });
+            widerParams.set("year_from", c.godiste - 1);
+            widerParams.set("year_to", c.godiste + 1);
+            widerParams.set("km_min", Math.max(0, Math.floor(c.kilometraza * 0.7)));
+            widerParams.set("km_max", Math.ceil(c.kilometraza * 1.3));
+            const r2 = await apiFetch("/eu-search?" + widerParams.toString());
+            const data2 = await r2.json();
+            if(data2.results && data2.results.length > retailPrices.length){
+                retailPrices = data2.results.map(x => x.price).filter(p => p > 1000);
+            }
+        }
+
+        if(retailPrices.length === 0){
+            container.innerHTML = '<div class="eu-error">Nema dovoljno EU oglasa za procenu uvoza.</div>';
+            return;
+        }
+
+        // Statistike retail cene
+        retailPrices.sort((a,b) => a - b);
+        const retailMin = retailPrices[0];
+        const retailMedian = retailPrices[Math.floor(retailPrices.length / 2)];
+        const retailAvg = Math.round(retailPrices.reduce((a,b) => a+b, 0) / retailPrices.length);
+
+        // BCA cena = retail - 17.5% (sredina BCA_DISCOUNT)
+        const discountMid = (BCA_DISCOUNT.min + BCA_DISCOUNT.max) / 2;
+        const bcaPriceMin = Math.round(retailMedian * (1 - BCA_DISCOUNT.max));
+        const bcaPriceMax = Math.round(retailMedian * (1 - BCA_DISCOUNT.min));
+        const bcaPriceMid = Math.round(retailMedian * (1 - discountMid));
+
+        // Landed cost računamo na osnovu BCA srednje cene
+        const powerKw = parsePowerKw(c.snaga);
+        const landedNoEur1 = calculateLandedCost(bcaPriceMid, "DE", powerKw, false);
+        const landedWithEur1 = calculateLandedCost(bcaPriceMid, "DE", powerKw, true);
+
+        // Dodaj BCA proviziju + posrednika
+        const bcaFee = Math.round(bcaPriceMid * BCA_FEE_RATE);
+
+        // Total landed sa svim troškovima
+        const totalDIYNoEur1 = landedNoEur1.total + bcaFee;
+        const totalDIYWithEur1 = landedWithEur1.total + bcaFee;
+        const totalViaAgency = landedWithEur1.total + bcaFee + AGENCY_FEE;
+
+        // Razlika u odnosu na domaću cenu
+        const savingsDIY = c.cena - totalDIYWithEur1;
+        const savingsAgency = c.cena - totalViaAgency;
+
+        // Render rezultata
+        container.innerHTML = "";
+
+        const stats = document.createElement("div");
+        stats.className = "eu-stats";
+        stats.innerHTML = `
+            Bazirano na <strong>${retailPrices.length}</strong> retail oglasa iz EU.
+            Retail median: <strong>€${retailMedian.toLocaleString("en-US")}</strong>,
+            opseg: €${retailMin.toLocaleString("en-US")} - €${retailPrices[retailPrices.length-1].toLocaleString("en-US")}
+            <div class="eu-match-hint">Procena se zasniva na javnim podacima — BCA cene nisu javne, koristimo statistički model (lizing povraćaji 15-20% ispod retail)</div>
+        `;
+        container.appendChild(stats);
+
+        // BCA estimate box
+        const bcaBox = document.createElement("div");
+        bcaBox.className = "import-box";
+        bcaBox.innerHTML = `
+            <div class="import-row">
+                <span class="import-label">🏭 BCA aukcija (procena)</span>
+                <span class="import-value">€${bcaPriceMin.toLocaleString("en-US")} - €${bcaPriceMax.toLocaleString("en-US")}</span>
+            </div>
+            <div class="import-meta">Lizing povraćaj iz Nemačke, srednja cena ~€${bcaPriceMid.toLocaleString("en-US")}</div>
+        `;
+        container.appendChild(bcaBox);
+
+        // Total cost breakdown
+        const breakdownBox = document.createElement("div");
+        breakdownBox.className = "import-breakdown";
+        breakdownBox.innerHTML = `
+            <h4 class="import-breakdown-title">Troškovnik (sa EUR.1):</h4>
+            ${landedWithEur1.breakdown.map(b => `
+                <div class="import-bd-row">
+                    <span>${b.label}</span>
+                    <span>€${b.value.toLocaleString("en-US")}</span>
+                </div>
+            `).join("")}
+            <div class="import-bd-row">
+                <span>BCA provizija (6%)</span>
+                <span>€${bcaFee.toLocaleString("en-US")}</span>
+            </div>
+            <div class="import-bd-row import-bd-total">
+                <span><strong>Ukupno (DIY)</strong></span>
+                <span><strong>€${totalDIYWithEur1.toLocaleString("en-US")}</strong></span>
+            </div>
+            <div class="import-bd-row">
+                <span>+ Posrednik/agencija</span>
+                <span>€${AGENCY_FEE.toLocaleString("en-US")}</span>
+            </div>
+            <div class="import-bd-row import-bd-total">
+                <span><strong>Ukupno (preko agencije)</strong></span>
+                <span><strong>€${totalViaAgency.toLocaleString("en-US")}</strong></span>
+            </div>
+        `;
+        container.appendChild(breakdownBox);
+
+        // Compare with domestic
+        const compareBox = document.createElement("div");
+        compareBox.className = "import-compare";
+
+        let savingsLabel = "";
+        let savingsClass = "";
+
+        if(savingsAgency > 1500){
+            savingsClass = "savings";
+            savingsLabel = `💰 Uvoz se isplati: ušteda ~€${savingsAgency.toLocaleString("en-US")} preko agencije, ~€${savingsDIY.toLocaleString("en-US")} DIY`;
+        } else if(savingsDIY > 1500){
+            savingsClass = "marginal";
+            savingsLabel = `⚖️ Uvoz se isplati samo DIY: ušteda €${savingsDIY.toLocaleString("en-US")}. Preko agencije razlika ${savingsAgency > 0 ? "€" + savingsAgency : "negativna €" + Math.abs(savingsAgency)}`;
+        } else if(savingsDIY > 0){
+            savingsClass = "marginal";
+            savingsLabel = `⚖️ Mala ušteda DIY (€${savingsDIY.toLocaleString("en-US")}). Uvoz nije znatno isplativ.`;
+        } else {
+            savingsClass = "expensive";
+            savingsLabel = `❌ Uvoz nije isplativ. Bio bi €${Math.abs(savingsDIY).toLocaleString("en-US")} skuplji od domaće cene (DIY)`;
+        }
+
+        compareBox.classList.add(savingsClass);
+        compareBox.innerHTML = `
+            <div class="import-compare-prices">
+                <div>Domaća cena: <strong>€${c.cena.toLocaleString("en-US")}</strong></div>
+                <div>Landed (DIY): <strong>€${totalDIYWithEur1.toLocaleString("en-US")}</strong></div>
+                <div>Landed (agencija): <strong>€${totalViaAgency.toLocaleString("en-US")}</strong></div>
+            </div>
+            <div class="import-compare-verdict">${savingsLabel}</div>
+        `;
+        container.appendChild(compareBox);
+
+        // Disclaimer
+        const disclaimer = document.createElement("div");
+        disclaimer.className = "import-disclaimer";
+        disclaimer.textContent = "⚠️ Procena! BCA prodaje samo firmama sa EU VAT brojem. Stvarne cene zavise od ponude na aukciji, stanja auta, i tržišnih okolnosti.";
+        container.appendChild(disclaimer);
+
+    }catch(e){
+        container.innerHTML = `<div class="eu-error">⚠️ Greška: ${e.message}</div>`;
+    }
+}
+
 async function loadEuComparison(container, c){
     container.innerHTML = '<div class="eu-loading">Pretražujem EU oglase...</div>';
 
@@ -4070,6 +4388,37 @@ function buildTrackedCard(o, c, showBestDealTag){
     euSection.appendChild(euToggle);
     euSection.appendChild(euContent);
     body.appendChild(euSection);
+
+    // PROCENA UVOZA (BCA lizing aukcije)
+    const importSection = document.createElement("div");
+    importSection.className = "eu-section";
+
+    const importToggle = document.createElement("button");
+    importToggle.className = "eu-toggle-btn";
+    importToggle.innerHTML = '<span>💼 Procena uvoza (BCA lizing)</span><span class="eu-arrow">▼</span>';
+
+    const importContent = document.createElement("div");
+    importContent.className = "eu-content";
+
+    let importLoaded = false;
+    importToggle.onclick = () => {
+        const isExpanded = importContent.classList.contains("expanded");
+        if(isExpanded){
+            importContent.classList.remove("expanded");
+            importToggle.classList.remove("expanded");
+        }else{
+            importContent.classList.add("expanded");
+            importToggle.classList.add("expanded");
+            if(!importLoaded){
+                importLoaded = true;
+                loadImportEstimate(importContent, c);
+            }
+        }
+    };
+
+    importSection.appendChild(importToggle);
+    importSection.appendChild(importContent);
+    body.appendChild(importSection);
 
     const actions = document.createElement("div");
     actions.className = "card-actions";
