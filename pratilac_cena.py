@@ -109,26 +109,60 @@ def izvuci_naziv(soup, data_layer=None):
 
 def izvuci_opis(soup):
     """Izvuče slobodan tekstualni opis oglasa."""
+    raw = None
+
     el = soup.find("div", class_="description-wrapper")
     if el:
-        return el.get_text("\n", strip=True)
+        raw = el.get_text("\n", strip=True)
 
     # Schema.org Car description
-    for script in soup.find_all("script", type="application/ld+json"):
-        try:
-            data = json.loads(script.string or "{}")
-            items = data if isinstance(data, list) else [data]
-            for item in items:
-                if isinstance(item, dict):
-                    offer = item.get("makesOffer") or {}
-                    car = offer.get("itemOffered") or {}
-                    desc = car.get("description")
-                    if desc:
-                        return desc
-        except (json.JSONDecodeError, AttributeError, TypeError):
-            continue
+    if not raw:
+        for script in soup.find_all("script", type="application/ld+json"):
+            try:
+                data = json.loads(script.string or "{}")
+                items = data if isinstance(data, list) else [data]
+                for item in items:
+                    if isinstance(item, dict):
+                        offer = item.get("makesOffer") or {}
+                        car = offer.get("itemOffered") or {}
+                        desc = car.get("description")
+                        if desc:
+                            raw = desc
+                            break
+                if raw:
+                    break
+            except (json.JSONDecodeError, AttributeError, TypeError):
+                continue
 
-    return None
+    return sanitize_opis(raw)
+
+
+def sanitize_opis(text):
+    """
+    Uklanja lične podatke iz opisa (telefoni, emailovi) i skracuje na 500 karaktera.
+    GDPR-friendly: ne čuvamo PII u našoj bazi.
+    """
+    if not text:
+        return None
+
+    # Email
+    text = re.sub(r"\S+@\S+\.\S+", "[email]", text)
+
+    # Telefoni (razne forme srpskih brojeva)
+    # +381 64 1234567, 064/1234-567, 064 12 34 567, 0641234567 itd
+    text = re.sub(r"\+?\d{1,3}[\s/-]?\d{2,3}[\s/-]?\d{2,4}[\s/-]?\d{2,4}", "[telefon]", text)
+    # Krace forme tipa 064 123 456 ili 06412345
+    text = re.sub(r"\b0\d{2}[\s/-]?\d{2,4}[\s/-]?\d{2,4}\b", "[telefon]", text)
+
+    # URL-ovi (mogu otkriti druge sajtove, kontakt)
+    text = re.sub(r"https?://\S+", "[link]", text)
+    text = re.sub(r"www\.\S+", "[link]", text)
+
+    # Skrati na 500 chars
+    if len(text) > 500:
+        text = text[:497] + "..."
+
+    return text.strip()
 
 
 def izvuci_dodatne_info(soup):
@@ -703,8 +737,11 @@ def calculate_score_v3(
 # ========================================================================
 
 def proveri_oglas(url):
+    headers = {
+        "User-Agent": "AutoDrukara/1.0 (+https://autodrukara.com/o-nama; non-commercial price tracker)",
+    }
     try:
-        response = requests.get(url, impersonate="chrome", timeout=20)
+        response = requests.get(url, headers=headers, timeout=20)
         response.raise_for_status()
         response.encoding = "utf-8"
     except Exception as e:
@@ -945,7 +982,6 @@ def scrape_for_user(email, oglasi):
             "garancija": data_layer.get("object_garancija") == "yes" if data_layer else False,
             "kupljen_nov_u_srbiji": data_layer.get("object_kupljen_nov_u_srbiji") == "yes" if data_layer else False,
             "damage": data_layer.get("object_damage") if data_layer else None,
-            "owner_name": data_layer.get("companyName") if data_layer else None,
             "owner_rating": data_layer.get("object_owner_rating") if data_layer else None,
             # NOVI PODACI
             "opis": opis,
