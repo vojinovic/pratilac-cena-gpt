@@ -235,6 +235,77 @@ body {
     box-shadow: 0 2px 8px rgba(0,0,0,0.3);
 }
 
+/* WAITLIST SCREEN */
+.waitlist-card {
+    max-width: 540px;
+    margin: 32px auto 0;
+    background: var(--color-bg-card);
+    border: 1px solid var(--color-border);
+    border-radius: 16px;
+    padding: 40px 32px;
+    text-align: center;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+}
+
+.waitlist-icon {
+    font-size: 48px;
+    margin-bottom: 16px;
+}
+
+.waitlist-title {
+    font-size: 26px;
+    font-weight: 700;
+    color: var(--color-text);
+    margin: 0 0 14px;
+    letter-spacing: -0.01em;
+}
+
+.waitlist-sub {
+    font-size: 15px;
+    line-height: 1.6;
+    color: var(--color-text-muted);
+    margin: 0 0 14px;
+}
+
+.waitlist-email {
+    display: inline-block;
+    background: var(--color-bg-soft);
+    border: 1px solid var(--color-border);
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-family: ui-monospace, "SF Mono", monospace;
+    font-size: 13px;
+    color: var(--color-text);
+    margin: 8px 0 16px;
+}
+
+.waitlist-meta {
+    margin-top: 24px !important;
+    padding-top: 20px;
+    border-top: 1px solid var(--color-border-soft);
+    font-size: 13px !important;
+    color: var(--color-text-subtle) !important;
+}
+
+.waitlist-meta a {
+    color: var(--color-text-muted);
+    border-bottom: 1px dotted var(--color-text-subtle);
+    text-decoration: none;
+}
+
+.waitlist-back {
+    display: inline-block;
+    margin-top: 20px;
+    color: var(--color-text-muted);
+    text-decoration: none;
+    font-size: 13px;
+    border-bottom: 1px dotted var(--color-text-subtle);
+}
+
+.waitlist-back:hover {
+    color: var(--color-text);
+}
+
 .theme-toggle .theme-icon-dark { display: none; }
 .theme-toggle .theme-icon-light { display: inline; }
 [data-theme="light"] .theme-toggle .theme-icon-dark { display: inline; }
@@ -255,6 +326,19 @@ body {
 
 .hero-logo {
     border-radius: 16px;
+}
+
+.hero-beta-badge {
+    display: inline-block;
+    background: linear-gradient(135deg, var(--color-cta) 0%, var(--color-cta-hover) 100%);
+    color: white;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 5px 12px;
+    border-radius: 100px;
+    letter-spacing: 0.06em;
+    margin-bottom: 18px;
+    box-shadow: 0 2px 8px rgba(239, 68, 68, 0.25);
 }
 
 .user-info {
@@ -2156,6 +2240,7 @@ input::placeholder { color: var(--color-text-subtle); }
         <!-- HERO -->
         <section class="hero">
             <img src="images/logo-full.png" alt="Auto Drukara" class="hero-logo">
+            <div class="hero-beta-badge">BETA · Ograničen pristup</div>
             <h1 class="hero-headline">Prati cene polovnih automobila i prepoznaj prave ponude</h1>
             <p class="hero-sub">Kažemo ti odmah da li je auto pošteno ocenjen ili duplo skuplji nego što vredi. Bez nagađanja, bez surfovanja po stranama oglasa.</p>
             <a href="#" class="hero-cta" onclick="loginWithGoogle(); return false;">
@@ -2165,9 +2250,9 @@ input::placeholder { color: var(--color-text-subtle); }
                     <path d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332z" fill="#FBBC05"/>
                     <path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z" fill="#EA4335"/>
                 </svg>
-                Počni besplatno
+                Zatraži pristup
             </a>
-            <p class="hero-mini-note">Google login, bez kreditne kartice, bez instalacije.</p>
+            <p class="hero-mini-note">Beta verzija. Google login te stavlja na waitlist - kontaktiramo te kad oslobodimo mesta.</p>
             <div class="hero-stats" id="heroStats">
                 <span>Pratimo cene svakih 6h</span>
             </div>
@@ -2353,8 +2438,8 @@ input::placeholder { color: var(--color-text-subtle); }
 
         <!-- FINAL CTA -->
         <section class="lp-section lp-final-cta">
-            <h2>Spreman da nađeš najbolji auto?</h2>
-            <p class="lp-section-sub">Bez registracije, bez forme. Samo Google login.</p>
+            <h2>Zainteresovan? Pridruži se beta programu</h2>
+            <p class="lp-section-sub">Trenutno biramo prvih nekoliko korisnika koji aktivno pretražuju tržište. Ostavi nam svoj email kroz Google login.</p>
             <a href="#" class="hero-cta" onclick="loginWithGoogle(); return false;">
                 <svg viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg" width="18" height="18">
                     <path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z" fill="#4285F4"/>
@@ -2362,9 +2447,9 @@ input::placeholder { color: var(--color-text-subtle); }
                     <path d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332z" fill="#FBBC05"/>
                     <path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z" fill="#EA4335"/>
                 </svg>
-                Prijavi se sa Google
+                Zatraži pristup
             </a>
-            <p class="lp-foot-note">Tvoji oglasi su privatni. Bez reklama.</p>
+            <p class="lp-foot-note">Tvoj email ide na waitlist. Javljamo se kad oslobodimo mesto.</p>
         </section>
 
         <!-- O NAMA / PRIVACY -->
@@ -4335,6 +4420,16 @@ async function trackFromSearch(url, label){
 }
 
 async function init(){
+    // Check if redirected from auth callback with waitlist flag
+    const params = new URLSearchParams(window.location.search);
+    if(params.get("waitlist") === "1"){
+        const email = params.get("email") || "";
+        // Clean URL
+        window.history.replaceState({}, "", window.location.pathname);
+        showWaitlistScreen(email);
+        return;
+    }
+
     const isAuthenticated = await checkAuth();
     if(!isAuthenticated){
         showLoginScreen();
@@ -4349,6 +4444,40 @@ async function init(){
     setupChips("fuelChips", SELECTED_FUEL);
     setupChips("chassisChips", SELECTED_CHASSIS);
     await load();
+}
+
+function showWaitlistScreen(email){
+    document.getElementById("loadingScreen").style.display = "none";
+    document.getElementById("mainApp").style.display = "none";
+    document.getElementById("appHeader").style.display = "none";
+    const loginScreen = document.getElementById("loginScreen");
+    loginScreen.style.display = "block";
+
+    const landingPage = loginScreen.querySelector(".landing-page");
+    if(landingPage){
+        landingPage.innerHTML = `
+            <section class="hero" style="padding: 80px 20px 60px;">
+                <img src="images/logo-full.png" alt="Auto Drukara" class="hero-logo">
+                <div class="waitlist-card">
+                    <div class="waitlist-icon">📝</div>
+                    <h1 class="waitlist-title">Skoro tu - na čekanju si!</h1>
+                    <p class="waitlist-sub">
+                        Auto Drukara je trenutno u <strong>beta verziji</strong> sa ograničenim brojem korisnika.
+                        Tvoj zahtev za pristup je sačuvan.
+                    </p>
+                    ${email ? `<div class="waitlist-email">${email}</div>` : ""}
+                    <p class="waitlist-sub">
+                        Kad otvorimo mesta, javićemo ti se na ovu adresu. Hvala na strpljenju!
+                    </p>
+                    <p class="waitlist-meta">
+                        Imaš pitanja? Piši na <a href="mailto:kontakt@autodrukara.com">kontakt@autodrukara.com</a>
+                    </p>
+                    <a href="/" class="waitlist-back">← Nazad na početnu</a>
+                </div>
+            </section>
+        `;
+    }
+    loadHeroStats();
 }
 
 function showInfoModal(c, o){
