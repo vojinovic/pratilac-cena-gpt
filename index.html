@@ -2865,22 +2865,18 @@ const IMPORT_COSTS = {
     amssUverenje: 100,
     customsDuty: { withEur1: 0, withoutEur1: 0.05 },
     vat: 0.20,
+    // Eko taksa - prosečna vrednost po vozilu (zavisi od mase + Euro standard)
+    ekoTaksa: 160,
+    // Akciza - za polovne aute STARIJE od godinu dana se NE plaća
+    // (zakon o akcizama u Srbiji - akciza samo na nova vozila)
+    // Za sigurnost, držimo na 0 - polovni auti iz EU oglasa su uvek stariji
     exciseTax: [
-        { maxKw: 99, rate: 0 },
-        { maxKw: 130, rate: 0.025 },
-        { maxKw: 170, rate: 0.05 },
-        { maxKw: 200, rate: 0.075 },
-        { maxKw: 250, rate: 0.10 },
-        { maxKw: Infinity, rate: 0.125 }
+        { maxKw: Infinity, rate: 0 }
     ]
 };
 
 function getExciseRate(powerKw){
-    if(!powerKw) return 0;
-    for(const tier of IMPORT_COSTS.exciseTax){
-        if(powerKw <= tier.maxKw) return tier.rate;
-    }
-    return 0.125;
+    return 0;  // Polovni auti ne plaćaju akcizu
 }
 
 function parsePowerKw(powerStr){
@@ -2899,24 +2895,29 @@ function calculateLandedCost(carPrice, country, powerKw, hasEur1){
     const transport = getTransportCost(country);
     const customsAgent = IMPORT_COSTS.customsAgent;
     const amssUverenje = IMPORT_COSTS.amssUverenje;
+    const ekoTaksa = IMPORT_COSTS.ekoTaksa;
 
+    // Carinska vrednost = cena + transport + agent
     const customsValue = carPrice + transport + customsAgent;
 
+    // Carina (5% bez EUR.1, 0% sa EUR.1)
     const customsRate = hasEur1 ? IMPORT_COSTS.customsDuty.withEur1 : IMPORT_COSTS.customsDuty.withoutEur1;
     const customsDuty = customsValue * customsRate;
 
     const afterCustoms = customsValue + customsDuty;
+
+    // PDV 20% - obracunava se na (carinska vrednost + carina)
     const vat = afterCustoms * IMPORT_COSTS.vat;
     const afterVat = afterCustoms + vat;
 
-    const exciseRate = getExciseRate(powerKw);
-    const excise = afterVat * exciseRate;
+    // Akciza - za polovne aute = 0 (zakon)
+    const excise = 0;
 
-    const total = afterVat + excise + amssUverenje;
+    const total = afterVat + ekoTaksa + amssUverenje;
 
     return {
         carPrice, transport, customsAgent, customsDuty, customsRate,
-        vat, excise, exciseRate, amssUverenje,
+        vat, excise, amssUverenje, ekoTaksa,
         total: Math.round(total),
         breakdown: [
             { label: "Cena auta", value: carPrice },
@@ -2924,7 +2925,7 @@ function calculateLandedCost(carPrice, country, powerKw, hasEur1){
             { label: "Carinska deklaracija", value: customsAgent },
             { label: `Carina ${(customsRate * 100).toFixed(0)}%`, value: Math.round(customsDuty) },
             { label: "PDV 20%", value: Math.round(vat) },
-            { label: `Akciza ${(exciseRate * 100).toFixed(1)}%${powerKw ? ` (${powerKw} kW)` : ""}`, value: Math.round(excise) },
+            { label: "Eko taksa", value: ekoTaksa },
             { label: "AMSS uverenje", value: amssUverenje }
         ]
     };
