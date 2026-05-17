@@ -1,7 +1,7 @@
 name: Provera cena
 on:
   schedule:
-    - cron: "0 * * * *"
+    - cron: "0 */6 * * *"
   workflow_dispatch:
   repository_dispatch:
     types: [scrape]
@@ -25,7 +25,7 @@ jobs:
 
       - name: Pokreni skriptu
         env:
-          API_URL: https://pratilac-cena-api.vojinovic82.workers.dev
+          API_URL: https://api.autodrukara.com
           SCRAPER_SECRET: ${{ secrets.SCRAPER_SECRET }}
         run: |
           python pratilac_cena.py
