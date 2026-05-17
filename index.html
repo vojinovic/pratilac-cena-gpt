@@ -306,6 +306,176 @@ body {
     color: var(--color-text);
 }
 
+/* ADMIN SECTION */
+.admin-title {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--color-text);
+    margin: 0 0 6px;
+}
+
+.admin-sub {
+    color: var(--color-text-muted);
+    font-size: 14px;
+    margin: 0 0 28px;
+}
+
+.admin-box {
+    background: var(--color-bg-card);
+    border: 1px solid var(--color-border);
+    border-radius: 14px;
+    padding: 24px;
+    margin-bottom: 20px;
+    max-width: 720px;
+}
+
+.admin-box-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 14px;
+}
+
+.admin-box h3 {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--color-text);
+    margin: 0 0 14px;
+}
+
+.admin-box-header h3 { margin: 0; }
+
+.btn-refresh {
+    background: transparent;
+    border: 1px solid var(--color-border);
+    color: var(--color-text-muted);
+    padding: 6px 14px;
+    border-radius: 6px;
+    font-size: 12px;
+    cursor: pointer;
+    font-family: inherit;
+}
+
+.btn-refresh:hover {
+    border-color: var(--color-text);
+    color: var(--color-text);
+}
+
+.admin-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.admin-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 14px;
+    background: var(--color-bg-soft);
+    border: 1px solid var(--color-border-soft);
+    border-radius: 10px;
+}
+
+.admin-row-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--color-border);
+    flex-shrink: 0;
+    object-fit: cover;
+}
+
+.admin-row-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.admin-row-name {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--color-text);
+}
+
+.admin-row-email {
+    font-size: 12px;
+    color: var(--color-text-muted);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.admin-row-meta {
+    font-size: 11px;
+    color: var(--color-text-subtle);
+    margin-top: 2px;
+}
+
+.admin-row-actions {
+    display: flex;
+    gap: 6px;
+    flex-shrink: 0;
+}
+
+.btn-approve {
+    background: #16a34a;
+    color: white;
+    border: none;
+    padding: 7px 14px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+}
+
+.btn-approve:hover { background: #15803d; }
+
+.btn-remove {
+    background: transparent;
+    border: 1px solid var(--color-border);
+    color: var(--color-text-muted);
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    cursor: pointer;
+    font-family: inherit;
+}
+
+.btn-remove:hover {
+    border-color: var(--color-red);
+    color: var(--color-red);
+}
+
+.admin-empty {
+    color: var(--color-text-subtle);
+    font-size: 13px;
+    text-align: center;
+    padding: 20px;
+    font-style: italic;
+}
+
+.admin-loading {
+    color: var(--color-text-subtle);
+    font-size: 13px;
+    text-align: center;
+    padding: 20px;
+}
+
+.admin-add-row {
+    display: flex;
+    gap: 8px;
+}
+
+.admin-add-row input {
+    flex: 1;
+    margin: 0;
+}
+
+.admin-add-row .add-btn {
+    flex-shrink: 0;
+}
+
 .theme-toggle .theme-icon-dark { display: none; }
 .theme-toggle .theme-icon-light { display: inline; }
 [data-theme="light"] .theme-toggle .theme-icon-dark { display: inline; }
@@ -2514,6 +2684,7 @@ input::placeholder { color: var(--color-text-subtle); }
     <div class="tabs">
         <button class="tab active" onclick="showSection('tracked', event)">Praćeni oglasi</button>
         <button class="tab" onclick="showSection('search', event)">Pretraga</button>
+        <button class="tab" id="adminTab" onclick="showSection('admin', event)" style="display:none;">⚙️ Admin</button>
     </div>
 
     <div id="section-tracked" class="section active">
@@ -2615,6 +2786,36 @@ input::placeholder { color: var(--color-text-subtle); }
         </div>
 
         <div id="searchPagination" class="pagination"></div>
+    </div>
+
+    <div id="section-admin" class="section">
+        <h2 class="admin-title">⚙️ Admin · Waitlist</h2>
+        <p class="admin-sub">Upravljanje pristupom korisnika beta verziji.</p>
+
+        <div class="admin-box">
+            <div class="admin-box-header">
+                <h3>⏳ Na čekanju</h3>
+                <button class="btn-refresh" onclick="loadAdminData()">↻ Osveži</button>
+            </div>
+            <div id="adminPending" class="admin-list">
+                <div class="admin-loading">Učitavam...</div>
+            </div>
+        </div>
+
+        <div class="admin-box">
+            <h3>➕ Ručno dodavanje</h3>
+            <div class="admin-add-row">
+                <input type="email" id="adminAddEmail" placeholder="email@example.com">
+                <button class="add-btn" onclick="adminApproveEmail(document.getElementById('adminAddEmail').value)">Dodaj</button>
+            </div>
+        </div>
+
+        <div class="admin-box">
+            <h3>✅ Odobreni korisnici</h3>
+            <div id="adminApproved" class="admin-list">
+                <div class="admin-loading">Učitavam...</div>
+            </div>
+        </div>
     </div>
 
     <footer class="app-footer">
@@ -2860,6 +3061,12 @@ function showMainApp(){
     const userInfo = document.getElementById("userInfo");
     userInfo.style.display = "flex";
     document.getElementById("userEmail").textContent = CURRENT_USER.email;
+
+    // Pokaži admin tab ako je korisnik admin
+    if(CURRENT_USER.is_admin){
+        const adminTab = document.getElementById("adminTab");
+        if(adminTab) adminTab.style.display = "";
+    }
 }
 
 // ========================================================================
@@ -2871,6 +3078,158 @@ function showSection(name, event){
     document.querySelectorAll(".section").forEach(s => s.classList.remove("active"));
     if(event && event.target) event.target.classList.add("active");
     document.getElementById("section-" + name).classList.add("active");
+
+    if(name === "admin"){
+        loadAdminData();
+    }
+}
+
+async function loadAdminData(){
+    const pendingEl = document.getElementById("adminPending");
+    const approvedEl = document.getElementById("adminApproved");
+    pendingEl.innerHTML = '<div class="admin-loading">Učitavam...</div>';
+    approvedEl.innerHTML = '<div class="admin-loading">Učitavam...</div>';
+
+    try {
+        const r = await apiFetch("/admin/waitlist");
+        if(!r.ok){
+            pendingEl.innerHTML = '<div class="admin-empty">Greška pri učitavanju</div>';
+            approvedEl.innerHTML = '<div class="admin-empty">Greška pri učitavanju</div>';
+            return;
+        }
+        const data = await r.json();
+
+        // Pending
+        if(!data.requested || data.requested.length === 0){
+            pendingEl.innerHTML = '<div class="admin-empty">Nema novih zahteva</div>';
+        } else {
+            pendingEl.innerHTML = "";
+            data.requested.forEach(req => {
+                const row = document.createElement("div");
+                row.className = "admin-row";
+
+                if(req.picture){
+                    const img = document.createElement("img");
+                    img.className = "admin-row-avatar";
+                    img.src = req.picture;
+                    img.alt = "";
+                    row.appendChild(img);
+                } else {
+                    const placeholder = document.createElement("div");
+                    placeholder.className = "admin-row-avatar";
+                    row.appendChild(placeholder);
+                }
+
+                const info = document.createElement("div");
+                info.className = "admin-row-info";
+                const name = document.createElement("div");
+                name.className = "admin-row-name";
+                name.textContent = req.name || "(bez imena)";
+                const email = document.createElement("div");
+                email.className = "admin-row-email";
+                email.textContent = req.email;
+                const meta = document.createElement("div");
+                meta.className = "admin-row-meta";
+                if(req.requested_at){
+                    const d = new Date(req.requested_at);
+                    meta.textContent = "Zahtev: " + d.toLocaleDateString("sr-RS") + " " + d.toLocaleTimeString("sr-RS", {hour: "2-digit", minute: "2-digit"});
+                }
+                info.appendChild(name);
+                info.appendChild(email);
+                info.appendChild(meta);
+                row.appendChild(info);
+
+                const actions = document.createElement("div");
+                actions.className = "admin-row-actions";
+                const approveBtn = document.createElement("button");
+                approveBtn.className = "btn-approve";
+                approveBtn.textContent = "✓ Odobri";
+                approveBtn.onclick = () => adminApproveEmail(req.email);
+                actions.appendChild(approveBtn);
+                row.appendChild(actions);
+
+                pendingEl.appendChild(row);
+            });
+        }
+
+        // Approved
+        if(!data.approved || data.approved.length === 0){
+            approvedEl.innerHTML = '<div class="admin-empty">Nema odobrenih korisnika</div>';
+        } else {
+            approvedEl.innerHTML = "";
+            data.approved.forEach(email => {
+                const row = document.createElement("div");
+                row.className = "admin-row";
+
+                const placeholder = document.createElement("div");
+                placeholder.className = "admin-row-avatar";
+                row.appendChild(placeholder);
+
+                const info = document.createElement("div");
+                info.className = "admin-row-info";
+                const emailEl = document.createElement("div");
+                emailEl.className = "admin-row-name";
+                emailEl.textContent = email;
+                info.appendChild(emailEl);
+                row.appendChild(info);
+
+                const actions = document.createElement("div");
+                actions.className = "admin-row-actions";
+                const removeBtn = document.createElement("button");
+                removeBtn.className = "btn-remove";
+                removeBtn.textContent = "Ukloni";
+                removeBtn.onclick = () => adminRemoveEmail(email);
+                actions.appendChild(removeBtn);
+                row.appendChild(actions);
+
+                approvedEl.appendChild(row);
+            });
+        }
+    } catch(e){
+        console.error(e);
+        pendingEl.innerHTML = '<div class="admin-empty">Greška</div>';
+        approvedEl.innerHTML = '<div class="admin-empty">Greška</div>';
+    }
+}
+
+async function adminApproveEmail(email){
+    if(!email || !email.includes("@")){
+        alert("Unesi valjan email");
+        return;
+    }
+    try {
+        const r = await apiFetch("/admin/whitelist/approve", {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({email}),
+        });
+        if(r.ok){
+            document.getElementById("adminAddEmail").value = "";
+            await loadAdminData();
+        } else {
+            alert("Greška");
+        }
+    } catch(e){
+        alert("Greška: " + e);
+    }
+}
+
+async function adminRemoveEmail(email){
+    if(!confirm("Ukloniti " + email + " iz odobrenih?")) return;
+    try {
+        const r = await apiFetch("/admin/whitelist/remove", {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({email}),
+        });
+        if(r.ok){
+            await loadAdminData();
+        } else {
+            alert("Greška");
+        }
+    } catch(e){
+        alert("Greška: " + e);
+    }
 }
 
 async function loadBrands(){
