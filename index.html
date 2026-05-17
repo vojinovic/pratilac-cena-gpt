@@ -89,7 +89,7 @@
       "name": "Kako pratite cene polovnih automobila?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "Svaki sat automatski proveravamo svaki praćeni oglas i upisujemo trenutnu cenu. Detektujemo promene, sniženja i kad oglas nestane. Gradimo grafikon kretanja cene za svaki auto."
+        "text": "Svakih 6 sati automatski proveravamo svaki praćeni oglas i upisujemo trenutnu cenu. Detektujemo promene, sniženja i kad oglas nestane. Gradimo grafikon kretanja cene za svaki auto."
       }
     }
   ]
@@ -786,6 +786,48 @@ body {
     margin: 0;
     font-size: 13px;
     color: var(--color-text-subtle);
+}
+
+.lp-footer-disclaimer {
+    max-width: 720px;
+    margin: 16px auto 0 !important;
+    font-size: 12px !important;
+    line-height: 1.55;
+    color: var(--color-text-subtle);
+    opacity: 0.8;
+}
+
+/* App footer (za ulogovane korisnike) */
+.app-footer {
+    margin-top: 60px;
+    padding: 32px 0 20px;
+    border-top: 1px solid var(--color-border-soft);
+    text-align: center;
+}
+
+.app-footer-disclaimer {
+    max-width: 720px;
+    margin: 0 auto 14px;
+    font-size: 12px;
+    line-height: 1.55;
+    color: var(--color-text-subtle);
+    opacity: 0.7;
+}
+
+.app-footer-meta {
+    font-size: 12px;
+    color: var(--color-text-subtle);
+    margin: 0;
+}
+
+.app-footer-meta a {
+    color: var(--color-text-muted);
+    text-decoration: none;
+    border-bottom: 1px dotted var(--color-text-subtle);
+}
+
+.app-footer-meta a:hover {
+    color: var(--color-text);
 }
 
 @media (max-width: 880px) {
@@ -2111,7 +2153,7 @@ input::placeholder { color: var(--color-text-subtle); }
             </a>
             <p class="hero-mini-note">Google login, bez kreditne kartice, bez instalacije.</p>
             <div class="hero-stats" id="heroStats">
-                <span>Pratimo cene na sat</span>
+                <span>Pratimo cene svakih 6h</span>
             </div>
         </section>
 
@@ -2144,7 +2186,7 @@ input::placeholder { color: var(--color-text-subtle); }
                 <div class="lp-card lp-card-solution">
                     <div class="lp-num">1</div>
                     <h3>Dodaj link oglasa</h3>
-                    <p>Pejstuje link sa polovniautomobili.com. Mi automatski hvatamo sve podatke i pratimo cenu na svaki sat.</p>
+                    <p>Pejstuje link sa polovniautomobili.com. Mi automatski hvatamo sve podatke i pratimo cenu na 6 sati.</p>
                 </div>
                 <div class="lp-card lp-card-solution">
                     <div class="lp-num">2</div>
@@ -2279,7 +2321,7 @@ input::placeholder { color: var(--color-text-subtle); }
 
             <details class="lp-faq-item">
                 <summary>Kako pratite cene?</summary>
-                <p>Svaki sat automatski proveravamo svaki praćeni oglas i upisujemo trenutnu cenu. Detektujemo promene, sniženja i kad oglas nestane. Vidiš grafikon kretanja cene za svaki auto koji pratiš duže od par dana.</p>
+                <p>Svakih 6 sati automatski proveravamo svaki praćeni oglas i upisujemo trenutnu cenu. Detektujemo promene, sniženja i kad oglas nestane. Vidiš grafikon kretanja cene za svaki auto koji pratiš duže od par dana.</p>
             </details>
 
             <details class="lp-faq-item">
@@ -2311,6 +2353,9 @@ input::placeholder { color: var(--color-text-subtle); }
 
         <footer class="lp-footer">
             <p>© 2026 Auto Drukara. Mi nađemo. Ti uštediš.</p>
+            <p class="lp-footer-disclaimer">
+                Auto Drukara nije povezan sa polovniautomobili.com niti bilo kojim drugim sajtom čije podatke prikazuje. Podaci se koriste isključivo u informativne svrhe za naše korisnike. Sve cene, slike i opisi su vlasništvo originalnih sajtova i oglašivača. Klikom na "Otvori" odlaziš direktno na originalni oglas.
+            </p>
         </footer>
 
     </div>
@@ -2335,7 +2380,7 @@ input::placeholder { color: var(--color-text-subtle); }
             <input id="urlInput" placeholder="URL oglasa sa polovniautomobili.com">
             <input id="labelInput" placeholder="Naziv (opciono - npr. 'Volvo XC60 za Nikolu')">
             <div class="add-box-hint">
-                Otvori oglas na <code>polovniautomobili.com</code>, kopiraj URL i nalepi ga ovde. Pratićemo cenu na svaki sat.
+                Otvori oglas na <code>polovniautomobili.com</code>, kopiraj URL i nalepi ga ovde. Pratićemo cenu na 6 sati.
             </div>
             <button class="add-btn" onclick="addOglas()">
                 <span>Dodaj oglas</span>
@@ -2425,6 +2470,13 @@ input::placeholder { color: var(--color-text-subtle); }
 
         <div id="searchPagination" class="pagination"></div>
     </div>
+
+    <footer class="app-footer">
+        <p class="app-footer-disclaimer">
+            Auto Drukara nije povezan sa polovniautomobili.com. Podaci se koriste isključivo informativno za naše korisnike. Sve cene, slike i opisi su vlasništvo originalnih sajtova i oglašivača.
+        </p>
+        <p class="app-footer-meta">© 2026 Auto Drukara · <a href="#" onclick="logout(); return false;">Logout</a></p>
+    </footer>
 
 </div>
 </div>
@@ -2592,9 +2644,9 @@ async function loadHeroStats(){
         if(!r.ok) return;
         const data = await r.json();
         if(data.oglasi > 0 && data.users > 0){
-            el.innerHTML = `<span>Pratimo ${data.oglasi} oglasa za ${data.users} korisnika</span> <span>Cene se proveravaju na sat</span>`;
+            el.innerHTML = `<span>Pratimo ${data.oglasi} oglasa za ${data.users} korisnika</span> <span>Cene se proveravaju svakih 6h</span>`;
         } else {
-            el.innerHTML = `<span>Cene se proveravaju na sat</span>`;
+            el.innerHTML = `<span>Cene se proveravaju svakih 6h</span>`;
         }
     } catch(e) {
         // ostavi default text
@@ -3484,7 +3536,7 @@ function render(){
             emptyState.innerHTML = `
                 <div class="empty-onboard-icon">🚗</div>
                 <h2>Hajde da dodamo prvi auto</h2>
-                <p class="empty-onboard-sub">Auto Drukara prati cene za tebe na svaki sat. Evo kako se počinje:</p>
+                <p class="empty-onboard-sub">Auto Drukara prati cene za tebe više puta dnevno. Evo kako se počinje:</p>
                 <div class="empty-onboard-steps">
                     <div class="empty-onboard-step">
                         <div class="empty-onboard-num">1</div>
