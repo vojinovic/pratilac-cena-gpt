@@ -89,7 +89,7 @@
       "name": "Kako pratite cene polovnih automobila?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "Svakih 6 sati automatski proveravamo svaki praćeni oglas i upisujemo trenutnu cenu. Detektujemo promene, sniženja i kad oglas nestane. Gradimo grafikon kretanja cene za svaki auto."
+        "text": "Svaka 3 sata automatski proveravamo svaki praćeni oglas i upisujemo trenutnu cenu. Detektujemo promene, sniženja i kad oglas nestane. Gradimo grafikon kretanja cene za svaki auto."
       }
     }
   ]
@@ -2610,7 +2610,7 @@ input::placeholder { color: var(--color-text-subtle); }
             </a>
             <p class="hero-mini-note">Beta verzija. Google login te stavlja na waitlist - kontaktiramo te kad oslobodimo mesta.</p>
             <div class="hero-stats" id="heroStats">
-                <span>Pratimo cene svakih 6h</span>
+                <span>Pratimo cene svaka 3h</span>
             </div>
         </section>
 
@@ -2643,7 +2643,7 @@ input::placeholder { color: var(--color-text-subtle); }
                 <div class="lp-card lp-card-solution">
                     <div class="lp-num">1</div>
                     <h3>Dodaj link oglasa</h3>
-                    <p>Pejstuje link sa polovniautomobili.com. Mi automatski hvatamo sve podatke i pratimo cenu na 6 sati.</p>
+                    <p>Pejstuje link sa polovniautomobili.com. Mi automatski hvatamo sve podatke i pratimo cenu na 3 sata.</p>
                 </div>
                 <div class="lp-card lp-card-solution">
                     <div class="lp-num">2</div>
@@ -2778,7 +2778,7 @@ input::placeholder { color: var(--color-text-subtle); }
 
             <details class="lp-faq-item">
                 <summary>Kako pratite cene?</summary>
-                <p>Svakih 6 sati automatski proveravamo svaki praćeni oglas i upisujemo trenutnu cenu. Detektujemo promene, sniženja i kad oglas nestane. Vidiš grafikon kretanja cene za svaki auto koji pratiš duže od par dana.</p>
+                <p>Svaka 3 sata automatski proveravamo svaki praćeni oglas i upisujemo trenutnu cenu. Detektujemo promene, sniženja i kad oglas nestane. Vidiš grafikon kretanja cene za svaki auto koji pratiš duže od par dana.</p>
             </details>
 
             <details class="lp-faq-item">
@@ -2822,7 +2822,7 @@ input::placeholder { color: var(--color-text-subtle); }
             <details class="lp-faq-item">
                 <summary>Kako koristimo podatke sa polovniautomobili.com</summary>
                 <p>Kada korisnik doda link oglasa, automatizovano čitamo javno dostupan oglas sa polovniautomobili.com i izvlačimo strukturirane podatke (cena, godište, kilometraža, oprema, lokacija). Ne ulazimo u zaštićene delove sajta, ne zaobilazimo login niti CAPTCHA. Šaljemo transparentan User-Agent header koji nas identifikuje i linkuje na ovu stranicu.</p>
-                <p>Provere cena radimo svakih 6 sati, što minimizira opterećenje source sajta. Klikom na "Otvori" korisnik odlazi direktno na originalni oglas. Vlasnici sadržaja su originalni sajtovi i oglašivači.</p>
+                <p>Provere cena radimo svaka 3 sata, što minimizira opterećenje source sajta. Klikom na "Otvori" korisnik odlazi direktno na originalni oglas. Vlasnici sadržaja su originalni sajtovi i oglašivači.</p>
             </details>
 
             <details class="lp-faq-item">
@@ -2883,7 +2883,7 @@ input::placeholder { color: var(--color-text-subtle); }
             <input id="urlInput" placeholder="URL oglasa sa polovniautomobili.com">
             <input id="labelInput" placeholder="Naziv (opciono - npr. 'Volvo XC60 za Nikolu')">
             <div class="add-box-hint">
-                Otvori oglas na <code>polovniautomobili.com</code>, kopiraj URL i nalepi ga ovde. Pratićemo cenu na 6 sati.
+                Otvori oglas na <code>polovniautomobili.com</code>, kopiraj URL i nalepi ga ovde. Pratićemo cenu na 3 sata.
             </div>
             <button class="add-btn" onclick="addOglas()">
                 <span>Dodaj oglas</span>
@@ -3234,9 +3234,9 @@ async function loadHeroStats(){
         if(!r.ok) return;
         const data = await r.json();
         if(data.oglasi > 0 && data.users > 0){
-            el.innerHTML = `<span>Pratimo ${data.oglasi} oglasa za ${data.users} korisnika</span> <span>Cene se proveravaju svakih 6h</span>`;
+            el.innerHTML = `<span>Pratimo ${data.oglasi} oglasa za ${data.users} korisnika</span> <span>Cene se proveravaju svaka 3h</span>`;
         } else {
-            el.innerHTML = `<span>Cene se proveravaju svakih 6h</span>`;
+            el.innerHTML = `<span>Cene se proveravaju svaka 3h</span>`;
         }
     } catch(e) {
         // ostavi default text
