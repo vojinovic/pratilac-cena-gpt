@@ -2527,6 +2527,66 @@ input::placeholder { color: var(--color-text-subtle); }
     align-items: center;
 }
 
+.ai-analysis-bar {
+    margin-bottom: 24px;
+}
+
+.ai-analysis-btn {
+    width: 100%;
+    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    padding: 16px 20px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    transition: transform 0.15s, box-shadow 0.15s;
+    box-shadow: 0 4px 14px rgba(99, 102, 241, 0.3);
+}
+
+.ai-analysis-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(99, 102, 241, 0.45);
+}
+
+.ai-analysis-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.ai-icon { font-size: 18px; }
+
+.ai-analysis-hint {
+    font-size: 12px;
+    color: var(--color-text-subtle);
+    text-align: center;
+    margin-top: 8px;
+}
+
+/* AI Analysis Modal */
+.ai-modal-content {
+    white-space: pre-wrap;
+    font-size: 14px;
+    line-height: 1.7;
+    color: var(--color-text);
+}
+
+.ai-modal-cached {
+    font-size: 11px;
+    color: var(--color-text-subtle);
+    font-style: italic;
+    margin-top: 16px;
+    padding-top: 12px;
+    border-top: 1px solid var(--color-border-soft);
+}
+
 .pagination button {
     padding: 9px 16px;
     border-radius: 8px;
@@ -2890,6 +2950,14 @@ input::placeholder { color: var(--color-text-subtle); }
             </button>
         </div>
 
+        <div id="aiAnalysisBar" class="ai-analysis-bar" style="display:none;">
+            <button class="ai-analysis-btn" onclick="runAiAnalysis()">
+                <span class="ai-icon">🤖</span>
+                <span>AI Analiza: koja je najbolja kupovina?</span>
+            </button>
+            <div class="ai-analysis-hint">Claude analizira sve tvoje praćene oglase i predlaže najbolju kupovinu sa obrazloženjem.</div>
+        </div>
+
         <div class="filters" id="filtersContainer">
             <button class="filter-btn active" onclick="setFilter('all', event)">Svi <span class="filter-count" id="count-all">0</span></button>
             <button class="filter-btn" onclick="setFilter('top', event)">🔥 Top ponude <span class="filter-count" id="count-top">0</span></button>
@@ -2994,6 +3062,13 @@ input::placeholder { color: var(--color-text-subtle); }
                 <input type="email" id="adminAddEmail" placeholder="email@example.com">
                 <button class="add-btn" onclick="adminApproveEmail(document.getElementById('adminAddEmail').value)">Dodaj</button>
             </div>
+        </div>
+
+        <div class="admin-box">
+            <h3>🧹 Čišćenje duplikata</h3>
+            <p style="font-size: 13px; color: var(--color-text-muted); margin: 0 0 12px;">Ukloni duplirane oglase iz tvoje liste (isti auto dodat više puta).</p>
+            <button class="add-btn" onclick="runDedup()">Očisti duplikate</button>
+            <div id="dedupResult" style="font-size: 13px; color: var(--color-text-muted); margin-top: 10px;"></div>
         </div>
 
         <div class="admin-box">
@@ -3170,6 +3245,93 @@ function toggleTheme(){
     } catch(e) {}
 }
 
+async function runDedup(){
+    const resultEl = document.getElementById("dedupResult");
+    if(resultEl) resultEl.textContent = "Čistim...";
+    try {
+        const r = await apiFetch("/dedup", { method: "POST" });
+        const data = await r.json();
+        if(r.ok && data.success){
+            if(resultEl) resultEl.textContent = `Uklonjeno ${data.removed} duplikata. Ostalo ${data.remaining} oglasa.`;
+            if(data.removed > 0){
+                await load(); // reload tracked listu
+            }
+        } else {
+            if(resultEl) resultEl.textContent = "Greška: " + (data.error || "nepoznata");
+        }
+    } catch(e){
+        if(resultEl) resultEl.textContent = "Greška: " + e.message;
+    }
+}
+
+async function runAiAnalysis(){
+    const btn = document.querySelector(".ai-analysis-btn");
+    if(btn){
+        btn.disabled = true;
+        btn.querySelector("span:last-child").textContent = "Claude analizira... (do 30s)";
+    }
+
+    try {
+        const r = await apiFetch("/ai-analysis", { method: "POST" });
+        const data = await r.json();
+
+        if(!r.ok || data.error){
+            alert(data.error || "Greška pri analizi");
+            return;
+        }
+
+        showAiAnalysisModal(data.analysis, data.cached);
+    } catch(e){
+        alert("Greška: " + e.message);
+    } finally {
+        if(btn){
+            btn.disabled = false;
+            btn.querySelector("span:last-child").textContent = "AI Analiza: koja je najbolja kupovina?";
+        }
+    }
+}
+
+function showAiAnalysisModal(text, cached){
+    const existing = document.getElementById("info-modal-backdrop");
+    if(existing) existing.remove();
+
+    const backdrop = document.createElement("div");
+    backdrop.id = "info-modal-backdrop";
+    backdrop.className = "info-modal-backdrop";
+
+    const modal = document.createElement("div");
+    modal.className = "info-modal";
+    modal.onclick = e => e.stopPropagation();
+
+    const closeBtn = document.createElement("button");
+    closeBtn.className = "info-modal-close";
+    closeBtn.textContent = "✕";
+    closeBtn.onclick = () => closeInfoModal();
+    modal.appendChild(closeBtn);
+
+    const title = document.createElement("h3");
+    title.textContent = "🤖 AI Analiza tvojih oglasa";
+    modal.appendChild(title);
+
+    const content = document.createElement("div");
+    content.className = "ai-modal-content";
+    content.textContent = text;
+    modal.appendChild(content);
+
+    if(cached){
+        const cachedNote = document.createElement("div");
+        cachedNote.className = "ai-modal-cached";
+        cachedNote.textContent = "Analiza je keširana (osvežava se kad se cene promene ili posle 6h).";
+        modal.appendChild(cachedNote);
+    }
+
+    backdrop.appendChild(modal);
+    backdrop.onclick = () => closeInfoModal();
+    document.body.appendChild(backdrop);
+    requestAnimationFrame(() => backdrop.classList.add("open"));
+    document.addEventListener("keydown", handleEscModal);
+}
+
 function showAboutModal(){
     const existing = document.getElementById("info-modal-backdrop");
     if(existing) existing.remove();
@@ -3256,6 +3418,9 @@ function showMainApp(){
     if(CURRENT_USER.is_admin){
         const adminTab = document.getElementById("adminTab");
         if(adminTab) adminTab.style.display = "";
+        // AI analiza bar (trenutno samo admin)
+        const aiBar = document.getElementById("aiAnalysisBar");
+        if(aiBar) aiBar.style.display = "";
     }
 }
 
