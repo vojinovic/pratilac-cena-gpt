@@ -1355,6 +1355,57 @@ input::placeholder { color: var(--color-text-subtle); }
     flex-wrap: wrap;
 }
 
+/* MODEL FILTERS (pills) */
+.model-filters {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 16px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--color-border-soft);
+}
+
+.model-pill {
+    background: transparent;
+    border: 1.5px solid var(--color-border);
+    padding: 8px 16px;
+    border-radius: 100px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--color-text-muted);
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.15s;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+}
+
+.model-pill:hover {
+    border-color: var(--color-text);
+    color: var(--color-text);
+}
+
+.model-pill.active {
+    background: var(--color-text);
+    color: var(--color-bg);
+    border-color: var(--color-text);
+}
+
+.model-pill-count {
+    background: var(--color-bg-soft);
+    color: var(--color-text-muted);
+    padding: 1px 8px;
+    border-radius: 10px;
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.model-pill.active .model-pill-count {
+    background: rgba(0,0,0,0.15);
+    color: inherit;
+}
+
 .filter-btn {
     background: var(--color-bg-card);
     border: 1px solid var(--color-border);
@@ -3097,6 +3148,8 @@ input::placeholder { color: var(--color-text-subtle); }
             <div class="ai-analysis-hint">Claude analizira sve tvoje praćene oglase i predlaže najbolju kupovinu sa obrazloženjem.</div>
         </div>
 
+        <div class="model-filters" id="modelFilters"></div>
+
         <div class="filters" id="filtersContainer">
             <button class="filter-btn active" onclick="setFilter('all', event)">Svi <span class="filter-count" id="count-all">0</span></button>
             <button class="filter-btn" onclick="setFilter('top', event)">🔥 Top ponude <span class="filter-count" id="count-top">0</span></button>
@@ -3327,6 +3380,7 @@ function calculateLandedCost(carPrice, country, powerKw, hasEur1){
 
 let DATA = {};
 let FILTER = "all";
+let MODEL_FILTER = "all";
 
 let SEARCH_DATA = null;
 let SEARCH_RESULTS_WITH_SCORE = [];
@@ -3411,7 +3465,12 @@ async function runAiAnalysis(){
     }
 
     try {
-        const r = await apiFetch("/ai-analysis", { method: "POST" });
+        const body = MODEL_FILTER !== "all" ? { model: MODEL_FILTER } : {};
+        const r = await apiFetch("/ai-analysis", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(body),
+        });
         const data = await r.json();
 
         if(!r.ok || data.error){
@@ -4615,6 +4674,76 @@ function setFilter(f, event){
     render();
 }
 
+// Citljivo ime modela iz "volvo-xc60" -> "Volvo XC60"
+function prettyModelName(modelKey){
+    if(!modelKey) return "Nepoznato";
+    return modelKey.split("-").map(p => {
+        // XC60, B4 i sl. ostaju velika slova ako su kratki alfanumericki
+        if(/^[a-z]+\d/.test(p) || p.length <= 3) return p.toUpperCase();
+        return p.charAt(0).toUpperCase() + p.slice(1);
+    }).join(" ");
+}
+
+// Vrati listu modela sa brojem oglasa
+function getModelCounts(){
+    const oglasi = DATA?.oglasi || [];
+    const cene = DATA?.cene || {};
+    const counts = {};
+    oglasi.forEach(o => {
+        const c = cene[o.url] || {};
+        const m = c.model || "nepoznato";
+        counts[m] = (counts[m] || 0) + 1;
+    });
+    return counts;
+}
+
+function renderModelFilters(){
+    const counts = getModelCounts();
+    const models = Object.keys(counts).sort((a,b) => counts[b] - counts[a]);
+    const container = document.getElementById("modelFilters");
+    if(!container) return;
+
+    // Ako je samo jedan model (ili nijedan), nema potrebe za filterom
+    if(models.length <= 1){
+        container.innerHTML = "";
+        container.style.display = "none";
+        return;
+    }
+    container.style.display = "flex";
+
+    const total = Object.values(counts).reduce((a,b) => a+b, 0);
+    let html = `<button class="model-pill ${MODEL_FILTER === 'all' ? 'active' : ''}" onclick="setModelFilter('all', event)">Svi modeli <span class="model-pill-count">${total}</span></button>`;
+
+    models.forEach(m => {
+        html += `<button class="model-pill ${MODEL_FILTER === m ? 'active' : ''}" onclick="setModelFilter('${m}', event)">${prettyModelName(m)} <span class="model-pill-count">${counts[m]}</span></button>`;
+    });
+
+    container.innerHTML = html;
+}
+
+function setModelFilter(m, event){
+    MODEL_FILTER = m;
+    document.querySelectorAll(".model-pill").forEach(b => b.classList.remove("active"));
+    if(event && event.target){
+        // event.target moze biti span unutar dugmeta
+        const btn = event.target.closest(".model-pill");
+        if(btn) btn.classList.add("active");
+    }
+    // Azuriraj AI dugme tekst
+    updateAiButtonLabel();
+    render();
+}
+
+function updateAiButtonLabel(){
+    const btn = document.querySelector(".ai-analysis-btn span:last-child");
+    if(!btn) return;
+    if(MODEL_FILTER === "all"){
+        btn.textContent = "AI Analiza: koja je najbolja kupovina?";
+    } else {
+        btn.textContent = `AI Analiza: ${prettyModelName(MODEL_FILTER)}`;
+    }
+}
+
 async function addOglas(){
     const url = document.getElementById("urlInput").value.trim();
     const label = document.getElementById("labelInput").value.trim();
@@ -4961,9 +5090,11 @@ function render(){
     const cene = DATA?.cene || {};
 
     updateFilterCounts();
+    renderModelFilters();
 
     let list = oglasi.filter(o => {
         const c = cene[o.url] || {};
+        if(MODEL_FILTER !== "all" && (c.model || "nepoznato") !== MODEL_FILTER) return false;
         return passesFilter(c, FILTER);
     });
 
