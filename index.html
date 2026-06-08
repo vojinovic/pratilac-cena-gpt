@@ -121,6 +121,15 @@
 
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 
+<!-- Microsoft Clarity (analitika ponašanja). Zameni CLARITY_PROJECT_ID svojim ID-jem. -->
+<script type="text/javascript">
+(function(c,l,a,r,i,t,y){
+    c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+    t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
+    y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+})(window, document, "clarity", "script", "CLARITY_PROJECT_ID");
+</script>
+
 <script>
 // Primeni temu pre rendera da sprečimo "flash of wrong theme"
 (function(){
@@ -763,6 +772,46 @@ body {
     max-width: 640px;
     margin: 0 auto 48px;
     line-height: 1.55;
+}
+
+/* ZAŠTO AUTO DRUKARA */
+.lp-why-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+.lp-why-item {
+    background: var(--color-bg-card);
+    border: 1px solid var(--color-border);
+    border-radius: 14px;
+    padding: 24px;
+    text-align: left;
+}
+
+.lp-why-icon {
+    font-size: 28px;
+    margin-bottom: 12px;
+}
+
+.lp-why-item h3 {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--color-text);
+    margin: 0 0 8px;
+}
+
+.lp-why-item p {
+    font-size: 14px;
+    color: var(--color-text-muted);
+    line-height: 1.55;
+    margin: 0;
+}
+
+@media (max-width: 768px) {
+    .lp-why-grid { grid-template-columns: 1fr; }
 }
 
 .lp-grid-3 {
@@ -3100,8 +3149,8 @@ input::placeholder { color: var(--color-text-subtle); }
         <section class="hero">
             <img src="images/logo-full.png" alt="Auto Drukara" class="hero-logo">
             <div class="hero-beta-badge">BETA · Ograničen pristup</div>
-            <h1 class="hero-headline">Prati cene polovnih automobila i prepoznaj prave ponude</h1>
-            <p class="hero-sub">Kažemo ti odmah da li je auto pošteno ocenjen ili duplo skuplji nego što vredi. Bez nagađanja, bez surfovanja po stranama oglasa.</p>
+            <h1 class="hero-headline">Pronađi najbolju kupovinu polovnog automobila</h1>
+            <p class="hero-sub">Auto Drukara prati cene, otkriva padove, analizira oglase i poredi sa EU tržištem da znaš da li je auto stvarno dobra kupovina pre nego što potrošiš hiljade evra.</p>
             <a href="#" class="hero-cta" onclick="loginWithGoogle(); return false;">
                 <svg viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg" width="18" height="18">
                     <path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z" fill="#4285F4"/>
@@ -3157,6 +3206,43 @@ input::placeholder { color: var(--color-text-subtle); }
                     <div class="lp-num">3</div>
                     <h3>Uporedi sa EU</h3>
                     <p>Vidi koliko isti auto košta u Nemačkoj, Austriji, Italiji ili Holandiji. Provera da li je uvoz isplativ.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- ZAŠTO AUTO DRUKARA -->
+        <section class="lp-section lp-why">
+            <h2>Zašto Auto Drukara?</h2>
+            <div class="lp-why-grid">
+                <div class="lp-why-item">
+                    <div class="lp-why-icon">📉</div>
+                    <h3>Prati promene cena</h3>
+                    <p>Saznaj kad prodavac spusti cenu i koliko puta ju je menjao.</p>
+                </div>
+                <div class="lp-why-item">
+                    <div class="lp-why-icon">🎯</div>
+                    <h3>Score kvaliteta oglasa</h3>
+                    <p>Procenjujemo koliko je cena realna u odnosu na tržište za to godište i kilometražu.</p>
+                </div>
+                <div class="lp-why-item">
+                    <div class="lp-why-icon">🤖</div>
+                    <h3>AI analiza</h3>
+                    <p>Dobij preporuku koji automobil iz tvoje liste najviše vredi razmotriti i zašto.</p>
+                </div>
+                <div class="lp-why-item">
+                    <div class="lp-why-icon">🌍</div>
+                    <h3>EU poređenje</h3>
+                    <p>Uporedi domaće cene sa sličnim automobilima u Nemačkoj, Austriji i Holandiji.</p>
+                </div>
+                <div class="lp-why-item">
+                    <div class="lp-why-icon">🤝</div>
+                    <h3>Pregovarački indikator</h3>
+                    <p>Prepoznaj oglase kod kojih postoji veća šansa za dodatni popust.</p>
+                </div>
+                <div class="lp-why-item">
+                    <div class="lp-why-icon">💼</div>
+                    <h3>Procena uvoza</h3>
+                    <p>Izračunaj koliko bi te koštalo da uvezeš sličan auto iz EU, sa svim troškovima.</p>
                 </div>
             </div>
         </section>
