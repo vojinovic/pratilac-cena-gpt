@@ -3600,6 +3600,16 @@ input::placeholder { color: var(--color-text-subtle); }
         </div>
 
         <div class="admin-box">
+            <div class="admin-box-header">
+                <h3>🤖 AI potrošnja po korisniku</h3>
+                <button class="btn-refresh" onclick="loadAiUsage()">↻ Osveži</button>
+            </div>
+            <div id="aiUsageList" class="admin-list">
+                <div class="admin-loading">Učitavam...</div>
+            </div>
+        </div>
+
+        <div class="admin-box">
             <h3>🧹 Čišćenje duplikata</h3>
             <p style="font-size: 13px; color: var(--color-text-muted); margin: 0 0 12px;">Ukloni duplirane oglase iz tvoje liste (isti auto dodat više puta).</p>
             <button class="add-btn" onclick="runDedup()">Očisti duplikate</button>
@@ -3797,6 +3807,48 @@ function toggleTheme(){
     try {
         localStorage.setItem("ad-theme", next);
     } catch(e) {}
+}
+
+async function loadAiUsage(){
+    const el = document.getElementById("aiUsageList");
+    if(!el) return;
+    el.innerHTML = '<div class="admin-loading">Učitavam...</div>';
+    try {
+        const r = await apiFetch("/admin/ai-usage");
+        if(!r.ok){
+            el.innerHTML = '<div class="admin-empty">Greška pri učitavanju</div>';
+            return;
+        }
+        const data = await r.json();
+        if(!data.users || data.users.length === 0){
+            el.innerHTML = '<div class="admin-empty">Još niko nije pokrenuo AI analizu</div>';
+            return;
+        }
+        el.innerHTML = "";
+        data.users.forEach(u => {
+            const row = document.createElement("div");
+            row.className = "admin-row";
+            let poslednji = "—";
+            if(u.poslednji){
+                const d = new Date(u.poslednji);
+                poslednji = d.toLocaleDateString("sr-RS") + " " + d.toLocaleTimeString("sr-RS", {hour:"2-digit", minute:"2-digit"});
+            }
+            const limitBadge = u.udara_limit ? ' <span style="color:#fbbf24;">⚠ limit</span>' : '';
+            const adminBadge = u.is_admin ? ' <span style="color:#a78bfa;">admin</span>' : '';
+            row.innerHTML = `
+                <div class="admin-row-info">
+                    <div class="admin-row-name">${u.email}${adminBadge}</div>
+                    <div class="admin-row-meta">
+                        Danas: ${u.danas}${u.is_admin ? "" : "/" + data.daily_limit}${limitBadge} ·
+                        Ukupno: ${u.ukupno} · Prosek ${u.prosek_auta} auta · Poslednja: ${poslednji}
+                    </div>
+                </div>
+            `;
+            el.appendChild(row);
+        });
+    } catch(e){
+        el.innerHTML = '<div class="admin-empty">Greška: ' + e.message + '</div>';
+    }
 }
 
 // Populariši dropdown modela u admin content generatoru
@@ -4215,6 +4267,7 @@ function showSection(name, event){
     if(name === "admin"){
         loadAdminData();
         populateContentModelSelect();
+        loadAiUsage();
     }
 }
 
