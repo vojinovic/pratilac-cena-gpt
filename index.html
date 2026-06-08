@@ -1677,6 +1677,48 @@ input::placeholder { color: var(--color-text-subtle); }
     letter-spacing: 0.04em;
 }
 
+.dc-basis {
+    margin-left: auto;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--color-text-muted);
+    background: rgba(255,255,255,0.06);
+    padding: 3px 10px;
+    border-radius: 100px;
+    text-transform: none;
+    letter-spacing: 0;
+}
+
+.dc-toggle {
+    display: flex;
+    gap: 6px;
+}
+
+.dc-toggle-btn {
+    flex: 1;
+    background: transparent;
+    border: 1px solid var(--color-border);
+    color: var(--color-text-muted);
+    padding: 7px 12px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.15s;
+}
+
+.dc-toggle-btn:hover {
+    border-color: var(--color-text);
+    color: var(--color-text);
+}
+
+.dc-toggle-btn.active {
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    color: white;
+    border-color: #8b5cf6;
+}
+
 .dc-car {
     display: flex;
     align-items: center;
@@ -3590,6 +3632,7 @@ let DATA = {};
 let FILTER = "all";
 let MODEL_FILTER = "all";
 let AI_RANKS = {};
+let DECISION_MODE = "ai";
 
 let SEARCH_DATA = null;
 let SEARCH_RESULTS_WITH_SCORE = [];
@@ -5610,24 +5653,29 @@ function buildDecisionCard(list, cene){
     if(!["all", "top", "ai"].includes(FILTER)) return null;
     if(!list || list.length < 2) return null;
 
-    // Nadji najboljeg: ako ima AI rang #1 u scope-u, koristi njega. Inace najvisi score.
-    let best = null;
-    const aiTop = list.find(o => {
+    // AI #1 u scope-u (ako postoji analiza)
+    const aiTopOglas = list.find(o => {
         const r = getAiRankForCurrentScope(o.url);
         return r && r.pozicija === 1;
     });
-    if(aiTop){
-        best = aiTop;
-    } else {
-        // Najvisi score medju aktivnima
-        const aktivni = list.filter(o => (cene[o.url] || {}).aktivan !== false);
-        if(aktivni.length === 0) return null;
-        best = aktivni.reduce((acc, o) =>
-            (cene[o.url]?.score || 0) > (cene[acc.url]?.score || 0) ? o : acc, aktivni[0]);
-    }
+
+    // Najvisi score medju aktivnima
+    const aktivni = list.filter(o => (cene[o.url] || {}).aktivan !== false);
+    if(aktivni.length === 0) return null;
+    const scoreTopOglas = aktivni.reduce((acc, o) =>
+        (cene[o.url]?.score || 0) > (cene[acc.url]?.score || 0) ? o : acc, aktivni[0]);
+
+    const hasAi = !!aiTopOglas;
+    const samePick = hasAi && aiTopOglas.url === scoreTopOglas.url;
+
+    // Koji mod prikazujemo: ako ima AI -> postuj DECISION_MODE (default 'ai'), inace 'score'
+    let mode = hasAi ? DECISION_MODE : "score";
+    const best = (mode === "ai" && aiTopOglas) ? aiTopOglas : scoreTopOglas;
 
     const c = cene[best.url] || {};
-    if(!c.cena || (c.score || 0) < 60) return null; // ne istici osrednje ponude
+    if(!c.cena) return null;
+    // Ne istici osrednje ponude AKO je izbor po score-u; AI izbor uvek postujemo
+    if(mode === "score" && (c.score || 0) < 60) return null;
 
     const aiRank = getAiRankForCurrentScope(best.url);
     const daysTracked = daysFromIsoDate(c.prvi_put_videno);
@@ -5665,11 +5713,29 @@ function buildDecisionCard(list, cene){
         rowsHtml += `<div class="dc-row"><span class="dc-label">Oglas aktivan</span><span class="dc-value">${danRenewed === 0 ? "danas" : danRenewed + " dana"}</span></div>`;
     }
 
+    // Toggle AI / Score (samo ako ima AI analize i izbori se razlikuju)
+    let toggleHtml = "";
+    if(hasAi && !samePick){
+        toggleHtml = `
+            <div class="dc-toggle">
+                <button class="dc-toggle-btn ${mode === "ai" ? "active" : ""}" onclick="setDecisionMode('ai')">🤖 AI preporuka</button>
+                <button class="dc-toggle-btn ${mode === "score" ? "active" : ""}" onclick="setDecisionMode('score')">📊 Po score-u</button>
+            </div>`;
+    }
+
+    // Podnaslov koji jasno kaze po cemu je izabran
+    let basisLabel = "";
+    if(hasAi && mode === "ai") basisLabel = "AI preporuka";
+    else if(hasAi && mode === "score") basisLabel = "Najviši score";
+    else basisLabel = "Najviši score";
+
     card.innerHTML = `
         <div class="dc-header">
             <span class="dc-trophy">🏆</span>
             <span class="dc-title">Najbolja kupovina${MODEL_FILTER !== "all" ? " · " + prettyModelName(MODEL_FILTER) : ""}</span>
+            <span class="dc-basis">${basisLabel}</span>
         </div>
+        ${toggleHtml}
         <div class="dc-car">
             ${c.slika ? `<img class="dc-img" src="${c.slika}" alt="">` : ""}
             <div class="dc-car-name">${getName(best, c)}</div>
@@ -5678,6 +5744,11 @@ function buildDecisionCard(list, cene){
         <a class="dc-btn" href="${best.url}" target="_blank">Pogledaj oglas →</a>
     `;
     return card;
+}
+
+function setDecisionMode(m){
+    DECISION_MODE = m;
+    render();
 }
 
 function isAlreadyTracked(url){
