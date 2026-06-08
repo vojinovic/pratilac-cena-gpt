@@ -1461,6 +1461,47 @@ input::placeholder { color: var(--color-text-subtle); }
     background: rgba(255,255,255,0.2);
 }
 
+/* DEAL SIGNALS (pregovaracki indikator + spustanja) */
+.deal-signals {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin: 10px 0 4px;
+}
+
+.deal-signal {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 100px;
+    display: inline-flex;
+    align-items: center;
+}
+
+.signal-drop {
+    background: rgba(22, 163, 74, 0.12);
+    color: #4ade80;
+    border: 1px solid rgba(22, 163, 74, 0.3);
+}
+
+.signal-negotiable {
+    background: rgba(245, 158, 11, 0.14);
+    color: #fbbf24;
+    border: 1px solid rgba(245, 158, 11, 0.35);
+}
+
+.signal-negotiable-soft {
+    background: rgba(245, 158, 11, 0.08);
+    color: #d4a24e;
+    border: 1px solid rgba(245, 158, 11, 0.2);
+}
+
+.signal-firm {
+    background: rgba(99, 102, 241, 0.12);
+    color: #a78bfa;
+    border: 1px solid rgba(99, 102, 241, 0.3);
+}
+
 /* EMPTY STATE - onboarding */
 .empty-state {
     background: var(--color-bg-card);
@@ -1606,6 +1647,90 @@ input::placeholder { color: var(--color-text-subtle); }
     grid-template-columns: repeat(auto-fill, minmax(330px, 1fr));
     gap: 20px;
     align-items: start;
+}
+
+/* DECISION CARD - Najbolja kupovina danas */
+.decision-card {
+    grid-column: 1 / -1;
+    background: linear-gradient(135deg, rgba(99,102,241,0.12), rgba(139,92,246,0.08));
+    border: 1.5px solid rgba(139,92,246,0.4);
+    border-radius: 16px;
+    padding: 20px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.dc-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.dc-trophy { font-size: 20px; }
+
+.dc-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--color-text);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.dc-car {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.dc-img {
+    width: 96px;
+    height: 72px;
+    object-fit: cover;
+    border-radius: 10px;
+    flex-shrink: 0;
+}
+
+.dc-car-name {
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--color-text);
+}
+
+.dc-rows {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 8px 24px;
+}
+
+.dc-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 6px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    font-size: 13px;
+}
+
+.dc-label { color: var(--color-text-muted); }
+.dc-value { color: var(--color-text); font-weight: 600; }
+.dc-accent { color: #4ade80; }
+
+.dc-btn {
+    align-self: flex-start;
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    color: white;
+    padding: 10px 22px;
+    border-radius: 10px;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 14px;
+    transition: transform 0.15s, box-shadow 0.15s;
+}
+
+.dc-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(99,102,241,0.4);
 }
 
 #searchResults {
@@ -3331,6 +3456,22 @@ input::placeholder { color: var(--color-text-subtle); }
         </div>
 
         <div class="admin-box">
+            <h3>📣 Generator sadržaja za objave</h3>
+            <p style="font-size: 13px; color: var(--color-text-muted); margin: 0 0 12px;">Napravi tekst spreman za FB grupe / Reddit iz tvojih praćenih oglasa.</p>
+            <div class="admin-add-row" style="margin-bottom: 10px;">
+                <select id="contentModelSelect" style="flex:1; padding: 10px; border-radius: 8px; background: var(--color-bg-soft); border: 1px solid var(--color-border); color: var(--color-text); font-family: inherit;"></select>
+                <select id="contentType" style="flex:1; padding: 10px; border-radius: 8px; background: var(--color-bg-soft); border: 1px solid var(--color-border); color: var(--color-text); font-family: inherit;">
+                    <option value="top">Top ponude (najbolji score)</option>
+                    <option value="drops">Najveći padovi cene</option>
+                    <option value="avoid">Precenjeni (izbegavaj)</option>
+                </select>
+            </div>
+            <button class="add-btn" onclick="generateContent()">Generiši tekst</button>
+            <textarea id="contentOutput" style="display:none; width:100%; margin-top:12px; min-height:220px; padding:12px; border-radius:8px; background: var(--color-bg-soft); border:1px solid var(--color-border); color: var(--color-text); font-family: inherit; font-size:13px; line-height:1.6; resize:vertical;"></textarea>
+            <button id="copyContentBtn" class="btn-refresh" style="display:none; margin-top:8px;" onclick="copyContent()">📋 Kopiraj</button>
+        </div>
+
+        <div class="admin-box">
             <h3>✅ Odobreni korisnici</h3>
             <div id="adminApproved" class="admin-list">
                 <div class="admin-loading">Učitavam...</div>
@@ -3504,6 +3645,89 @@ function toggleTheme(){
     try {
         localStorage.setItem("ad-theme", next);
     } catch(e) {}
+}
+
+// Populariši dropdown modela u admin content generatoru
+function populateContentModelSelect(){
+    const sel = document.getElementById("contentModelSelect");
+    if(!sel) return;
+    const counts = getModelCounts();
+    const models = Object.keys(counts).sort((a,b) => counts[b] - counts[a]);
+    sel.innerHTML = models.map(m => `<option value="${m}">${prettyModelName(m)} (${counts[m]})</option>`).join("");
+}
+
+function generateContent(){
+    const model = document.getElementById("contentModelSelect").value;
+    const type = document.getElementById("contentType").value;
+    const oglasi = (DATA?.oglasi || []).filter(o => (DATA.cene[o.url] || {}).model === model);
+    const cene = DATA?.cene || {};
+
+    let cars = oglasi.map(o => ({ ...cene[o.url], url: o.url, label: o.label || (cene[o.url] || {}).label }))
+        .filter(c => c.cena && c.aktivan !== false);
+
+    const modelNaziv = prettyModelName(model);
+    let text = "";
+
+    if(type === "top"){
+        cars.sort((a,b) => (b.score||0) - (a.score||0));
+        const top = cars.slice(0, 5);
+        text = `🚗 Najbolji ${modelNaziv} oglasi ove nedelje\n\n`;
+        top.forEach((c, i) => {
+            text += `${i+1}. ${c.label}\n`;
+            text += `   💰 ${formatPrice(c.cena)} · ${c.godiste || "?"}. · ${c.kilometraza ? c.kilometraza.toLocaleString("sr-RS") + " km" : "?"}\n`;
+            text += `   📊 Score ${c.score || 0}/100${c.score >= 75 ? " 🔥" : ""}\n\n`;
+        });
+        text += `Cene pratimo automatski na autodrukara.com — javi se ako hoćeš pristup (beta).`;
+    } else if(type === "drops"){
+        cars = cars.filter(c => (c.ukupno_snizenje || 0) > 0);
+        cars.sort((a,b) => (b.ukupno_snizenje||0) - (a.ukupno_snizenje||0));
+        const top = cars.slice(0, 5);
+        if(top.length === 0){
+            text = `Trenutno nema značajnih padova cene za ${modelNaziv}.`;
+        } else {
+            text = `📉 ${modelNaziv}: najveći padovi cene\n\n`;
+            top.forEach((c, i) => {
+                text += `${i+1}. ${c.label}\n`;
+                text += `   ${formatPrice(c.prva_cena)} → ${formatPrice(c.cena)} (pad ${formatPrice(c.ukupno_snizenje)})\n`;
+                text += `   📊 Score ${c.score || 0}/100\n\n`;
+            });
+            text += `Pratimo cene na autodrukara.com i javljamo kad padnu.`;
+        }
+    } else if(type === "avoid"){
+        // Precenjeni: cena znatno iznad ocekivane (nizak score zbog cene)
+        cars = cars.filter(c => (c.score || 0) < 45);
+        cars.sort((a,b) => (a.score||0) - (b.score||0));
+        const top = cars.slice(0, 3);
+        if(top.length === 0){
+            text = `Nema očigledno precenjenih ${modelNaziv} oglasa trenutno (dobra vest za kupce).`;
+        } else {
+            text = `⚠️ ${modelNaziv}: oglasi koje treba dobro proveriti\n\n`;
+            top.forEach((c, i) => {
+                text += `${i+1}. ${c.label}\n`;
+                text += `   💰 ${formatPrice(c.cena)} · Score ${c.score || 0}/100\n`;
+                const negativni = (c.score_breakdown || []).filter(b => b.value < 0).slice(0,2);
+                if(negativni.length) text += `   Razlozi: ${negativni.map(b => b.label).join(", ")}\n`;
+                text += `\n`;
+            });
+            text += `Score računamo na osnovu cene, kilometraže, stanja i tržišta. Detalji na autodrukara.com.`;
+        }
+    }
+
+    const out = document.getElementById("contentOutput");
+    out.value = text;
+    out.style.display = "block";
+    document.getElementById("copyContentBtn").style.display = "inline-block";
+}
+
+function copyContent(){
+    const out = document.getElementById("contentOutput");
+    out.select();
+    navigator.clipboard.writeText(out.value).then(() => {
+        const btn = document.getElementById("copyContentBtn");
+        const orig = btn.textContent;
+        btn.textContent = "✓ Kopirano";
+        setTimeout(() => { btn.textContent = orig; }, 1500);
+    });
 }
 
 async function runDedup(){
@@ -3827,6 +4051,7 @@ function showSection(name, event){
 
     if(name === "admin"){
         loadAdminData();
+        populateContentModelSelect();
     }
 }
 
@@ -4956,6 +5181,55 @@ function updateFilterCounts(){
     }
 }
 
+// Pregovaracki indikator + broj spustanja cene
+function buildDealSignals(c, daysTracked){
+    const signals = [];
+
+    // Broj spustanja cene (samo padovi)
+    const istorija = Array.isArray(c.istorija_cena) ? c.istorija_cena : [];
+    let brojSpustanja = 0;
+    for(let i = 1; i < istorija.length; i++){
+        if(istorija[i].cena < istorija[i-1].cena) brojSpustanja++;
+    }
+    if(brojSpustanja > 0){
+        signals.push({
+            cls: "signal-drop",
+            text: brojSpustanja === 1 ? "📉 1 spuštanje cene" : `📉 ${brojSpustanja} spuštanja cene`,
+        });
+    }
+
+    // Pregovaracki indikator (deterministicki)
+    // Spreman na pregovor: oglas star + spustao cenu + nizak/srednji score
+    // Mala sansa: nov oglas + visok score
+    const score = c.score || 0;
+    const star = (daysTracked || 0) >= 20;
+    const spustao = brojSpustanja > 0;
+    const danRenewed = daysFromIsoDate(c.last_renewed_date);
+    const svez = danRenewed !== null && danRenewed <= 5;
+
+    if(c.aktivan !== false){
+        if(star && spustao && score < 60){
+            signals.push({ cls: "signal-negotiable", text: "🤝 Verovatno spreman na pregovor" });
+        } else if(star && spustao){
+            signals.push({ cls: "signal-negotiable-soft", text: "🤝 Moguć pregovor" });
+        } else if(svez && score >= 75){
+            signals.push({ cls: "signal-firm", text: "⚡ Mala šansa za popust" });
+        }
+    }
+
+    if(signals.length === 0) return null;
+
+    const row = document.createElement("div");
+    row.className = "deal-signals";
+    signals.forEach(s => {
+        const span = document.createElement("span");
+        span.className = "deal-signal " + s.cls;
+        span.textContent = s.text;
+        row.appendChild(span);
+    });
+    return row;
+}
+
 function buildTrackedCard(o, c, showBestDealTag){
     const card = document.createElement("div");
     card.className = "card" + (showBestDealTag ? " top-deal" : "");
@@ -5075,6 +5349,10 @@ function buildTrackedCard(o, c, showBestDealTag){
     price.className = "card-price";
     price.textContent = formatPrice(c.cena);
     body.appendChild(price);
+
+    // Pregovaracki indikator + broj spustanja cene
+    const signalsRow = buildDealSignals(c, daysTracked);
+    if(signalsRow) body.appendChild(signalsRow);
 
     const sparkline = buildSparkline(c.istorija_cena);
     body.appendChild(sparkline);
@@ -5310,6 +5588,13 @@ function render(){
     container.style.display = "grid";
     emptyState.style.display = "none";
 
+    // "Najbolja kupovina danas" decision kartica - samo na 'all' i 'top' filterima
+    const decisionCard = buildDecisionCard(list, cene);
+    if(decisionCard){
+        // Decision kartica ide van grida (full width), pa pravimo wrapper
+        container.appendChild(decisionCard);
+    }
+
     const topUrl = (list[0] && (cene[list[0].url]?.score || 0) >= 80) ? list[0].url : null;
 
     list.forEach(o => {
@@ -5318,6 +5603,81 @@ function render(){
         container.appendChild(buildTrackedCard(o, c, isBestDeal));
     });
 }
+
+// "Najbolja kupovina danas" - istaknuta kartica sa sazetkom najboljeg auta
+function buildDecisionCard(list, cene){
+    // Prikazi samo na 'all', 'top', 'ai' filterima i ako ima bar 2 aktivna auta
+    if(!["all", "top", "ai"].includes(FILTER)) return null;
+    if(!list || list.length < 2) return null;
+
+    // Nadji najboljeg: ako ima AI rang #1 u scope-u, koristi njega. Inace najvisi score.
+    let best = null;
+    const aiTop = list.find(o => {
+        const r = getAiRankForCurrentScope(o.url);
+        return r && r.pozicija === 1;
+    });
+    if(aiTop){
+        best = aiTop;
+    } else {
+        // Najvisi score medju aktivnima
+        const aktivni = list.filter(o => (cene[o.url] || {}).aktivan !== false);
+        if(aktivni.length === 0) return null;
+        best = aktivni.reduce((acc, o) =>
+            (cene[o.url]?.score || 0) > (cene[acc.url]?.score || 0) ? o : acc, aktivni[0]);
+    }
+
+    const c = cene[best.url] || {};
+    if(!c.cena || (c.score || 0) < 60) return null; // ne istici osrednje ponude
+
+    const aiRank = getAiRankForCurrentScope(best.url);
+    const daysTracked = daysFromIsoDate(c.prvi_put_videno);
+    const danRenewed = daysFromIsoDate(c.last_renewed_date);
+
+    // Pregovaracka procena (gruba): ako spustao + star, predlozi nizi opseg
+    const istorija = Array.isArray(c.istorija_cena) ? c.istorija_cena : [];
+    let brojSpustanja = 0;
+    for(let i = 1; i < istorija.length; i++){
+        if(istorija[i].cena < istorija[i-1].cena) brojSpustanja++;
+    }
+    let pregovorText = null;
+    if((daysTracked || 0) >= 20 && brojSpustanja > 0){
+        const donja = Math.round(c.cena * 0.97);
+        const gornja = Math.round(c.cena * 0.985);
+        pregovorText = `${formatPrice(donja)} - ${formatPrice(gornja)}`;
+    }
+
+    const card = document.createElement("div");
+    card.className = "decision-card";
+
+    let rowsHtml = "";
+    rowsHtml += `<div class="dc-row"><span class="dc-label">Cena</span><span class="dc-value">${formatPrice(c.cena)}</span></div>`;
+    rowsHtml += `<div class="dc-row"><span class="dc-label">Score</span><span class="dc-value">${c.score || 0}/100</span></div>`;
+    if(aiRank && aiRank.pozicija){
+        rowsHtml += `<div class="dc-row"><span class="dc-label">AI preporuka</span><span class="dc-value">#${aiRank.pozicija}${aiRank.ocena ? " · " + aiRank.ocena : ""}</span></div>`;
+    }
+    if(pregovorText){
+        rowsHtml += `<div class="dc-row"><span class="dc-label">Procena pregovora</span><span class="dc-value dc-accent">${pregovorText}</span></div>`;
+    }
+    if(brojSpustanja > 0){
+        rowsHtml += `<div class="dc-row"><span class="dc-label">Spuštanja cene</span><span class="dc-value">${brojSpustanja}x</span></div>`;
+    }
+    if(danRenewed !== null){
+        rowsHtml += `<div class="dc-row"><span class="dc-label">Oglas aktivan</span><span class="dc-value">${danRenewed === 0 ? "danas" : danRenewed + " dana"}</span></div>`;
+    }
+
+    card.innerHTML = `
+        <div class="dc-header">
+            <span class="dc-trophy">🏆</span>
+            <span class="dc-title">Najbolja kupovina${MODEL_FILTER !== "all" ? " · " + prettyModelName(MODEL_FILTER) : ""}</span>
+        </div>
+        <div class="dc-car">
+            ${c.slika ? `<img class="dc-img" src="${c.slika}" alt="">` : ""}
+            <div class="dc-car-name">${getName(best, c)}</div>
+        </div>
+        <div class="dc-rows">${rowsHtml}</div>
+        <a class="dc-btn" href="${best.url}" target="_blank">Pogledaj oglas →</a>
+    `;
+    return card;
 
 function isAlreadyTracked(url){
     if(!DATA?.oglasi) return false;
