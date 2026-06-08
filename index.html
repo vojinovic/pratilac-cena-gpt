@@ -3937,6 +3937,17 @@ async function runAiAnalysis(){
         }
 
         showAiAnalysisModal(data);
+
+        // Prikazi preostali dnevni limit (samo obicni useri)
+        if(typeof data.preostalo_danas === "number"){
+            const hint = document.querySelector(".ai-analysis-hint");
+            if(hint){
+                hint.textContent = data.preostalo_danas > 0
+                    ? `Preostalo danas: ${data.preostalo_danas} od ${data.dnevni_limit} analiza.`
+                    : `Iskoristio si sve analize za danas (${data.dnevni_limit}). Sačuvane analize možeš otvoriti bez ograničenja.`;
+            }
+        }
+
         // Osvezi podatke da se prikazu AI rang badge-ovi na karticama
         load();
     } catch(e){
@@ -3950,7 +3961,7 @@ async function runAiAnalysis(){
     } finally {
         if(btn){
             btn.disabled = false;
-            btn.querySelector("span:last-child").textContent = "AI Analiza: koja je najbolja kupovina?";
+            updateAiButtonLabel();
         }
     }
 }
@@ -4185,10 +4196,10 @@ function showMainApp(){
     if(CURRENT_USER.is_admin){
         const adminTab = document.getElementById("adminTab");
         if(adminTab) adminTab.style.display = "";
-        // AI analiza bar (trenutno samo admin)
-        const aiBar = document.getElementById("aiAnalysisBar");
-        if(aiBar) aiBar.style.display = "";
     }
+    // AI analiza bar - dostupno svim odobrenim korisnicima
+    const aiBar = document.getElementById("aiAnalysisBar");
+    if(aiBar) aiBar.style.display = "";
 }
 
 // ========================================================================
