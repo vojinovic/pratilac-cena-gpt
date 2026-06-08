@@ -2614,6 +2614,49 @@ input::placeholder { color: var(--color-text-subtle); }
 
 .ai-icon { font-size: 18px; }
 
+.ai-analysis-actions {
+    display: flex;
+    justify-content: center;
+    margin-top: 8px;
+}
+
+.ai-saved-btn {
+    background: transparent;
+    border: 1px solid var(--color-border);
+    color: var(--color-text-muted);
+    padding: 6px 14px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.15s;
+}
+
+.ai-saved-btn:hover {
+    border-color: var(--color-text);
+    color: var(--color-text);
+}
+
+/* AI rank badge on cards */
+.ai-rank-badge {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    color: white;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 4px 9px;
+    border-radius: 100px;
+    box-shadow: 0 2px 8px rgba(99,102,241,0.4);
+    z-index: 2;
+}
+
+.ai-rank-badge.gold { background: linear-gradient(135deg, #fbbf24, #f59e0b); color: #422006; }
+.ai-rank-badge.silver { background: linear-gradient(135deg, #e5e7eb, #9ca3af); color: #1f2937; }
+.ai-rank-badge.bronze { background: linear-gradient(135deg, #d97706, #b45309); color: #fff; }
+
 .ai-analysis-hint {
     font-size: 12px;
     color: var(--color-text-subtle);
@@ -3145,6 +3188,9 @@ input::placeholder { color: var(--color-text-subtle); }
                 <span class="ai-icon">🤖</span>
                 <span>AI Analiza: koja je najbolja kupovina?</span>
             </button>
+            <div class="ai-analysis-actions">
+                <button class="ai-saved-btn" onclick="showSavedAnalysis()">📄 Prikaži poslednju analizu</button>
+            </div>
             <div class="ai-analysis-hint">Claude analizira sve tvoje praćene oglase i predlaže najbolju kupovinu sa obrazloženjem.</div>
         </div>
 
@@ -3381,6 +3427,7 @@ function calculateLandedCost(carPrice, country, powerKw, hasEur1){
 let DATA = {};
 let FILTER = "all";
 let MODEL_FILTER = "all";
+let AI_RANKS = {};
 
 let SEARCH_DATA = null;
 let SEARCH_RESULTS_WITH_SCORE = [];
@@ -3457,6 +3504,20 @@ async function runDedup(){
     }
 }
 
+function showSavedAnalysis(){
+    const model = MODEL_FILTER !== "all" ? MODEL_FILTER : "all";
+    apiFetch("/ai-analysis/saved?model=" + encodeURIComponent(model))
+        .then(r => r.json().then(data => ({ ok: r.ok, data })))
+        .then(({ ok, data }) => {
+            if(!ok || data.error){
+                alert(data.error || "Nema sačuvane analize za ovaj model. Pokreni analizu prvo.");
+                return;
+            }
+            showAiAnalysisModal(data);
+        })
+        .catch(e => alert("Greška: " + e.message));
+}
+
 async function runAiAnalysis(){
     const btn = document.querySelector(".ai-analysis-btn");
     if(btn){
@@ -3479,6 +3540,8 @@ async function runAiAnalysis(){
         }
 
         showAiAnalysisModal(data);
+        // Osvezi podatke da se prikazu AI rang badge-ovi na karticama
+        load();
     } catch(e){
         alert("Greška: " + e.message);
     } finally {
@@ -3521,10 +3584,18 @@ function showAiAnalysisModal(data){
         modal.appendChild(content);
     }
 
-    if(data.cached){
+    if(data.cached || data.generated_at){
         const cachedNote = document.createElement("div");
         cachedNote.className = "ai-modal-cached";
-        cachedNote.textContent = "Analiza je keširana (osvežava se kad se cene promene ili posle 6h).";
+        let noteText = "";
+        if(data.generated_at){
+            const d = new Date(data.generated_at);
+            noteText = "Analiza napravljena: " + d.toLocaleDateString("sr-RS") + " u " + d.toLocaleTimeString("sr-RS", {hour: "2-digit", minute: "2-digit"});
+        }
+        if(data.from_saved){
+            noteText += " (sačuvana verzija)";
+        }
+        cachedNote.textContent = noteText || "Keširana analiza.";
         modal.appendChild(cachedNote);
     }
 
@@ -4013,6 +4084,7 @@ async function load(){
             return;
         }
         DATA = await r.json();
+        AI_RANKS = DATA.ai_ranks || {};
         render();
     }catch(e){
         console.error(e);
@@ -4871,6 +4943,21 @@ function buildTrackedCard(o, c, showBestDealTag){
     scoreBadge.className = "score-badge";
     scoreBadge.textContent = `${badge} ${score}`;
     imgWrap.appendChild(scoreBadge);
+
+    // AI rang badge (ako postoji)
+    const aiRank = AI_RANKS[o.url];
+    if(aiRank && aiRank.pozicija){
+        const aiBadge = document.createElement("div");
+        aiBadge.className = "ai-rank-badge";
+        if(aiRank.pozicija === 1) aiBadge.classList.add("gold");
+        else if(aiRank.pozicija === 2) aiBadge.classList.add("silver");
+        else if(aiRank.pozicija === 3) aiBadge.classList.add("bronze");
+        aiBadge.textContent = `🤖 AI #${aiRank.pozicija}`;
+        if(aiRank.ocena) aiBadge.title = aiRank.ocena;
+        // Ako postoji best-deal tag (gore levo), pomeri AI badge nize
+        if(showBestDealTag) aiBadge.style.top = "44px";
+        imgWrap.appendChild(aiBadge);
+    }
 
     if(daysRenewed !== null){
         const statusBadge = document.createElement("div");
