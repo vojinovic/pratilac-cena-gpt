@@ -1441,6 +1441,26 @@ input::placeholder { color: var(--color-text-subtle); }
     color: var(--color-text-muted);
 }
 
+.filter-ai-btn {
+    border-color: #8b5cf6;
+    color: #a78bfa;
+}
+
+.filter-ai-btn:hover {
+    border-color: #8b5cf6;
+    color: #c4b5fd;
+}
+
+.filter-ai-btn.active {
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    color: white;
+    border-color: #8b5cf6;
+}
+
+.filter-ai-btn.active .filter-count {
+    background: rgba(255,255,255,0.2);
+}
+
 /* EMPTY STATE - onboarding */
 .empty-state {
     background: var(--color-bg-card);
@@ -3203,6 +3223,7 @@ input::placeholder { color: var(--color-text-subtle); }
             <button class="filter-btn" onclick="setFilter('changes', event)">📈 Sa promenom <span class="filter-count" id="count-changes">0</span></button>
             <button class="filter-btn" onclick="setFilter('inactive', event)">👻 Nestali <span class="filter-count" id="count-inactive">0</span></button>
             <button class="filter-btn" onclick="setFilter('problem', event)">⚠️ Problem <span class="filter-count" id="count-problem">0</span></button>
+            <button class="filter-btn filter-ai-btn" id="filterAiBtn" onclick="setFilter('ai', event)" style="display:none;">🤖 AI preporuka <span class="filter-count" id="count-ai">0</span></button>
         </div>
 
         <div id="list"></div>
@@ -4868,13 +4889,30 @@ async function deleteOglas(url){
     }
 }
 
-function passesFilter(c, filterName){
+// Vrati AI rang za oglas u trenutnom scope-u (model filter ili 'all')
+function getAiRankForCurrentScope(url){
+    const rank = AI_RANKS[url];
+    if(!rank) return null;
+    const wantScope = MODEL_FILTER !== "all" ? MODEL_FILTER : "all";
+    // Ako je rang napravljen za taj scope, vazi. Inace null.
+    if(rank.scope === wantScope) return rank;
+    return null;
+}
+
+// Ima li uopste AI rangova za trenutni scope (da znamo da prikazemo dugme)
+function hasAiRanksForScope(){
+    const wantScope = MODEL_FILTER !== "all" ? MODEL_FILTER : "all";
+    return Object.values(AI_RANKS).some(r => r.scope === wantScope);
+}
+
+function passesFilter(c, filterName, url){
     if(filterName === "all") return true;
     if(filterName === "top") return (c.score || 0) >= 75;
     if(filterName === "active") return c.aktivan !== false;
     if(filterName === "inactive") return c.aktivan === false;
     if(filterName === "changes") return c.broj_promena && c.broj_promena > 0 && c.aktivan !== false;
     if(filterName === "problem") return c.problem_cena === true && c.aktivan !== false;
+    if(filterName === "ai") return getAiRankForCurrentScope(url) !== null;
     return true;
 }
 
@@ -4885,11 +4923,31 @@ function updateFilterCounts(){
     filters.forEach(f => {
         const count = oglasi.filter(o => {
             const c = cene[o.url] || {};
-            return passesFilter(c, f);
+            return passesFilter(c, f, o.url);
         }).length;
         const el = document.getElementById("count-" + f);
         if(el) el.textContent = count;
     });
+
+    // AI filter dugme - prikazi samo ako ima rangova za trenutni scope
+    const aiBtn = document.getElementById("filterAiBtn");
+    if(aiBtn){
+        if(hasAiRanksForScope()){
+            aiBtn.style.display = "";
+            const aiCount = oglasi.filter(o => passesFilter(cene[o.url] || {}, "ai", o.url)).length;
+            const countEl = document.getElementById("count-ai");
+            if(countEl) countEl.textContent = aiCount;
+        } else {
+            aiBtn.style.display = "none";
+            // Ako je AI filter bio aktivan a vise nema rangova, vrati na 'all'
+            if(FILTER === "ai"){
+                FILTER = "all";
+                document.querySelectorAll(".filter-btn").forEach(b => b.classList.remove("active"));
+                const allBtn = document.querySelector('.filter-btn[onclick*="\'all\'"]');
+                if(allBtn) allBtn.classList.add("active");
+            }
+        }
+    }
 }
 
 function buildTrackedCard(o, c, showBestDealTag){
@@ -4944,8 +5002,8 @@ function buildTrackedCard(o, c, showBestDealTag){
     scoreBadge.textContent = `${badge} ${score}`;
     imgWrap.appendChild(scoreBadge);
 
-    // AI rang badge (ako postoji)
-    const aiRank = AI_RANKS[o.url];
+    // AI rang badge (ako postoji za trenutni scope)
+    const aiRank = getAiRankForCurrentScope(o.url);
     if(aiRank && aiRank.pozicija){
         const aiBadge = document.createElement("div");
         aiBadge.className = "ai-rank-badge";
@@ -5182,10 +5240,19 @@ function render(){
     let list = oglasi.filter(o => {
         const c = cene[o.url] || {};
         if(MODEL_FILTER !== "all" && (c.model || "nepoznato") !== MODEL_FILTER) return false;
-        return passesFilter(c, FILTER);
+        return passesFilter(c, FILTER, o.url);
     });
 
-    list.sort((a,b) => (cene[b.url]?.score || 0) - (cene[a.url]?.score || 0));
+    if(FILTER === "ai"){
+        // Sortiraj po AI poziciji (#1 prvo)
+        list.sort((a,b) => {
+            const ra = getAiRankForCurrentScope(a.url);
+            const rb = getAiRankForCurrentScope(b.url);
+            return (ra?.pozicija || 999) - (rb?.pozicija || 999);
+        });
+    } else {
+        list.sort((a,b) => (cene[b.url]?.score || 0) - (cene[a.url]?.score || 0));
+    }
 
     const container = document.getElementById("list");
     const emptyState = document.getElementById("emptyState");
