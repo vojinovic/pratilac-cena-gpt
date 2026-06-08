@@ -3564,7 +3564,13 @@ async function runAiAnalysis(){
         // Osvezi podatke da se prikazu AI rang badge-ovi na karticama
         load();
     } catch(e){
-        alert("Greška: " + e.message);
+        // Failed to fetch / network / timeout
+        const msg = (e && e.message) ? e.message.toLowerCase() : "";
+        if(msg.includes("fetch") || msg.includes("network") || msg.includes("load failed")){
+            alert("Veza je prekinuta pre nego što je analiza stigla (verovatno spor odgovor ili mrežni problem). Probaj ponovo za koji trenutak.");
+        } else {
+            alert("Greška: " + e.message);
+        }
     } finally {
         if(btn){
             btn.disabled = false;
