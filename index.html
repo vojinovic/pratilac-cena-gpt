@@ -4186,12 +4186,30 @@ async function logout(){
     showLoginScreen();
 }
 
+// Clarity merenje: identifikuj korisnika i salji custom evente.
+// Bezopasno ako Clarity nije ucitan (adblock i sl.) - tiho preskace.
+function track(eventName){
+    try{
+        if(typeof window.clarity === "function") window.clarity("event", eventName);
+    }catch(e){}
+}
+
+function identifyUser(email){
+    try{
+        if(typeof window.clarity === "function" && email){
+            window.clarity("identify", email);
+            window.clarity("set", "user", email);
+        }
+    }catch(e){}
+}
+
 async function checkAuth(){
     try{
         const r = await apiFetch("/auth/me");
         const data = await r.json();
         if(data.authenticated){
             CURRENT_USER = data;
+            identifyUser(data.email);
             return true;
         }
     }catch(e){
@@ -4438,6 +4456,7 @@ async function runAiAnalysis(){
         btn.querySelector("span:last-child").textContent = "Analiza u toku...";
     }
     showAiLoadingOverlay();
+    track("ai_started");
 
     try {
         const body = MODEL_FILTER !== "all" ? { model: MODEL_FILTER } : {};
@@ -5793,6 +5812,7 @@ async function addOglasByUrl(url, label){
         await load();
         if(SEARCH_DATA) renderSearch();
         showToast("✓ Oglas dodat. Prikupljamo cenu, sliku i score, obično 5-30 minuta. Osvežavamo automatski.");
+        track("car_added");
         return true;
     }catch(e){
         console.error(e);
@@ -6824,6 +6844,7 @@ function buildReasonsRow(breakdown){
 }
 
 async function doSearch(page = 1){
+    if(page === 1) track("search_used");
     if(!SELECTED_BRAND && SELECTED_FUEL.size === 0 && SELECTED_CHASSIS.size === 0){
         alert("Izaberi bar brend, gorivo ili karoseriju.");
         return;
@@ -7137,6 +7158,7 @@ async function shareList(){
             alert(data.error || "Greška pri pravljenju linka.");
             return;
         }
+        track("share_created");
 
         let copied = false;
         try{
