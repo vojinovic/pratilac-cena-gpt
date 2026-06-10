@@ -3398,6 +3398,70 @@ input::placeholder { color: var(--color-text-subtle); }
     font-family: inherit;
     font-size: 14px;
 }
+/* Pending kartica (scraper jos nije prikupio podatke) */
+.pending-card {
+    border: 1px dashed var(--color-border, #3a3a42);
+    border-radius: 14px;
+    background: var(--color-bg-soft, #1a1a1e);
+    padding: 22px 18px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    justify-content: center;
+    min-height: 220px;
+}
+.pending-card-icon {
+    font-size: 34px;
+    margin-bottom: 10px;
+    animation: pending-pulse 1.6s ease-in-out infinite;
+}
+@keyframes pending-pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.55; transform: scale(0.94); }
+}
+.pending-card-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--color-text, #f4f4f5);
+    margin-bottom: 6px;
+    word-break: break-word;
+}
+.pending-card-sub {
+    font-size: 12.5px;
+    color: var(--color-text-muted, #a1a1aa);
+    line-height: 1.55;
+    max-width: 280px;
+    margin-bottom: 14px;
+}
+.pending-card-actions {
+    display: flex;
+    gap: 8px;
+}
+
+/* Toast notifikacija */
+.ad-toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(16px);
+    background: var(--color-bg-soft, #1f1f24);
+    border: 1px solid var(--color-border, #2a2a30);
+    color: var(--color-text, #f4f4f5);
+    padding: 12px 18px;
+    border-radius: 12px;
+    font-size: 13.5px;
+    line-height: 1.5;
+    box-shadow: 0 8px 28px rgba(0, 0, 0, 0.35);
+    z-index: 1100;
+    max-width: 420px;
+    opacity: 0;
+    transition: opacity 0.25s ease, transform 0.25s ease;
+}
+.ad-toast.open {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+}
 </style>
 </head>
 <body>
@@ -5728,6 +5792,7 @@ async function addOglasByUrl(url, label){
         }
         await load();
         if(SEARCH_DATA) renderSearch();
+        showToast("✓ Oglas dodat. Prikupljamo cenu, sliku i score, obično 5-30 minuta. Osvežavamo automatski.");
         return true;
     }catch(e){
         console.error(e);
@@ -6151,6 +6216,72 @@ function buildTrackedCard(o, c, showBestDealTag){
     return card;
 }
 
+let TOAST_TIMER = null;
+
+function showToast(msg, durationMs = 6000){
+    const existing = document.getElementById("adToast");
+    if(existing) existing.remove();
+    if(TOAST_TIMER){ clearTimeout(TOAST_TIMER); TOAST_TIMER = null; }
+
+    const toast = document.createElement("div");
+    toast.id = "adToast";
+    toast.className = "ad-toast";
+    toast.textContent = msg;
+    document.body.appendChild(toast);
+    requestAnimationFrame(() => toast.classList.add("open"));
+
+    TOAST_TIMER = setTimeout(() => {
+        toast.classList.remove("open");
+        setTimeout(() => toast.remove(), 300);
+    }, durationMs);
+}
+
+// Kartica za oglas koji je dodat ali scraper jos nije prikupio podatke
+function buildPendingCard(o){
+    const card = document.createElement("div");
+    card.className = "pending-card";
+
+    const icon = document.createElement("div");
+    icon.className = "pending-card-icon";
+    icon.textContent = "⏳";
+    card.appendChild(icon);
+
+    const title = document.createElement("div");
+    title.className = "pending-card-title";
+    let naziv = o.label;
+    if(!naziv){
+        // Izvuci citljiv naziv iz URL sluga
+        const m = o.url.match(/\/auto-oglasi\/\d+\/([^/?]+)/);
+        naziv = m ? m[1].replace(/-/g, " ") : "Novi oglas";
+    }
+    title.textContent = naziv;
+    card.appendChild(title);
+
+    const sub = document.createElement("div");
+    sub.className = "pending-card-sub";
+    sub.textContent = "Prikupljamo podatke o vozilu: cenu, sliku, score i istoriju. Obično traje 5-30 minuta, ponekad do par sati. Osvežavamo automatski, ne moraš ništa da radiš.";
+    card.appendChild(sub);
+
+    const actions = document.createElement("div");
+    actions.className = "pending-card-actions";
+
+    const openBtn = document.createElement("a");
+    openBtn.className = "btn";
+    openBtn.href = o.url;
+    openBtn.target = "_blank";
+    openBtn.textContent = "Otvori oglas";
+    actions.appendChild(openBtn);
+
+    const delBtn = document.createElement("button");
+    delBtn.className = "btn btn-danger";
+    delBtn.textContent = "Obriši";
+    delBtn.onclick = () => deleteOglas(o.url);
+    actions.appendChild(delBtn);
+
+    card.appendChild(actions);
+    return card;
+}
+
 function render(){
     const oglasi = DATA?.oglasi || [];
     const cene = DATA?.cene || {};
@@ -6191,21 +6322,25 @@ function render(){
         return passesFilter(c, FILTER, o.url);
     });
 
+    // Razdvoji: auti bez podataka (scraper jos nije prosao) idu na VRH
+    const pendingList = list.filter(o => !(cene[o.url] && cene[o.url].cena));
+    let readyList = list.filter(o => cene[o.url] && cene[o.url].cena);
+
     if(FILTER === "ai"){
         // Sortiraj po AI poziciji (#1 prvo)
-        list.sort((a,b) => {
+        readyList.sort((a,b) => {
             const ra = getAiRankForCurrentScope(a.url);
             const rb = getAiRankForCurrentScope(b.url);
             return (ra?.pozicija || 999) - (rb?.pozicija || 999);
         });
     } else {
-        list.sort((a,b) => (cene[b.url]?.score || 0) - (cene[a.url]?.score || 0));
+        readyList.sort((a,b) => (cene[b.url]?.score || 0) - (cene[a.url]?.score || 0));
     }
 
     container.innerHTML = "";
 
     // Ima auta ali filter je prazan
-    if(list.length === 0){
+    if(pendingList.length === 0 && readyList.length === 0){
         container.style.display = "none";
         emptyState.style.display = "block";
         emptyState.className = "empty-state";
@@ -6217,15 +6352,18 @@ function render(){
     emptyState.style.display = "none";
 
     // "Najbolja kupovina danas" decision kartica - samo na 'all' i 'top' filterima
-    const decisionCard = buildDecisionCard(list, cene);
+    const decisionCard = buildDecisionCard(readyList, cene);
     if(decisionCard){
         // Decision kartica ide van grida (full width), pa pravimo wrapper
         container.appendChild(decisionCard);
     }
 
-    const topUrl = (list[0] && (cene[list[0].url]?.score || 0) >= 80) ? list[0].url : null;
+    // Pending kartice prve, da korisnik odmah vidi sta je upravo dodao
+    pendingList.forEach(o => container.appendChild(buildPendingCard(o)));
 
-    list.forEach(o => {
+    const topUrl = (readyList[0] && (cene[readyList[0].url]?.score || 0) >= 80) ? readyList[0].url : null;
+
+    readyList.forEach(o => {
         const c = cene[o.url] || {};
         const isBestDeal = o.url === topUrl;
         container.appendChild(buildTrackedCard(o, c, isBestDeal));
