@@ -1714,6 +1714,111 @@ input::placeholder { color: var(--color-text-subtle); }
     .empty-onboard-steps { grid-template-columns: 1fr; }
 }
 
+/* ONBOARDING HERO (korisnik sa 0 auta) */
+.onboard-hero {
+    max-width: 760px;
+    margin: 12px auto 0;
+    text-align: center;
+    padding: 24px 20px 8px;
+}
+.onboard-hero-icon {
+    width: 72px; height: 72px;
+    border-radius: 50%;
+    background: var(--color-bg-card);
+    border: 1px solid var(--color-border);
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 20px;
+    font-size: 34px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.35);
+}
+.onboard-hero-title {
+    font-size: 28px; font-weight: 800;
+    letter-spacing: -0.02em;
+    color: var(--color-text);
+    margin: 0 0 12px;
+}
+.onboard-hero-sub {
+    font-size: 16px; line-height: 1.55;
+    color: var(--color-text-muted);
+    max-width: 520px; margin: 0 auto 28px;
+}
+.onboard-primary-btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+    background: var(--color-cta); color: var(--color-cta-text);
+    border: none; border-radius: 12px;
+    padding: 16px 36px;
+    font-size: 17px; font-weight: 700;
+    cursor: pointer; font-family: inherit;
+    box-shadow: 0 6px 18px rgba(239,68,68,0.35);
+    transition: transform 0.15s, box-shadow 0.15s, background 0.15s;
+}
+.onboard-primary-btn:hover {
+    transform: translateY(-1px);
+    background: var(--color-cta-hover);
+    box-shadow: 0 8px 24px rgba(239,68,68,0.5);
+}
+.onboard-secondary {
+    margin-top: 16px;
+    font-size: 14px;
+    color: var(--color-text-muted);
+}
+.onboard-secondary a {
+    color: var(--color-text);
+    font-weight: 600;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    margin-left: 4px;
+}
+.onboard-secondary a:hover { text-decoration: none; }
+.onboard-how {
+    margin-top: 44px;
+    padding-top: 32px;
+    border-top: 1px solid var(--color-border-soft);
+    text-align: left;
+}
+.onboard-how-title {
+    font-size: 13px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.06em;
+    color: var(--color-text-subtle);
+    text-align: center;
+    margin-bottom: 22px;
+}
+.onboard-how-steps {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 18px;
+}
+.onboard-how-step {
+    display: flex; gap: 12px; align-items: flex-start;
+    background: var(--color-bg-card);
+    border: 1px solid var(--color-border);
+    border-radius: 12px;
+    padding: 16px;
+}
+.onboard-how-num {
+    flex-shrink: 0;
+    width: 26px; height: 26px; border-radius: 50%;
+    background: var(--color-cta); color: var(--color-cta-text);
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 13px;
+}
+.onboard-how-step h4 {
+    font-size: 14px; font-weight: 600;
+    color: var(--color-text);
+    margin: 0 0 4px;
+}
+.onboard-how-step p {
+    font-size: 12.5px; line-height: 1.5;
+    color: var(--color-text-muted);
+    margin: 0;
+}
+@media (max-width: 640px){
+    .onboard-hero-title { font-size: 24px; }
+    .onboard-hero-sub { font-size: 15px; }
+    .onboard-primary-btn { width: 100%; padding: 16px 24px; }
+    .onboard-how-steps { grid-template-columns: 1fr; }
+}
+
 #list {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(330px, 1fr));
@@ -3113,7 +3218,6 @@ input::placeholder { color: var(--color-text-subtle); }
 }
 </style>
 </head>
-
 <body>
 
 <header class="header-wrap" id="appHeader" style="display:none;">
@@ -3457,14 +3561,54 @@ input::placeholder { color: var(--color-text-subtle); }
 <div class="container">
 
     <div class="tabs">
-        <button class="tab active" onclick="showSection('tracked', event)">Praćeni oglasi</button>
-        <button class="tab" onclick="showSection('search', event)">Pretraga</button>
-        <button class="tab" id="adminTab" onclick="showSection('admin', event)" style="display:none;">⚙️ Admin</button>
+        <button class="tab active" data-section="tracked" onclick="showSection('tracked', event)">Praćeni oglasi</button>
+        <button class="tab" data-section="search" onclick="showSection('search', event)">Pretraga</button>
+        <button class="tab" id="adminTab" data-section="admin" onclick="showSection('admin', event)" style="display:none;">⚙️ Admin</button>
     </div>
 
     <div id="section-tracked" class="section active">
 
-        <div class="add-box">
+        <div id="onboardHero" class="onboard-hero" style="display:none;">
+            <div class="onboard-hero-icon">🚗</div>
+            <h2 class="onboard-hero-title">Dobrodošao u Auto Drukaru</h2>
+            <p class="onboard-hero-sub">Pronađi najbolju kupovinu na tržištu za nekoliko sekundi. Mi analiziramo oglase i dajemo score 0-100 da odmah znaš šta vredi.</p>
+
+            <button class="onboard-primary-btn" onclick="goToSearch()">🔍 Pronađi auto</button>
+
+            <div class="onboard-secondary">
+                Već imaš konkretan oglas?
+                <a href="#" onclick="revealAddBox(); return false;">Nalepi link →</a>
+            </div>
+
+            <div class="onboard-how">
+                <div class="onboard-how-title">Kako radi</div>
+                <div class="onboard-how-steps">
+                    <div class="onboard-how-step">
+                        <div class="onboard-how-num">1</div>
+                        <div>
+                            <h4>Pronađeš auto</h4>
+                            <p>Pretražiš tržište po marki, modelu, godištu i ceni.</p>
+                        </div>
+                    </div>
+                    <div class="onboard-how-step">
+                        <div class="onboard-how-num">2</div>
+                        <div>
+                            <h4>Pogledaš score</h4>
+                            <p>Svaki oglas dobija ocenu 0-100 i razloge zašto.</p>
+                        </div>
+                    </div>
+                    <div class="onboard-how-step">
+                        <div class="onboard-how-num">3</div>
+                        <div>
+                            <h4>Zapratiš ako vredi</h4>
+                            <p>Pratimo cenu i javljamo kad padne ili se pojavi bolja prilika.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="add-box" id="addBox">
             <div class="add-box-header">
                 <div class="add-box-header-icon">➕</div>
                 <h3>Dodaj auto koji pratiš</h3>
@@ -4250,6 +4394,7 @@ function showMainApp(){
         if(adminTab) adminTab.style.display = "";
     }
     // AI analiza bar - dostupno svim odobrenim korisnicima
+    // NAPOMENA: render() ce ga sakriti ako korisnik ima 0 auta (onboarding)
     const aiBar = document.getElementById("aiAnalysisBar");
     if(aiBar) aiBar.style.display = "";
 }
@@ -4259,16 +4404,34 @@ function showMainApp(){
 // ========================================================================
 
 function showSection(name, event){
-    document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
     document.querySelectorAll(".section").forEach(s => s.classList.remove("active"));
-    if(event && event.target) event.target.classList.add("active");
-    document.getElementById("section-" + name).classList.add("active");
+    const sec = document.getElementById("section-" + name);
+    if(sec) sec.classList.add("active");
+
+    document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+    const tabBtn = document.querySelector('.tab[data-section="' + name + '"]');
+    if(tabBtn) tabBtn.classList.add("active");
 
     if(name === "admin"){
         loadAdminData();
         populateContentModelSelect();
         loadAiUsage();
     }
+}
+
+function goToSearch(){
+    showSection("search");
+    const brand = document.getElementById("brandInput");
+    if(brand) setTimeout(() => brand.focus(), 60);
+}
+
+function revealAddBox(){
+    const box = document.getElementById("addBox");
+    if(!box) return;
+    box.style.display = "";
+    box.scrollIntoView({ behavior: "smooth", block: "center" });
+    const url = document.getElementById("urlInput");
+    if(url) setTimeout(() => url.focus(), 250);
 }
 
 async function loadAdminData(){
@@ -5734,6 +5897,33 @@ function render(){
     const oglasi = DATA?.oglasi || [];
     const cene = DATA?.cene || {};
 
+    const onboardHero = document.getElementById("onboardHero");
+    const addBox = document.getElementById("addBox");
+    const aiBar = document.getElementById("aiAnalysisBar");
+    const modelFilters = document.getElementById("modelFilters");
+    const filtersContainer = document.getElementById("filtersContainer");
+    const container = document.getElementById("list");
+    const emptyState = document.getElementById("emptyState");
+
+    // 0 auta -> cist onboarding, sakrij sve kontrole
+    if(oglasi.length === 0){
+        if(onboardHero) onboardHero.style.display = "block";
+        if(addBox) addBox.style.display = "none";
+        if(aiBar) aiBar.style.display = "none";
+        if(modelFilters){ modelFilters.style.display = "none"; modelFilters.innerHTML = ""; }
+        if(filtersContainer) filtersContainer.style.display = "none";
+        container.style.display = "none";
+        container.innerHTML = "";
+        emptyState.style.display = "none";
+        return;
+    }
+
+    // Ima bar jedan auto -> normalan prikaz kontrola
+    if(onboardHero) onboardHero.style.display = "none";
+    if(addBox) addBox.style.display = "";
+    if(aiBar) aiBar.style.display = "";
+    if(filtersContainer) filtersContainer.style.display = "flex";
+
     updateFilterCounts();
     renderModelFilters();
 
@@ -5754,50 +5944,14 @@ function render(){
         list.sort((a,b) => (cene[b.url]?.score || 0) - (cene[a.url]?.score || 0));
     }
 
-    const container = document.getElementById("list");
-    const emptyState = document.getElementById("emptyState");
-
     container.innerHTML = "";
 
+    // Ima auta ali filter je prazan
     if(list.length === 0){
         container.style.display = "none";
         emptyState.style.display = "block";
-
-        // Korisnik nema NIJEDAN oglas - prikazi onboarding
-        if(oglasi.length === 0){
-            emptyState.className = "empty-onboard";
-            emptyState.innerHTML = `
-                <div class="empty-onboard-icon">🚗</div>
-                <h2>Hajde da dodamo prvi auto</h2>
-                <p class="empty-onboard-sub">Auto Drukara prati cene za tebe više puta dnevno. Evo kako se počinje:</p>
-                <div class="empty-onboard-steps">
-                    <div class="empty-onboard-step">
-                        <div class="empty-onboard-num">1</div>
-                        <h4>Otvori polovniautomobili.com</h4>
-                        <p>Pretraži auto koji te zanima i otvori oglas.</p>
-                    </div>
-                    <div class="empty-onboard-step">
-                        <div class="empty-onboard-num">2</div>
-                        <h4>Kopiraj URL</h4>
-                        <p>Iz adresne trake ili sa Share dugmeta.</p>
-                    </div>
-                    <div class="empty-onboard-step">
-                        <div class="empty-onboard-num">3</div>
-                        <h4>Nalepi gore</h4>
-                        <p>Mi automatski hvatamo sve podatke i počinjemo praćenje.</p>
-                    </div>
-                </div>
-                <div class="empty-onboard-example-label">PRIMER URL-A</div>
-                <div class="empty-onboard-example">https://www.polovniautomobili.com/auto-oglasi/12345678/volvo-xc60-b4-awd</div>
-                <div class="empty-onboard-alt">
-                    ili koristi <a href="#" onclick="showSection('search', event); return false;">našu pretragu</a> da nađeš auto sa pametnim score-om i dodaš ga direktno odatle
-                </div>
-            `;
-        } else {
-            // Imaju oglase ali filter je prazan
-            emptyState.className = "empty-state";
-            emptyState.textContent = "Nema oglasa u ovoj kategoriji. Probaj drugi filter.";
-        }
+        emptyState.className = "empty-state";
+        emptyState.textContent = "Nema oglasa u ovoj kategoriji. Probaj drugi filter.";
         return;
     }
 
