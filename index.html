@@ -3389,6 +3389,15 @@ input::placeholder { color: var(--color-text-subtle); }
     border-radius: 6px;
     margin-bottom: 8px;
 }
+.search-grid select {
+    padding: 12px 14px;
+    border-radius: 10px;
+    background: var(--color-bg-soft, #1a1a1e);
+    border: 1px solid var(--color-border, #2a2a30);
+    color: var(--color-text, #f4f4f5);
+    font-family: inherit;
+    font-size: 14px;
+}
 </style>
 </head>
 <body>
@@ -3839,6 +3848,13 @@ input::placeholder { color: var(--color-text-subtle); }
                 <input id="yearFromInput" type="number" placeholder="Godište od">
                 <input id="yearToInput" type="number" placeholder="Godište do">
                 <input id="priceToInput" type="number" placeholder="Max cena (€)">
+                <input id="cityInput" placeholder="Mesto (npr. Niš)" autocomplete="off">
+                <select id="cityDistanceSelect" title="Udaljenost od mesta">
+                    <option value="0" selected>Samo to mesto</option>
+                    <option value="30">+ 30 km</option>
+                    <option value="50">+ 50 km</option>
+                    <option value="100">+ 100 km</option>
+                </select>
             </div>
 
             <div class="search-chips-row">
@@ -6672,6 +6688,8 @@ async function doSearch(page = 1){
     const yearFrom = document.getElementById("yearFromInput").value.trim();
     const yearTo = document.getElementById("yearToInput").value.trim();
     const priceTo = document.getElementById("priceToInput").value.trim();
+    const city = document.getElementById("cityInput").value.trim();
+    const cityDistance = document.getElementById("cityDistanceSelect").value;
 
     const params = new URLSearchParams();
     if(SELECTED_BRAND) params.set("brand", SELECTED_BRAND.value);
@@ -6679,6 +6697,10 @@ async function doSearch(page = 1){
     if(yearFrom) params.set("year_from", yearFrom);
     if(yearTo) params.set("year_to", yearTo);
     if(priceTo) params.set("price_to", priceTo);
+    if(city){
+        params.set("city", city);
+        if(cityDistance && cityDistance !== "0") params.set("city_distance", cityDistance);
+    }
     if(page > 1) params.set("page", page);
 
     SELECTED_FUEL.forEach(v => params.append("fuel[]", v));
