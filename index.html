@@ -3310,6 +3310,85 @@ input::placeholder { color: var(--color-text-subtle); }
     margin-top: 14px;
     opacity: 0.7;
 }
+/* Share view (javna read-only lista) */
+.share-header {
+    text-align: center;
+    padding: 28px 16px 8px;
+}
+.share-header img { height: 52px; }
+.share-title {
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--color-text, #f4f4f5);
+    margin: 14px 0 4px;
+}
+.share-meta {
+    font-size: 13px;
+    color: var(--color-text-muted, #a1a1aa);
+}
+.share-disclaimer {
+    max-width: 640px;
+    margin: 14px auto 22px;
+    padding: 10px 14px;
+    border: 1px solid var(--color-border, #2a2a30);
+    border-radius: 10px;
+    background: var(--color-bg-soft, #1a1a1e);
+    font-size: 12px;
+    color: var(--color-text-muted, #a1a1aa);
+    text-align: center;
+}
+.share-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 16px;
+    margin-bottom: 28px;
+}
+.share-analysis {
+    background: var(--color-bg-soft, #1a1a1e);
+    border: 1px solid var(--color-border, #2a2a30);
+    border-radius: 14px;
+    padding: 20px;
+    margin-bottom: 28px;
+}
+.share-analysis > h3 {
+    margin: 0 0 14px;
+    font-size: 18px;
+    color: var(--color-text, #f4f4f5);
+}
+.share-cta {
+    text-align: center;
+    padding: 28px 16px 48px;
+}
+.share-cta h2 {
+    font-size: 20px;
+    color: var(--color-text, #f4f4f5);
+    margin: 0 0 8px;
+}
+.share-cta p {
+    font-size: 14px;
+    color: var(--color-text-muted, #a1a1aa);
+    margin: 0 0 18px;
+}
+.share-cta-btn {
+    display: inline-block;
+    background: #ef4444;
+    color: white;
+    font-weight: 700;
+    font-size: 15px;
+    padding: 13px 28px;
+    border-radius: 10px;
+    text-decoration: none;
+}
+.share-inactive-tag {
+    display: inline-block;
+    background: rgba(120, 120, 130, 0.25);
+    color: var(--color-text-muted, #a1a1aa);
+    font-size: 11px;
+    font-weight: 600;
+    padding: 3px 8px;
+    border-radius: 6px;
+    margin-bottom: 8px;
+}
 </style>
 </head>
 <body>
@@ -3724,6 +3803,7 @@ input::placeholder { color: var(--color-text-subtle); }
             </button>
             <div class="ai-analysis-actions">
                 <button class="ai-saved-btn" onclick="showSavedAnalysis()">📄 Prikaži poslednju analizu</button>
+                <button class="ai-saved-btn" id="shareListBtn" onclick="shareList()">🔗 Podeli listu</button>
             </div>
             <div class="ai-analysis-hint">Claude analizira sve tvoje praćene oglase i predlaže najbolju kupovinu sa obrazloženjem.</div>
         </div>
@@ -6874,7 +6954,260 @@ async function trackFromSearch(url, label){
     if(ok) renderSearch();
 }
 
+// ========================================================================
+// SHARE (javna read-only lista)
+// ========================================================================
+
+async function shareList(){
+    const btn = document.getElementById("shareListBtn");
+    const orig = btn ? btn.textContent : "";
+    if(btn){ btn.disabled = true; btn.textContent = "Pravim link..."; }
+
+    try{
+        const body = MODEL_FILTER !== "all" ? { model: MODEL_FILTER } : {};
+        const r = await apiFetch("/share/create", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(body),
+        });
+        const data = await r.json();
+        if(!r.ok || data.error){
+            alert(data.error || "Greška pri pravljenju linka.");
+            return;
+        }
+
+        let copied = false;
+        try{
+            await navigator.clipboard.writeText(data.url);
+            copied = true;
+        }catch(e){ /* clipboard nedostupan, prikazi prompt */ }
+
+        if(copied){
+            if(btn) btn.textContent = "✓ Link kopiran";
+            setTimeout(() => { if(btn) btn.textContent = orig; }, 2500);
+        }else{
+            prompt("Kopiraj link za deljenje:", data.url);
+        }
+    }catch(e){
+        alert("Greška: " + e.message);
+    }finally{
+        if(btn){
+            btn.disabled = false;
+            if(btn.textContent === "Pravim link...") btn.textContent = orig;
+        }
+    }
+}
+
+function buildShareCard(c){
+    const card = document.createElement("div");
+    card.className = "card";
+
+    const score = c.score || 0;
+    let badge = "🔴";
+    if(score >= 75) badge = "🔥";
+    else if(score >= 60) badge = "🟢";
+    else if(score >= 40) badge = "🟡";
+
+    const imgWrap = document.createElement("div");
+    imgWrap.className = "card-img-wrap";
+    if(c.slika){
+        const img = document.createElement("img");
+        img.src = c.slika;
+        img.onerror = () => { imgWrap.innerHTML = '<div class="no-image">Bez slike</div>'; };
+        imgWrap.appendChild(img);
+    }else{
+        const noImg = document.createElement("div");
+        noImg.className = "no-image";
+        noImg.textContent = "Bez slike";
+        imgWrap.appendChild(noImg);
+    }
+    const sb = document.createElement("div");
+    sb.className = "score-badge";
+    sb.textContent = `${badge} ${score}`;
+    imgWrap.appendChild(sb);
+    card.appendChild(imgWrap);
+
+    const body = document.createElement("div");
+    body.className = "card-body";
+
+    if(c.aktivan === false){
+        const tag = document.createElement("div");
+        tag.className = "share-inactive-tag";
+        tag.textContent = "👻 Oglas više nije aktivan";
+        body.appendChild(tag);
+    }
+
+    if(c.damage && !c.damage.toLowerCase().includes("nije")){
+        const dw = document.createElement("div");
+        dw.className = "damage-badge";
+        dw.textContent = "⚠️ " + c.damage;
+        body.appendChild(dw);
+    }
+
+    const title = document.createElement("div");
+    title.className = "card-title";
+    title.textContent = c.label || "Oglas";
+    body.appendChild(title);
+
+    const price = document.createElement("div");
+    price.className = "card-price";
+    price.textContent = formatPrice(c.cena);
+    body.appendChild(price);
+
+    if(c.ukupno_snizenje > 0){
+        const drop = document.createElement("div");
+        drop.style.cssText = "font-size:12px;color:#16a34a;font-weight:600;margin:-4px 0 8px;";
+        drop.textContent = `📉 Cena pala ${formatPrice(c.ukupno_snizenje)} od prvog viđenja`;
+        body.appendChild(drop);
+    }
+
+    if(c.score_breakdown && c.score_breakdown.length > 0){
+        const reasonsRow = buildReasonsRow(c.score_breakdown);
+        if(reasonsRow) body.appendChild(reasonsRow);
+    }
+
+    const indicators = [];
+    if(c.prvi_vlasnik) indicators.push("👤 Prvi vlasnik");
+    if(c.servisna_knjizica) indicators.push("📖 Servisna");
+    if(c.garancija) indicators.push("🛡️ Garancija");
+    if(indicators.length > 0){
+        const indRow = document.createElement("div");
+        indRow.className = "card-indicators";
+        indicators.forEach(label => {
+            const span = document.createElement("span");
+            span.className = "indicator";
+            span.textContent = label;
+            indRow.appendChild(span);
+        });
+        body.appendChild(indRow);
+    }
+
+    const specs = [];
+    if(c.godiste) specs.push({label: c.godiste + ".", year: true});
+    if(c.kilometraza) specs.push({label: formatKm(c.kilometraza)});
+    if(c.gorivo) specs.push({label: c.gorivo});
+    if(c.karoserija) specs.push({label: c.karoserija});
+    if(specs.length > 0){
+        const specsRow = document.createElement("div");
+        specsRow.className = "card-specs";
+        specs.forEach(s => {
+            const span = document.createElement("span");
+            span.className = "spec" + (s.year ? " year" : "");
+            span.textContent = s.label;
+            specsRow.appendChild(span);
+        });
+        body.appendChild(specsRow);
+    }
+
+    const actions = document.createElement("div");
+    actions.className = "card-actions";
+    const openBtn = document.createElement("a");
+    openBtn.className = "btn";
+    openBtn.href = c.url;
+    openBtn.target = "_blank";
+    openBtn.rel = "noopener";
+    openBtn.textContent = "Otvori oglas";
+    actions.appendChild(openBtn);
+    body.appendChild(actions);
+
+    card.appendChild(body);
+    return card;
+}
+
+async function showShareView(shareId){
+    document.getElementById("loadingScreen").style.display = "none";
+    document.getElementById("loginScreen").style.display = "none";
+    document.getElementById("mainApp").style.display = "none";
+    document.getElementById("appHeader").style.display = "none";
+
+    const view = document.createElement("div");
+    view.id = "shareView";
+    view.className = "container";
+    document.body.appendChild(view);
+
+    view.innerHTML = '<div class="login-loading">Učitavam podeljenu listu...</div>';
+
+    let data;
+    try{
+        const r = await fetch(API + "/share/" + encodeURIComponent(shareId));
+        data = await r.json();
+        if(!r.ok || data.error){
+            view.innerHTML = `
+                <div class="share-header">
+                    <img src="images/logo-full.png" alt="Auto Drukara">
+                    <div class="share-title">Lista nije dostupna</div>
+                    <div class="share-meta">${data.error || "Greška pri učitavanju."}</div>
+                </div>
+                <div class="share-cta">
+                    <a class="share-cta-btn" href="/">Idi na Auto Drukara →</a>
+                </div>`;
+            return;
+        }
+    }catch(e){
+        view.innerHTML = '<div class="login-loading">Greška pri učitavanju liste.</div>';
+        return;
+    }
+
+    const cars = data.cars || [];
+    const scopeLabel = data.scope && data.scope !== "all" ? prettyModelName(data.scope) : "Praćeni automobili";
+    let datum = "";
+    try{
+        datum = new Date(data.created_at).toLocaleDateString("sr-RS", {day:"numeric", month:"numeric", year:"numeric"});
+    }catch(e){}
+
+    view.innerHTML = `
+        <div class="share-header">
+            <img src="images/logo-full.png" alt="Auto Drukara">
+            <div class="share-title">${scopeLabel} · ${cars.length} ${cars.length === 1 ? "oglas" : (cars.length < 5 ? "oglasa" : "oglasa")}</div>
+            <div class="share-meta">Podeljena lista sa Auto Drukare · Snimljeno ${datum}</div>
+        </div>
+        <div class="share-disclaimer">
+            Ovo je snimak liste iz trenutka deljenja. Cene i dostupnost oglasa su se u međuvremenu mogli promeniti.
+            Score 0-100 računamo na osnovu cene, kilometraže, godišta, stanja i svežine oglasa.
+        </div>
+        <div class="share-grid" id="shareGrid"></div>
+        <div id="shareAnalysisWrap"></div>
+        <div class="share-cta">
+            <h2>Praviš svoju listu?</h2>
+            <p>Auto Drukara automatski prati cene, daje score svakom oglasu i AI analizu koja je najbolja kupovina.</p>
+            <a class="share-cta-btn" href="/">Zatraži pristup →</a>
+        </div>
+    `;
+
+    const grid = document.getElementById("shareGrid");
+    cars.forEach(c => grid.appendChild(buildShareCard(c)));
+
+    // AI analiza (ako je snapshot sadrzi)
+    if(data.analysis && data.analysis.structured){
+        const wrap = document.getElementById("shareAnalysisWrap");
+        const box = document.createElement("div");
+        box.className = "share-analysis";
+        const h = document.createElement("h3");
+        h.textContent = "🤖 AI Analiza";
+        box.appendChild(h);
+        renderStructuredAnalysis(box, data.analysis.structured, data.analysis.idMap || []);
+        if(data.analysis.generated_at){
+            const note = document.createElement("div");
+            note.className = "ai-modal-cached";
+            try{
+                const d = new Date(data.analysis.generated_at);
+                note.textContent = "Analiza napravljena: " + d.toLocaleDateString("sr-RS");
+            }catch(e){}
+            box.appendChild(note);
+        }
+        wrap.appendChild(box);
+    }
+}
+
 async function init(){
+    // Javni share prikaz - bez logina
+    const initParams = new URLSearchParams(window.location.search);
+    const shareId = initParams.get("share");
+    if(shareId){
+        showShareView(shareId);
+        return;
+    }
+
     // Check if redirected from auth callback with waitlist flag
     const params = new URLSearchParams(window.location.search);
     if(params.get("waitlist") === "1"){
