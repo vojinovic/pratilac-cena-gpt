@@ -6,23 +6,23 @@ on:
   repository_dispatch:
     types: [scrape]
 
+concurrency:
+  group: provera-cena
+  cancel-in-progress: false
+
 jobs:
   provera:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-
       - name: Install dependencies
         run: |
           pip install curl_cffi beautifulsoup4
-
       - name: Pokreni skriptu
         env:
           API_URL: https://api.autodrukara.com
