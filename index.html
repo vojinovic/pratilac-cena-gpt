@@ -4503,6 +4503,129 @@ async function runAiAnalysis(){
     }
 }
 
+// Sklopi samostalan print dokument od AI analize i otvori dijalog za stampu.
+// Korisnik u dijalogu bira "Sacuvaj kao PDF" (desktop besprekorno, mobilni
+// zavisi od browsera). Bez biblioteka i bez servera.
+function printAiAnalysis(data){
+    const s = data.structured;
+    const idMap = data.idMap || [];
+    const mapById = {};
+    idMap.forEach(m => { mapById[m.id] = m; });
+
+    const esc = (t) => String(t == null ? "" : t)
+        .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
+    const datum = new Date().toLocaleDateString("sr-RS", {day:"numeric", month:"long", year:"numeric"});
+
+    let rangHtml = "";
+    if(Array.isArray(s && s.rangiranje) && s.rangiranje.length > 0){
+        rangHtml = '<h2>🏆 Rangiranje kupovina</h2>';
+        s.rangiranje.forEach(item => {
+            const car = mapById[item.id] || {};
+            const meta = [
+                car.cena ? "€" + car.cena.toLocaleString("en-US") : "",
+                car.godiste || "",
+                car.kilometraza ? car.kilometraza.toLocaleString("en-US") + " km" : "",
+                car.score != null ? "score " + car.score : "",
+            ].filter(Boolean).join(" · ");
+            rangHtml += `
+                <div class="p-rank">
+                    <div class="p-rank-head">
+                        <span class="p-pos">${esc(item.pozicija || "?")}.</span>
+                        <span class="p-naziv">${esc(car.naziv || item.naziv || ("Auto #" + item.id))}</span>
+                        ${item.ocena ? `<span class="p-ocena">${esc(item.ocena)}</span>` : ""}
+                    </div>
+                    ${meta ? `<div class="p-meta">${esc(meta)}</div>` : ""}
+                    ${item.obrazlozenje ? `<div class="p-obr">${esc(item.obrazlozenje)}</div>` : ""}
+                </div>`;
+        });
+    }
+
+    const doc = `<!DOCTYPE html>
+<html lang="sr"><head><meta charset="utf-8"><title>Auto Drukara - AI Analiza</title>
+<style>
+    * { box-sizing: border-box; }
+    body { font-family: -apple-system, "Segoe UI", Roboto, Arial, sans-serif; color: #1a1a1a; line-height: 1.55; max-width: 760px; margin: 0 auto; padding: 32px 28px; }
+    .p-header { display: flex; align-items: center; justify-content: space-between; border-bottom: 2px solid #ef4444; padding-bottom: 14px; margin-bottom: 8px; }
+    .p-logo { font-size: 20px; font-weight: 800; color: #ef4444; }
+    .p-logo span { color: #1a1a1a; }
+    .p-date { font-size: 12px; color: #666; }
+    h1 { font-size: 19px; margin: 18px 0 10px; }
+    h2 { font-size: 15px; margin: 22px 0 8px; padding-bottom: 4px; border-bottom: 1px solid #ddd; }
+    .p-intro { font-size: 13px; color: #333; background: #f6f6f7; border-radius: 8px; padding: 12px 14px; }
+    .p-rank { border: 1px solid #e3e3e6; border-radius: 8px; padding: 10px 12px; margin-bottom: 8px; page-break-inside: avoid; }
+    .p-rank-head { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+    .p-pos { font-weight: 800; color: #ef4444; font-size: 15px; }
+    .p-naziv { font-weight: 700; font-size: 14px; }
+    .p-ocena { font-size: 11px; background: #eef; color: #339; padding: 2px 7px; border-radius: 5px; }
+    .p-meta { font-size: 12px; color: #666; margin: 3px 0; }
+    .p-obr { font-size: 12.5px; color: #222; margin-top: 4px; }
+    .p-section { font-size: 12.5px; color: #222; white-space: pre-wrap; }
+    .p-preporuka { background: #fef6f6; border: 1px solid #f5c9c9; border-radius: 8px; padding: 12px 14px; font-size: 13px; margin-top: 14px; }
+    .p-footer { margin-top: 28px; padding-top: 12px; border-top: 1px solid #ddd; font-size: 11px; color: #888; text-align: center; }
+    .p-disclaimer { font-size: 10.5px; color: #999; margin-top: 6px; text-align: center; }
+    @media print { body { padding: 0; } @page { margin: 16mm; } }
+.ai-pdf-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: transparent;
+    border: 1px solid var(--color-border, #2a2a30);
+    color: var(--color-text, #f4f4f5);
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 8px 14px;
+    border-radius: 9px;
+    cursor: pointer;
+    transition: background 0.15s ease;
+}
+.ai-pdf-btn:hover { background: var(--color-bg-soft, #1f1f24); }
+.ai-pdf-hint {
+    font-size: 11px;
+    color: var(--color-text-muted, #71717a);
+    margin: 6px 0 4px;
+}
+@media print {
+    .info-modal-backdrop { display: none !important; }
+}
+</style></head>
+<body>
+    <div class="p-header">
+        <div class="p-logo">Auto<span>Drukara</span></div>
+        <div class="p-date">${esc(datum)}</div>
+    </div>
+    <h1>🤖 AI Analiza oglasa</h1>
+    ${s && s.pregled ? `<div class="p-intro">${esc(s.pregled)}</div>` : ""}
+    ${rangHtml}
+    ${s && s.napomene ? `<h2>🔧 Napomene o modelima</h2><div class="p-section">${esc(s.napomene)}</div>` : ""}
+    ${s && s.rizici ? `<h2>⚠️ Rizici</h2><div class="p-section">${esc(s.rizici)}</div>` : ""}
+    ${s && s.preporuka ? `<div class="p-preporuka"><strong>💡 Preporuka:</strong> ${esc(s.preporuka)}</div>` : ""}
+    <div class="p-footer">Generisano na autodrukara.com — AI savetnik za kupovinu polovnih automobila</div>
+    <div class="p-disclaimer">Analiza je informativnog karaktera i ne predstavlja profesionalni savet. Pre kupovine obavezno proverite vozilo i dokumentaciju.</div>
+</body></html>`;
+
+    const iframe = document.createElement("iframe");
+    iframe.style.cssText = "position:fixed;right:0;bottom:0;width:0;height:0;border:0;";
+    document.body.appendChild(iframe);
+    const idoc = iframe.contentWindow.document;
+    idoc.open();
+    idoc.write(doc);
+    idoc.close();
+
+    iframe.onload = () => {
+        setTimeout(() => {
+            try{
+                iframe.contentWindow.focus();
+                iframe.contentWindow.print();
+            }catch(e){
+                alert("Štampa nije uspela na ovom uređaju. Probaj na računaru.");
+            }
+            setTimeout(() => iframe.remove(), 1000);
+        }, 300);
+    };
+}
+
 function showAiAnalysisModal(data){
     const existing = document.getElementById("info-modal-backdrop");
     if(existing) existing.remove();
@@ -4524,6 +4647,18 @@ function showAiAnalysisModal(data){
     const title = document.createElement("h3");
     title.textContent = "🤖 AI Analiza tvojih oglasa";
     modal.appendChild(title);
+
+    // Dugme za stampu / cuvanje kao PDF
+    const pdfBtn = document.createElement("button");
+    pdfBtn.className = "ai-pdf-btn";
+    pdfBtn.innerHTML = "📄 Sačuvaj kao PDF";
+    pdfBtn.onclick = () => { track("pdf_export"); printAiAnalysis(data); };
+    modal.appendChild(pdfBtn);
+
+    const pdfHint = document.createElement("div");
+    pdfHint.className = "ai-pdf-hint";
+    pdfHint.textContent = "Otvoriće se pregled za štampu, gde možeš izabrati \"Sačuvaj kao PDF\".";
+    modal.appendChild(pdfHint);
 
     if(data.structured){
         renderStructuredAnalysis(modal, data.structured, data.idMap || []);
