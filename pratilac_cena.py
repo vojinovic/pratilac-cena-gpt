@@ -47,12 +47,106 @@ def izvuci_data_layer(html):
         return {}
 
 
-def izvuci_cenu(soup, data_layer=None):
+def izvuci_iz_meta(soup):
+    """
+    Glavni izvor podataka posle PA redizajna (jun 2026): meta description i
+    keywords su serverski renderovani (PA ih mora dati zbog Google/FB share-a),
+    za razliku od dataLayer-a i priceClassified koji se sad učitavaju JS-om
+    pa ih curl_cffi ne vidi.
+
+    Primer meta-description:
+    "Škoda Kodiaq 2.0tdi dsg 4x4, 2021. godište, Džip/SUV, Dizel, 1968 cm3,
+     vozilo prešlo 191850 km, Voganj. Cena 21.950 €, Putnička vozila..."
+
+    Vraća dict: cena, godiste, kilometraza, gorivo, karoserija, kubikaza, mesto.
+    Sva polja su opciona (None ako se ne nađu).
+    """
+    result = {
+        "cena": None, "godiste": None, "kilometraza": None,
+        "gorivo": None, "karoserija": None, "kubikaza": None, "mesto": None,
+    }
+
+    desc = None
+    meta = soup.find("meta", attrs={"name": "description"})
+    if meta and meta.get("content"):
+        desc = meta.get("content")
+    if not desc:
+        meta = soup.find("meta", attrs={"property": "og:description"})
+        if meta and meta.get("content"):
+            desc = meta.get("content")
+
+    if not desc:
+        return result
+
+    # Normalizuj non-breaking space (&nbsp; -> obican razmak)
+    desc = desc.replace("\xa0", " ").replace("&nbsp;", " ")
+
+    # CENA: "Cena 21.950 €" ili "Cena 21950 €"
+    m = re.search(r"Cena\s+([\d.\s]+)\s*€", desc)
+    if m:
+        result["cena"] = parsiraj_broj(m.group(1))
+
+    # GODIŠTE: "2021. godište"
+    m = re.search(r"(\d{4})\.\s*godi", desc)
+    if m:
+        try:
+            g = int(m.group(1))
+            if 1950 <= g <= datetime.now().year + 1:
+                result["godiste"] = g
+        except (ValueError, TypeError):
+            pass
+
+    # KILOMETRAŽA: "vozilo prešlo 191850 km" ili "prešlo 191.850 km"
+    m = re.search(r"prešlo\s+([\d.\s]+)\s*km", desc)
+    if not m:
+        m = re.search(r"([\d.\s]+)\s*km\b", desc)
+    if m:
+        cifre = re.sub(r"[^\d]", "", m.group(1))
+        if cifre:
+            km = int(cifre)
+            if 0 <= km <= 2000000:
+                result["kilometraza"] = km
+
+    # KUBIKAŽA: "1968 cm3"
+    m = re.search(r"(\d{3,5})\s*cm3", desc)
+    if m:
+        try:
+            result["kubikaza"] = int(m.group(1))
+        except (ValueError, TypeError):
+            pass
+
+    # GORIVO: poznate vrednosti iz opisa
+    for fuel in ["Dizel", "Benzin + metan (CNG)", "Benzin + gas (TNG)", "Benzin", "Hibrid", "Električni pogon", "Elektro"]:
+        if fuel in desc:
+            result["gorivo"] = fuel
+            break
+
+    # KAROSERIJA: poznate vrednosti
+    for chassis in ["Džip/SUV", "Limuzina", "Karavan", "Hečbek", "Kupe", "Kabriolet", "Monovolumen (MiniVan)", "Pickup", "Kombi"]:
+        if chassis in desc:
+            result["karoserija"] = chassis
+            break
+
+    # MESTO: izmedju "km, " i ". Cena" -> "Voganj"
+    m = re.search(r"km,\s*([^.]+?)\.\s*Cena", desc)
+    if m:
+        result["mesto"] = m.group(1).strip()
+
+    return result
+
+
+def izvuci_cenu(soup, data_layer=None, meta_data=None):
+    # 1) Meta description (glavni izvor posle PA redizajna)
+    if meta_data and meta_data.get("cena"):
+        return meta_data["cena"]
+
+    # 2) dataLayer (radi ako PA vrati server-side render)
     if data_layer and data_layer.get("object_price"):
         cena = parsiraj_broj(data_layer.get("object_price"))
         if cena:
             return cena
 
+    # 3) Stari DOM fallback-ovi
     el = soup.find("span", class_="priceClassified")
     if el:
         cena = parsiraj_broj(el.get_text(" ", strip=True))
@@ -93,6 +187,14 @@ def izvuci_sliku(soup):
 def izvuci_naziv(soup, data_layer=None):
     if data_layer and data_layer.get("name"):
         return data_layer.get("name")
+
+    # og:title je pouzdaniji od h1 posle redizajna
+    meta = soup.find("meta", property="og:title")
+    if meta and meta.get("content"):
+        text = meta.get("content")
+        text = text.replace("| Polovni Automobili", "").replace("- Polovni automobili", "").replace("Polovni Automobili", "").strip()
+        if text:
+            return text
 
     h1 = soup.find("h1")
     if h1:
@@ -742,25 +844,29 @@ def proveri_oglas(url):
         response.raise_for_status()
         response.encoding = "utf-8"
     except Exception as e:
+        # Mrežna/HTTP greška (403, 502, timeout...) NIJE dokaz da je oglas
+        # obrisan. Vrati aktivan=None (nepoznato), pa pozivalac zadrži stare
+        # podatke umesto da oglas proglasi mrtvim ili obriše cenu.
         print("Greška:", e)
-        return None, None, None, "", {}, {}, "", [], False
+        return None, None, None, "", {}, {}, "", [], None, {}
 
     final_url = response.url
     if "redirect_message" in final_url or "/auto-oglasi/pretraga" in final_url:
         print(f"  OGLAS OBRISAN")
-        return None, None, None, "", {}, {}, "", [], False
+        return None, None, None, "", {}, {}, "", [], False, {}
 
     soup = BeautifulSoup(response.text, "html.parser")
     data_layer = izvuci_data_layer(response.text)
+    meta_data = izvuci_iz_meta(soup)
     extra_info = izvuci_dodatne_info(soup)
     opis = izvuci_opis(soup)
     oprema = izvuci_opremu(soup)
 
-    cena = izvuci_cenu(soup, data_layer)
+    cena = izvuci_cenu(soup, data_layer, meta_data)
     slika = izvuci_sliku(soup)
     naziv = izvuci_naziv(soup, data_layer)
 
-    return cena, slika, naziv, response.text, data_layer, extra_info, opis, oprema, True
+    return cena, slika, naziv, response.text, data_layer, extra_info, opis, oprema, True, meta_data
 
 
 # ========================================================================
@@ -884,10 +990,23 @@ def scrape_for_user(email, oglasi):
         url = oglas["url"]
         print(f"\nPROVERA: {url}")
 
-        cena, slika, naziv, html, data_layer, extra_info, opis, oprema, aktivan = proveri_oglas(url)
+        cena, slika, naziv, html, data_layer, extra_info, opis, oprema, aktivan, meta_data = proveri_oglas(url)
 
         label = oglas.get("label") or naziv or "Oglas"
         model = extract_model(url)
+
+        # aktivan=None znači mrežna/HTTP greška (403, 502, timeout). Oglas NIJE
+        # obrisan, samo ga sad ne možemo pročitati. Šaljemo minimalan zapis bez
+        # 'aktivan' polja; merge na Worker strani čuva sve stare podatke.
+        if aktivan is None:
+            baza_nova[url] = {
+                "label": label,
+                "model": model,
+                "problem_cena": True,
+                "poslednja_provera": now,
+            }
+            time.sleep(PAUZA)
+            continue
 
         if not aktivan:
             baza_nova[url] = {
@@ -920,6 +1039,8 @@ def scrape_for_user(email, oglasi):
         snaga = None
         kubikaza = None
 
+        # Primarni izvor: dataLayer (kad PA vrati server-side render).
+        # Fallback: meta description (radi i posle JS redizajna).
         if data_layer:
             try:
                 if data_layer.get("object_production_year"):
@@ -945,6 +1066,19 @@ def scrape_for_user(email, oglasi):
             gorivo = data_layer.get("object_fuel")
             karoserija = data_layer.get("object_chassis")
             last_renewed_date = data_layer.get("object_last_renewed_date")
+
+        # Dopuna iz meta description-a za sve što dataLayer nije dao
+        if meta_data:
+            if godiste is None:
+                godiste = meta_data.get("godiste")
+            if kilometraza is None:
+                kilometraza = meta_data.get("kilometraza")
+            if not gorivo:
+                gorivo = meta_data.get("gorivo")
+            if not karoserija:
+                karoserija = meta_data.get("karoserija")
+            if kubikaza is None:
+                kubikaza = meta_data.get("kubikaza")
 
         print(f"  MODEL: {model} | CENA: {cena} | {godiste}, {kilometraza}km")
         if extra_info.get("zemlja_uvoza"):
@@ -993,6 +1127,7 @@ def scrape_for_user(email, oglasi):
             "broj_sedista": extra_info.get("broj_sedista"),
             "broj_vrata": extra_info.get("broj_vrata"),
             "vin": extra_info.get("vin"),
+            "mesto": meta_data.get("mesto") if meta_data else None,
             # privremena za pass 2
             "_data_layer": data_layer,
             "_naslov": naziv,
