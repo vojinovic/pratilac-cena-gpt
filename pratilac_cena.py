@@ -851,7 +851,23 @@ def proveri_oglas(url):
         return None, None, None, "", {}, {}, "", [], None, {}
 
     final_url = response.url
+    # Obrisan oglas: PA redirektuje na pretragu slicnih. Stari format je sadrzao
+    # 'redirect_message' ili '/pretraga', novi (jun 2026) vodi na kategorijski
+    # URL bez broja oglasa, npr /auto-oglasi/volvo/xc60/dzipsuv/dizel.
+    # Pravi oglas UVEK ima numericki ID: /auto-oglasi/29352833/...
+    obrisan = False
     if "redirect_message" in final_url or "/auto-oglasi/pretraga" in final_url:
+        obrisan = True
+    elif "/auto-oglasi/" in final_url and not re.search(r"/auto-oglasi/\d+/", final_url):
+        obrisan = True
+    else:
+        # Dodatna provera: canonical koji ne sadrzi broj oglasa = redirekt na kategoriju
+        soup_check = BeautifulSoup(response.text, "html.parser")
+        canon = soup_check.find("link", attrs={"rel": "canonical"})
+        if canon and canon.get("href") and not re.search(r"/auto-oglasi/\d+/", canon.get("href")):
+            obrisan = True
+
+    if obrisan:
         print(f"  OGLAS OBRISAN")
         return None, None, None, "", {}, {}, "", [], False, {}
 
