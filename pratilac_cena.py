@@ -668,14 +668,36 @@ def calculate_score_v3(
     # STANJE (max ~30)
     has_damage = False
     if structured_data:
-        if structured_data.get("object_prvi_vlasnik") == "yes":
+        je_prvi_vlasnik = structured_data.get("object_prvi_vlasnik") == "yes"
+        je_kupljen_nov = structured_data.get("object_kupljen_nov_u_srbiji") == "yes"
+
+        if je_prvi_vlasnik:
             breakdown.append({"label": "Prvi vlasnik", "value": 6, "category": "stanje"})
         if structured_data.get("object_servisna_knjizica") == "yes":
             breakdown.append({"label": "Servisna knjižica", "value": 5, "category": "stanje"})
         if structured_data.get("object_garancija") == "yes":
             breakdown.append({"label": "Garancija", "value": 4, "category": "stanje"})
-        if structured_data.get("object_kupljen_nov_u_srbiji") == "yes":
+        if je_kupljen_nov:
             breakdown.append({"label": "Kupljen nov u Srbiji", "value": 5, "category": "stanje"})
+
+        # KOMBINOVANI BONUS: prvi vlasnik + kupljen nov u Srbiji.
+        # Najjači signal poverenja na tržištu - eliminiše rizik uvoza
+        # (manipulacija km, skriveni udesi, lažna istorija koju ni CarVertical
+        # ne uhvati). Važi za sve, ali skaliran: što je auto noviji, signal jači.
+        if je_prvi_vlasnik and je_kupljen_nov:
+            if godiste:
+                starost = datetime.now().year - godiste
+                if starost <= 3:
+                    bonus, label = 14, "Nov, domaći, prvi vlasnik"
+                elif starost <= 6:
+                    bonus, label = 11, "Mlad, domaći, prvi vlasnik"
+                elif starost <= 10:
+                    bonus, label = 8, "Domaći od prvog vlasnika"
+                else:
+                    bonus, label = 6, "Domaći od prvog vlasnika"
+            else:
+                bonus, label = 8, "Domaći od prvog vlasnika"
+            breakdown.append({"label": label, "value": bonus, "category": "stanje"})
 
         damage = (structured_data.get("object_damage") or "").lower()
         if "udaren" in damage:
