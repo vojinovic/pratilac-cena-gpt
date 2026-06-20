@@ -4589,6 +4589,24 @@ function printAiAnalysis(data){
 @media print {
     .info-modal-backdrop { display: none !important; }
 }
+.deleted-section-header {
+    grid-column: 1 / -1;
+    margin: 18px 0 4px;
+    padding-top: 18px;
+    border-top: 1px solid var(--color-border, #2a2a30);
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+.deleted-section-header > span {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--color-text-muted, #a1a1aa);
+}
+.deleted-section-header > small {
+    font-size: 12px;
+    color: var(--color-text-muted, #71717a);
+}
 </style></head>
 <body>
     <div class="p-header">
@@ -6477,9 +6495,19 @@ function render(){
         return passesFilter(c, FILTER, o.url);
     });
 
-    // Razdvoji: auti bez podataka (scraper jos nije prosao) idu na VRH
-    const pendingList = list.filter(o => !(cene[o.url] && cene[o.url].cena));
-    let readyList = list.filter(o => cene[o.url] && cene[o.url].cena);
+    // Razdvoji u tri grupe:
+    //  - pending: nema cenu (scraper jos nije prosao) -> VRH
+    //  - obrisani: aktivan === false (skinuti sa PA) -> DNO, posebna sekcija
+    //  - readyList: aktivni sa cenom -> sredina, sortirani po score
+    const pendingList = list.filter(o => {
+        const c = cene[o.url];
+        return !(c && c.cena) && !(c && c.aktivan === false);
+    });
+    const obrisaniList = list.filter(o => (cene[o.url] || {}).aktivan === false);
+    let readyList = list.filter(o => {
+        const c = cene[o.url];
+        return c && c.cena && c.aktivan !== false;
+    });
 
     if(FILTER === "ai"){
         // Sortiraj po AI poziciji (#1 prvo)
@@ -6495,7 +6523,7 @@ function render(){
     container.innerHTML = "";
 
     // Ima auta ali filter je prazan
-    if(pendingList.length === 0 && readyList.length === 0){
+    if(pendingList.length === 0 && readyList.length === 0 && obrisaniList.length === 0){
         container.style.display = "none";
         emptyState.style.display = "block";
         emptyState.className = "empty-state";
@@ -6523,6 +6551,19 @@ function render(){
         const isBestDeal = o.url === topUrl;
         container.appendChild(buildTrackedCard(o, c, isBestDeal));
     });
+
+    // Obrisani oglasi: zasebna sekcija na dnu sa naslovom (full-width)
+    if(obrisaniList.length > 0){
+        const sep = document.createElement("div");
+        sep.className = "deleted-section-header";
+        sep.innerHTML = `<span>👻 Više ne postoje na sajtu</span><small>Ovi oglasi su skinuti sa Polovnih automobila. Prikazujemo poslednju zabeleženu cenu.</small>`;
+        container.appendChild(sep);
+
+        obrisaniList.forEach(o => {
+            const c = cene[o.url] || {};
+            container.appendChild(buildTrackedCard(o, c, false));
+        });
+    }
 }
 
 // "Najbolja kupovina danas" - istaknuta kartica sa sazetkom najboljeg auta
