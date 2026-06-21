@@ -47,6 +47,142 @@ def izvuci_data_layer(html):
         return {}
 
 
+def izvuci_iz_next_data(html):
+    """
+    Parsira <script id="__NEXT_DATA__"> i vraca productData kao normalizovan dict.
+    Posle PA Next.js redizajna (jun 2026) ovo je najbogatiji i najpouzdaniji izvor:
+    sva polja oglasa su server-side renderovana u JSON-u, citaju se bez JS-a.
+    Vraca None ako blok ne postoji ili nema productData (npr. obrisan oglas).
+
+    VAZNO: "Prvi vlasnik", "Kupljen nov u Srbiji", "Servisna knjiga", "Garancija"
+    NISU posebna polja - oni su stavke unutar condition niza. Zemlja uvoza
+    (countryOrigin) postoji samo kod uvoza; kod domaceg vozila je odsutna.
+    """
+    m = re.search(
+        r'<script id="__NEXT_DATA__"[^>]*>(.*?)</script>',
+        html, re.S
+    )
+    if not m:
+        return None
+    try:
+        data = json.loads(m.group(1))
+    except (ValueError, TypeError):
+        return None
+
+    pd = (data.get("props", {})
+              .get("pageProps", {})
+              .get("productData"))
+    if not isinstance(pd, dict):
+        return None
+
+    cond = pd.get("condition") or []
+    safety = pd.get("safety") or []
+    equipment = pd.get("equipment") or []
+    owner = pd.get("owner") or {}
+
+    def in_cond(*frags):
+        for c in cond:
+            low = (c or "").lower()
+            if all(f in low for f in frags):
+                return True
+        return False
+
+    return {
+        # osnovni podaci (zamena za data_layer + meta description)
+        "cena": pd.get("price"),
+        "valuta": pd.get("priceCurrency"),
+        "godiste": pd.get("year"),
+        "kilometraza": pd.get("mileage"),
+        "gorivo": pd.get("fuel"),
+        "karoserija": pd.get("chassis"),
+        "kubikaza": pd.get("engineVolume"),
+        "snaga": pd.get("horsePower"),     # KS, isto kao ranije
+        "snaga_kw": pd.get("power"),
+        "menjac": pd.get("gearBox"),
+        "klima": pd.get("airCondition"),
+        "naziv": pd.get("title"),
+        "model_part": pd.get("model"),
+        "mark": pd.get("mark"),
+        "brend": pd.get("brand"),
+        # status / aktivnost
+        "status": pd.get("status"),        # "active" kad je oglas ziv
+        "rezervisan": bool(pd.get("reserved")),
+        "id_oglasa": pd.get("id"),
+        "datum_objave": pd.get("publishDate"),
+        "datum_obnove": pd.get("renewDate"),
+        # POREKLO I POVERENJE (kljuc za scoring bonus)
+        "zemlja_uvoza": pd.get("countryOrigin"),   # None kod domaceg
+        "iz_inostranstva": bool(pd.get("fromAbroad")),
+        "poreklo": pd.get("origin"),               # "Domace tablice" / "Na ime kupca"
+        "prvi_vlasnik": in_cond("prvi vlasnik"),
+        "kupljen_nov_u_srbiji": in_cond("kupljen nov"),
+        "servisna_knjizica": in_cond("servisna"),
+        "garancija": in_cond("garancija"),
+        "rezervni_kljuc": in_cond("rezervni"),
+        "vlasnistvo": pd.get("ownerLegalStatus"),
+        # prodavac
+        "tip_prodavca": owner.get("ownerType"),    # "dealer" (placa) / "user" (privatnik)
+        "grad": owner.get("city"),
+        # tehnicki detalji
+        "pogon": pd.get("drive"),
+        "emisiona_klasa": pd.get("emissionClass"),
+        "zamajac": pd.get("flywheel"),
+        "boja": pd.get("color"),
+        "enterijer_materijal": pd.get("interiorMaterial"),
+        "boja_enterijera": pd.get("interiorColor"),
+        "broj_sedista": pd.get("seats"),
+        "broj_vrata": pd.get("doors"),
+        "strana_volana": pd.get("wheelSide"),
+        "ostecenje": pd.get("damaged"),
+        "registracija": pd.get("registration"),
+        "zamena": pd.get("trade"),
+        # tekst i liste
+        "opis": pd.get("description") or "",
+        "oprema": equipment,
+        "sigurnost": safety,
+        "stanje_lista": cond,
+    }
+
+
+def next_data_u_datalayer(nd):
+    """
+    Konvertuje normalizovan next_data dict u synteticki data_layer format
+    (object_* kljucevi sa "yes"/"no" vrednostima) tako da nizvodni scoring kod
+    koji cita structured_data.get("object_prvi_vlasnik") == "yes" radi netaknut.
+    """
+    if not nd:
+        return {}
+    def yn(v):
+        return "yes" if v else "no"
+    dl = {
+        "object_prvi_vlasnik": yn(nd.get("prvi_vlasnik")),
+        "object_kupljen_nov_u_srbiji": yn(nd.get("kupljen_nov_u_srbiji")),
+        "object_servisna_knjizica": yn(nd.get("servisna_knjizica")),
+        "object_garancija": yn(nd.get("garancija")),
+    }
+    if nd.get("godiste"):
+        dl["object_production_year"] = str(nd["godiste"])
+    if nd.get("kilometraza"):
+        dl["object_mileage"] = str(nd["kilometraza"])
+    if nd.get("snaga"):
+        dl["object_engine_horsepower"] = str(nd["snaga"])
+    if nd.get("kubikaza"):
+        dl["object_engine_volume"] = str(nd["kubikaza"])
+    if nd.get("gorivo"):
+        dl["object_fuel"] = nd["gorivo"]
+    if nd.get("karoserija"):
+        dl["object_chassis"] = nd["karoserija"]
+    if nd.get("menjac"):
+        dl["object_gear_box"] = nd["menjac"]
+    if nd.get("klima"):
+        dl["object_air_conditioner"] = nd["klima"]
+    if nd.get("datum_obnove"):
+        dl["object_last_renewed_date"] = nd["datum_obnove"]
+    if nd.get("ostecenje"):
+        dl["object_damage"] = nd["ostecenje"]
+    return dl
+
+
 def izvuci_iz_meta(soup):
     """
     Glavni izvor podataka posle PA redizajna (jun 2026): meta description i
@@ -894,6 +1030,13 @@ def proveri_oglas(url):
         return None, None, None, "", {}, {}, "", [], False, {}
 
     soup = BeautifulSoup(response.text, "html.parser")
+
+    # PRIMARNI IZVOR (posle PA Next.js redizajna): __NEXT_DATA__ JSON.
+    # Sadrzi kompletne, server-renderovane podatke oglasa. Stari put
+    # (data_layer + meta description + HTML scraping) ostaje fallback za
+    # slucaj da PA promeni strukturu ili neki oglas nema NEXT_DATA blok.
+    next_data = izvuci_iz_next_data(response.text)
+
     data_layer = izvuci_data_layer(response.text)
     meta_data = izvuci_iz_meta(soup)
     extra_info = izvuci_dodatne_info(soup)
@@ -903,6 +1046,63 @@ def proveri_oglas(url):
     cena = izvuci_cenu(soup, data_layer, meta_data)
     slika = izvuci_sliku(soup)
     naziv = izvuci_naziv(soup, data_layer)
+
+    if next_data:
+        # Rezervisan oglas ili status != active = tretiraj kao neaktivan
+        # (necemo ga prikazati kao zivu kupovinu, ali ga ne brisemo iz baze).
+        if next_data.get("status") and next_data["status"] != "active":
+            print(f"  STATUS: {next_data['status']} (neaktivan)")
+            return None, None, None, "", {}, {}, "", [], False, {}
+
+        # NEXT_DATA puni cenu/naziv ako ih stari put nije izvukao
+        if cena is None and next_data.get("cena"):
+            cena = next_data["cena"]
+        if (not naziv or naziv == "Oglas") and next_data.get("naziv"):
+            naziv = next_data["naziv"]
+        if not opis and next_data.get("opis"):
+            opis = next_data["opis"]
+        if not oprema and next_data.get("oprema"):
+            oprema = next_data["oprema"]
+
+        # Synteticki data_layer iz NEXT_DATA tako da nizvodni scoring
+        # (koji cita object_prvi_vlasnik == "yes" itd.) radi netaknut.
+        # Spajamo: pravi data_layer ima prednost ako postoji neko polje,
+        # inace dopunjavamo iz NEXT_DATA.
+        nd_dl = next_data_u_datalayer(next_data)
+        if not data_layer:
+            data_layer = nd_dl
+        else:
+            for k, v in nd_dl.items():
+                if k not in data_layer or data_layer.get(k) in (None, ""):
+                    data_layer[k] = v
+
+        # extra_info dopuna iz NEXT_DATA (zemlja uvoza, pogon, boja, emisiona...)
+        ei_iz_nd = {
+            "zemlja_uvoza": next_data.get("zemlja_uvoza"),
+            "pogon": next_data.get("pogon"),
+            "emisiona_klasa": next_data.get("emisiona_klasa"),
+            "boja": next_data.get("boja"),
+            "enterijer_materijal": next_data.get("enterijer_materijal"),
+            "boja_enterijera": next_data.get("boja_enterijera"),
+            "poreklo": next_data.get("poreklo"),
+            "broj_sedista": next_data.get("broj_sedista"),
+            "broj_vrata": next_data.get("broj_vrata"),
+            "tip_prodavca": next_data.get("tip_prodavca"),
+            "grad": next_data.get("grad"),
+            "zamajac": next_data.get("zamajac"),
+            "vlasnistvo": next_data.get("vlasnistvo"),
+            "registracija": next_data.get("registracija"),
+            "ostecenje": next_data.get("ostecenje"),
+        }
+        for k, v in ei_iz_nd.items():
+            if v is not None and (k not in extra_info or not extra_info.get(k)):
+                extra_info[k] = v
+
+        # meta_data dopuna (mesto = grad prodavca ako meta nije dao)
+        if not meta_data:
+            meta_data = {}
+        if not meta_data.get("mesto") and next_data.get("grad"):
+            meta_data["mesto"] = next_data["grad"]
 
     return cena, slika, naziv, response.text, data_layer, extra_info, opis, oprema, True, meta_data
 
@@ -1165,6 +1365,9 @@ def scrape_for_user(email, oglasi):
             "broj_sedista": extra_info.get("broj_sedista"),
             "broj_vrata": extra_info.get("broj_vrata"),
             "vin": extra_info.get("vin"),
+            "tip_prodavca": extra_info.get("tip_prodavca"),
+            "vlasnistvo": extra_info.get("vlasnistvo"),
+            "ostecenje": extra_info.get("ostecenje"),
             "mesto": meta_data.get("mesto") if meta_data else None,
             # privremena za pass 2
             "_data_layer": data_layer,
