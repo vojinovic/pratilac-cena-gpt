@@ -1191,24 +1191,12 @@ def build_augmented_baza(baza_nova):
     return reference_data
 
 
-# Mapa karoserija label -> ID koji search endpoint ocekuje
-CHASSIS_MAP = {
-    "Džip/SUV": "2632",
-    "Limuzina": "2631",
-    "Karavan": "2633",
-    "Hečbek": "2630",
-    "Hatchback": "2630",
-    "Kupe": "2634",
-    "Kabriolet": "2635",
-    "Monovolumen (MiniVan)": "2636",
-    "Pickup": "2637",
-}
-
-
+# Posle PA redizajna karoserija se ne salje kao numericki ID nego kao naziv.
+# Worker (CHASSIS_MAP u worker.js) prevodi naziv u novi PA format (sedan, suv...).
 def _chassis_to_id(karoserija):
     if not karoserija:
         return None
-    return CHASSIS_MAP.get(karoserija)
+    return str(karoserija).strip() or None
 
 
 # ========================================================================
